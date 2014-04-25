@@ -3,7 +3,8 @@ var _ = require('underscore'),
     gramework = require('gramework'),
     Dispatcher = gramework.Dispatcher,
     Scene = gramework.Scene,
-    entities = require('./entities');
+    entities = require('./entities'),
+    Vec2d = gramework.vectors.Vec2d;
 
 var Game = Scene.extend({
     initialize: function(options) {
@@ -14,20 +15,38 @@ var Game = Scene.extend({
             world: this
         });
         this.entities.add(this.protestor);
+
+        this.gravity = new Vec2d(0, 50);
+
+        // Handles world speed.
+        this.velocity = new Vec2d(0, 0);
+        this.speed = 10;
     },
 
     update: function(dt) {
         Scene.prototype.update.call(this, dt);
+
+        dt = (dt / 1000); // Sane velocity mutations.
+
+        var accel = new Vec2d(5, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
     },
 
     draw: function(surface) {
-        Scene.prototype.draw.call(this, surface);
+        surface.clear();
+        this.view.clear();
+
+        surface.fill("#ff22cc");
+        Scene.prototype.draw.call(this, surface, {clear: false});
+    },
+
+    event: function(ev) {
+        // Placeholder. Need to send event and identify active protestor.
     }
 });
 
 var main = function() {
-    var game = new Game({
-    });
+    var game = new Game({});
     var d = new Dispatcher(gamejs, {
         initial: game
     });
