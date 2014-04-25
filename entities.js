@@ -9,6 +9,7 @@ var Protestor = Entity.extend({
 
         this.world = options.world;
         this.velocity = new Vec2d(0, 0);
+        this.speed = 15;
         this.onGround = false;
     },
 
@@ -44,8 +45,17 @@ var Protestor = Entity.extend({
         var vec = new Vec2d().add(this.world.gravity);
         this.velocity.add(vec.mul(dt));
 
-        this.rect.x += this.velocity.x;
-        this.rect.y += this.velocity.y;
+        // Adjust X vector based on the world speed. Some protestors will be
+        // slower than others, eventually getting caught.
+        if (this.speed !== 0) {
+            var setTo = (this.world.velocity.magnitude() * 0.0025 * this.speed);
+            this.velocity.setX(setTo);
+        } else {
+            this.velocity.setX(-(this.world.velocity.magnitude() * 0.0025));
+        }
+
+        this.rect.x += this.velocity.getX();
+        this.rect.y += this.velocity.getY();
 
         // Decide next movement.
         var delta = new Vec2d(0, 0);
@@ -71,6 +81,7 @@ var Protestor = Entity.extend({
     draw: function(surface) {
         gamejs.draw.rect(surface, "#ffcc00", this.rect);
     }
+
 });
 
 module.exports = {

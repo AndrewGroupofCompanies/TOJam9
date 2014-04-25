@@ -8,19 +8,21 @@ var _ = require('underscore'),
 
 var Game = Scene.extend({
     initialize: function(options) {
+        this.gravity = new Vec2d(0, 50);
+
+        // Handles world speed.
+        this.velocity = new Vec2d(0, 0);
+        this.speed = -10;
+        this.accel = 5;
+
         // For now, keep it simple with one protestor. Can adjust from there.
         this.protestor = new entities.Protestor({
-            x: 0, y: 0,
+            x: 300, y: 0,
             width: 32, height: 32,
             world: this
         });
         this.entities.add(this.protestor);
 
-        this.gravity = new Vec2d(0, 50);
-
-        // Handles world speed.
-        this.velocity = new Vec2d(0, 0);
-        this.speed = 10;
     },
 
     // Identify if an entity is colliding with our world.
@@ -36,7 +38,7 @@ var Game = Scene.extend({
 
         dt = (dt / 1000); // Sane velocity mutations.
 
-        var accel = new Vec2d(5, 0);
+        var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
     },
 
