@@ -1,7 +1,12 @@
-var gamejs = require('gamejs'),
+var _ = require('underscore'),
+    gamejs = require('gamejs'),
     gramework = require('gramework'),
     Entity = gramework.Entity,
     Vec2d = gramework.vectors.Vec2d;
+
+var randomHex = function() {
+    return '#' + (function co(lor){   return (lor += [0,1,2,3,4,5,6,7,8,9,'a','b','c','d','e','f'][Math.floor(Math.random()*16)]) && (lor.length == 6) ?  lor : co(lor); })('');
+};
 
 var Protestor = Entity.extend({
     initialize: function(options) {
@@ -9,8 +14,10 @@ var Protestor = Entity.extend({
 
         this.world = options.world;
         this.velocity = new Vec2d(0, 0);
-        this.speed = 15;
+        this.speed = _.random(-3, 3);
         this.onGround = false;
+
+        this.hex = randomHex();
     },
 
     canMove: function(dx, dy) {
@@ -79,7 +86,7 @@ var Protestor = Entity.extend({
     },
 
     draw: function(surface) {
-        gamejs.draw.rect(surface, "#ffcc00", this.rect);
+        gamejs.draw.rect(surface, this.hex, this.rect);
     }
 
 });

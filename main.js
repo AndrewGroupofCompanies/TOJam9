@@ -16,13 +16,18 @@ var Game = Scene.extend({
         this.accel = 5;
 
         // For now, keep it simple with one protestor. Can adjust from there.
-        this.protestor = new entities.Protestor({
-            x: 300, y: 0,
-            width: 32, height: 32,
-            world: this
-        });
-        this.entities.add(this.protestor);
+        this.createProtestors(40);
+    },
 
+    createProtestors: function(limit) {
+        _.each(_.range(limit), function(i) {
+            var p = new entities.Protestor({
+                x: 200 + (i * 15), y: 0,
+                width: 32, height: 32,
+                world: this
+            });
+            this.entities.add(p);
+        }, this);
     },
 
     // Identify if an entity is colliding with our world.
