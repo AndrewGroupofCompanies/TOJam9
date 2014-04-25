@@ -9,12 +9,19 @@ var Protestor = Entity.extend({
 
         this.world = options.world;
         this.velocity = new Vec2d(0, 0);
+        this.onGround = false;
     },
 
     canMove: function(dx, dy) {
         var collidedX = false,
             collidedY = false,
             start;
+
+        // Moving to the right! Endless runner style.
+        if (dx > 0) {
+            start = this.rect.x;
+            this.rect.x += dx;
+        }
 
         if (dy > 0) {
             start = this.rect.y;
@@ -47,6 +54,18 @@ var Protestor = Entity.extend({
         var collided = this.canMove.apply(this, delta.unpack()),
             collidedX = collided[0],
             collidedY = collided[1];
+
+        if (collidedY) {
+            this.velocity.setY(0);
+            if (delta.getY() > 0) {
+                this.onGround = true;
+            }
+        } else {
+            // We're moving up or down, probably not on ground.
+            if (Math.floor(delta.getY()) !== 0) {
+                this.onGround = false;
+            }
+        }
     },
 
     draw: function(surface) {
