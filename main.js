@@ -23,6 +23,14 @@ var Game = Scene.extend({
         this.speed = 10;
     },
 
+    // Identify if an entity is colliding with our world.
+    collides: function(entity) {
+        // hit ROCK BOTTOM
+        if (entity.rect.y >= (this.height() - entity.rect.height)) {
+            return true;
+        }
+    },
+
     update: function(dt) {
         Scene.prototype.update.call(this, dt);
 
@@ -36,6 +44,7 @@ var Game = Scene.extend({
         surface.clear();
         this.view.clear();
 
+        this.view.fill("#ff22cc");
         surface.fill("#ff22cc");
         Scene.prototype.draw.call(this, surface, {clear: false});
     },
