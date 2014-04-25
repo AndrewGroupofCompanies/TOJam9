@@ -1,16 +1,17 @@
 {
     "name": "TOJam9",
     "version": "0.0.1",
+    "main": "main.js",
     "scripts": {
-        "start": "node ./scripts/server.js",
-        "build": "browserify main.js -o bundled.js",
-	"watch": "watchify main.js -o bundled.js -v",
+        "start": "node ./dist/server.js",
+        "build": "browserify . -o ./dist/bundled.js",
+        "watch": "watchify . -o ./dist/bundled.js -v",
         "deploy": "node ./scripts/deploy.js"
     },
     "dependencies": {
-	"gamejs": "1.0.0",
+        "gamejs": "1.0.0",
         "gramework": "https://github.com/bartek/gramework/tarball/master",
-	"underscore": "~1.5.2"
+        "underscore": "~1.6.0"
     },
     "devDependencies": {
         "browserify": "~2.29.0",
