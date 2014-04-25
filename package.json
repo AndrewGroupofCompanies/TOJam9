@@ -5,7 +5,7 @@
     "scripts": {
         "start": "node ./dist/server.js",
         "build": "browserify . -o ./dist/bundled.js",
-        "watch": "watchify . -o ./dist/bundled.js -v",
+        "watch": "watchify -d . -o ./dist/bundled.js -v",
         "deploy": "node ./scripts/deploy.js"
     },
     "dependencies": {
