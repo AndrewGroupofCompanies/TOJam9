@@ -101,7 +101,7 @@ var Game = Scene.extend({
             takeover: gamejs.event.K_t
         });
         this.player = null;
-        //this.spawnPlayer();
+        this.spawnPlayer();
     },
 
     createProtestors: function(limit) {

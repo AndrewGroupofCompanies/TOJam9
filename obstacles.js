@@ -44,7 +44,7 @@ var Fence = Obstacle.extend({
 
     update: function(dt) {
         Obstacle.prototype.update.call(this, dt);
-        this.collisionRect.left = this.rect.left + 65;
+        this.collisionRect.left = this.rect.left + 55;
         this.collisionRect.top = this.rect.top + 75;
     }
 
