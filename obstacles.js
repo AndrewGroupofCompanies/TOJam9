@@ -18,9 +18,9 @@ var Obstacle = Entity.extend({
         this.type = options.type;
         console.log(this.type);
         if(this.type === 1){
-            this.image = Images.fence;
+            //this.image = Images.fence;
         } else {
-            this.image = Images.barricade;
+            //this.image = Images.barricade;
         };
     },
     
