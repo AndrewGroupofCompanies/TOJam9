@@ -112,7 +112,6 @@ var Game = Scene.extend({
         _.each(_.range(limit), function(i) {
             var randomNum= _.random(1,6);
             var spriteId  = 'protester0' + randomNum;
-            console.log(spriteId);
             var tmpSpriteSheet = this.spriteSheets[spriteId];
             var p = new entities.Protestor({
                 x: 80 + (i * 15), y: this.runningPlane,

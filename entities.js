@@ -139,7 +139,7 @@ var Protestor = Citizen.extend({
 
         this.isProtestor = true; // Identifier.
 
-        this.runSpeed = 1.5; // Our speed modifier.
+        this.runSpeed = 1.0; // Our speed modifier.
         this.speed = this.runSpeed;
         this.canDeke = true;
         this.stumbleCounter = 0;
@@ -152,7 +152,7 @@ var Protestor = Citizen.extend({
 
         // Police padding. If we get too near the police and are aware of them,
         // we should
-        this.awarenessDistance = 20;
+        this.awarenessDistance = 90;
 
         // Eventually police can advance, and we won't be aware of this. This is
         // where we can get captured.
@@ -168,7 +168,7 @@ var Protestor = Citizen.extend({
     },
 
     makeDecision: function() {
-        return _.random(0, 10) > 7;
+        return _.random(0, 10) > 8.5;
     },
 
     resetDecision: function() {
@@ -233,7 +233,7 @@ var Protestor = Citizen.extend({
 
     // We're near the front of the pack, just hold back.
     nearFront: function() {
-        if ((this.rect.x + this.rect.width) >= this.world.frontLine) {
+        if ((this.rect.x + this.rect.width + this.awarenessDistance) >= this.world.frontLine) {
             return true;
         }
         return false;
@@ -569,7 +569,7 @@ var Player = Protestor.extend({
         if (this.pressureCount >= this.pressureDelay) {
             this.pressureCount = 0;
             if (this.isDistractingPolice()) {
-                console.log("Good job!");
+                console.log("Distracting Police!");
             } else {
                 this.world.increasePolicePressure();
             }

@@ -40,6 +40,7 @@ _.extend(SceneryGenerator.prototype, {
     },
 
     generateScenery: function(image, z) {
+        return;
         var s = new Scrollable({
             height: 64,
             width: 64,
