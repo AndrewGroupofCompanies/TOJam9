@@ -64,9 +64,9 @@ var Game = Scene.extend({
         this.createScrollable(9);
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
-        
+
         this.Obstacles = null;
-        
+
         //this.createPolice(10);
         this.controller = new GameController({
             pressure: gamejs.event.K_p,
@@ -97,7 +97,7 @@ var Game = Scene.extend({
                 x: 200 + (i * 15), y: 0,
                 width: 30, height: 30,
                 world: this,
-                
+
                 spriteSheet: this.spriteSheets.protester01
             });
             this.entities.add(p);
@@ -151,7 +151,7 @@ var Game = Scene.extend({
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
         this.scrollables.update(dt);
-        
+
         if (this.Obstacles && this.Obstacles.alive) {
             this.Obstacles.update(dt);
         } else if (this.Obstacles === null) {

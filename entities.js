@@ -3,7 +3,7 @@ var _ = require('underscore'),
     gramework = require('gramework'),
     Entity = gramework.Entity,
     animate = gramework.animate,
-    Vec2d = gramework.vectors.Vec2d;
+    Vec2d = gramework.vectors.Vec2d,
     GameController = gramework.input.GameController;
 
 var randomHex = function() {
@@ -44,7 +44,7 @@ var Citizen = Entity.extend({
 
             this.image = this.anim.update(0);
             this.anim.setFrame(_.random(0,23));
-        }   
+        }
 
         this.hex = randomHex();
     },
@@ -119,8 +119,6 @@ var Citizen = Entity.extend({
     },
 
     draw: function(surface) {
-        
-
         if (this.image) {
             Entity.prototype.draw.apply(this, arguments);
         } else {

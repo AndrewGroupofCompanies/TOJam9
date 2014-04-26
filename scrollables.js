@@ -33,7 +33,6 @@ var SceneryGenerator = function(options) {
 
 _.extend(SceneryGenerator.prototype, {
     initialize: function(options) {
-        
     },
 
     generateScenery: function(sceneryType, z) {
