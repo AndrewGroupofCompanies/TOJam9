@@ -16,7 +16,10 @@ var Game = Scene.extend({
         this.accel = 5;
 
         // For now, keep it simple with one protestor. Can adjust from there.
-        this.createProtestors(40);
+        this.createProtestors(5); // 40);
+
+        // Track the police pressure by using an imaginery line on the x-axis.
+        this.policePressure = 150;
     },
 
     createProtestors: function(limit) {
@@ -53,6 +56,11 @@ var Game = Scene.extend({
 
         this.view.fill("#ff22cc");
         surface.fill("#ff22cc");
+
+        // Draw the police pressure line as useful debugging.
+        gamejs.draw.line(this.view, "#cccccc",
+            [this.policePressure, 0],
+            [this.policePressure, surface.getSize()[1]]);
         Scene.prototype.draw.call(this, surface, {clear: false});
     },
 

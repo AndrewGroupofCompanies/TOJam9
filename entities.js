@@ -14,7 +14,7 @@ var Citizen = Entity.extend({
 
         this.world = options.world;
         this.velocity = new Vec2d(0, 0);
-        this.speed = _.random(-3, 3);
+        this.speed = 0;
         this.onGround = false;
 
         this.hex = randomHex();
@@ -46,9 +46,8 @@ var Citizen = Entity.extend({
         return [collidedX, collidedY];
     },
 
-    update: function(dt) {
+    adjustVector: function(dt) {
         dt = (dt / 1000); // Sanity.
-
         var vec = new Vec2d().add(this.world.gravity);
         this.velocity.add(vec.mul(dt));
 
@@ -60,9 +59,10 @@ var Citizen = Entity.extend({
         } else {
             this.velocity.setX(-(this.world.velocity.magnitude() * 0.0025));
         }
+    },
 
-        this.rect.x += this.velocity.getX();
-        this.rect.y += this.velocity.getY();
+    decideNextMovement: function(dt) {
+        dt = (dt / 1000);
 
         // Decide next movement.
         var delta = new Vec2d(0, 0);
@@ -85,13 +85,68 @@ var Citizen = Entity.extend({
         }
     },
 
+    update: function(dt) {
+        this.adjustVector(dt);
+        this.rect.x += this.velocity.getX();
+        this.rect.y += this.velocity.getY();
+        this.decideNextMovement(dt);
+    },
+
     draw: function(surface) {
         gamejs.draw.rect(surface, this.hex, this.rect);
     }
 
 });
 
-var Protestor = Citizen.extend({});
+var Protestor = Citizen.extend({
+    initialize: function(options) {
+        Citizen.prototype.initialize.call(this, options);
+
+        this.accel = 2;
+        this.maxSpeed = 40;
+        this.sprintTime = 0;
+
+        // Police padding
+        this.awarenessDistance = 10;
+    },
+
+    adjustVector: function(dt) {
+        Citizen.prototype.adjustVector.call(this, dt);
+
+        dt = (dt / 1000);
+
+        // Adjust the speed based on police pressure.
+        if (this.nearPolice()) {
+            console.log(this.hex, " is near the police!");
+            this.speed = 5;
+            this.sprintTime = 100;
+        }
+
+        // Adjust accel and speed because we may be sprinting forward.
+        var accel = new Vec2d(this.accel, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.velocity = this.velocity.truncate(this.maxSpeed);
+
+        // Stop sprinting once sprint time is done.
+        if (this.sprintTime > 0) {
+            this.sprintTime --;
+
+            if ((this.sprintTime / this.speed) <= 15) {
+                this.speed -= 1;
+            }
+        }
+
+        if (this.speed < 0) { console.log("We got no speed."); }
+    },
+
+    // Protestor is getting awfully close to the police!
+    nearPolice: function() {
+        if ((this.rect.x - this.awarenessDistance) <= this.world.policePressure) {
+            return true;
+        }
+        return false;
+    }
+});
 
 module.exports = {
     Protestor: Protestor
