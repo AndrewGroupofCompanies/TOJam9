@@ -144,10 +144,10 @@ var Protestor = Citizen.extend({
 
         // If we're near police we should ensure that the movement is positive.
         if (this.nearPolice()) {
-            console.log(this.hex, " is near the police!");
+            //console.log(this.hex, " is near the police!");
             this.speed = this.runSpeed;
         } else if (this.nearFront()) {
-            console.log(this.hex, " is near the front!");
+            //console.log(this.hex, " is near the front!");
             this.speed = -(this.runSpeed);
         }
 

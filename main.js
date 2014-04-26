@@ -3,8 +3,9 @@ var _ = require('underscore'),
     gramework = require('gramework'),
     Dispatcher = gramework.Dispatcher,
     Scene = gramework.Scene,
-    entities = require('./entities'),
-    Vec2d = gramework.vectors.Vec2d;
+    Vec2d = gramework.vectors.Vec2d,
+    GameController = gramework.input.GameController,
+    entities = require('./entities');
 
 var Game = Scene.extend({
     initialize: function(options) {
@@ -22,6 +23,9 @@ var Game = Scene.extend({
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 100;
         //this.createPolice(10);
+        this.controller = new GameController({
+            pressure: gamejs.event.K_p
+        });
     },
 
     createProtestors: function(limit) {
@@ -84,6 +88,11 @@ var Game = Scene.extend({
 
     event: function(ev) {
         // Placeholder. Need to send event and identify active protestor.
+        var handled = this.controller.handle(ev);
+        if (!handled) return;
+        if (handled.value === this.controller.controls.pressure) {
+            this.policePressure += 10;
+        }
     }
 });
 
