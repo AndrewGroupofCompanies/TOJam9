@@ -15,9 +15,13 @@ var Images = {
     bg_test: './assets/images/bg_test.jpg',
     sprite_test: './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
+    protester01: './assets/images/protester_01_pete.png',
+    protester02: './assets/images/protester_02_pete.png',
+    protester03: './assets/images/protester_03_pete.png',
+    protester04: './assets/images/protester_04_xyz.png',
+    protester05: './assets/images/protester_05_xyz.png',
+    protester06: './assets/images/protester_06_xyz.png',
     tree_01: './assets/images/tree_01.png',
-    protester01: './assets/images/protester01.png',
-    protester02: './assets/images/protester02.png',
     fence: './assets/images/fencebroken.png',
     barricade: './assets/images/barricade.png'
 };
@@ -42,7 +46,11 @@ var Game = Scene.extend({
         this.spriteSheets = {
             police: initSpriteSheet(imgfy(Images.cop01), 60, 30),
             protester01: initSpriteSheet(imgfy(Images.protester01), 30, 30),
-            protester02: initSpriteSheet(imgfy(Images.protester02), 30, 30)
+            protester02: initSpriteSheet(imgfy(Images.protester02), 30, 30),
+            protester03: initSpriteSheet(imgfy(Images.protester03), 30, 30),
+            protester04: initSpriteSheet(imgfy(Images.protester04), 30, 30),
+            protester05: initSpriteSheet(imgfy(Images.protester05), 30, 30),
+            protester06: initSpriteSheet(imgfy(Images.protester06), 30, 30),
         };
 
         var previousAdd = this.entities.add;
@@ -103,13 +111,12 @@ var Game = Scene.extend({
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
-            var tmpSpriteSheet = "";
-            if (_.random(1,2) === 1) {
-                tmpSpriteSheet = this.spriteSheets.protester01;
-            } else {
-                tmpSpriteSheet = this.spriteSheets.protester02;
-            }
-
+            
+            var randomNum= _.random(1,6);
+            var spriteId  = 'protester0' + randomNum;
+            console.log(spriteId);
+            tmpSpriteSheet = this.spriteSheets[spriteId];
+            
             var p = new entities.Protestor({
                 x: 80 + (i * 15), y: 0,
                 width: 30, height: 30,
