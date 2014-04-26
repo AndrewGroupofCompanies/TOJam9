@@ -384,7 +384,7 @@ var Police = Citizen.extend({
         this.setAnimation("capturing");
 
         // Set speed to negative, so the two go off the screen.
-        //this.speed = -10;
+        this.speed = -10;
     },
 
     adjustVector: function(dt) {
