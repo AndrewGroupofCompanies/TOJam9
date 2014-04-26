@@ -11,6 +11,8 @@ var assets = [
     './assets/images/bg_test.jpg'
 ];
 
+var GROUND_HEIGHT = 40;
+
 var Game = Scene.extend({
     initialize: function(options) {
         this.gravity = new Vec2d(0, 50);
@@ -32,7 +34,11 @@ var Game = Scene.extend({
         this.scrollables.add(this.bg);
 
         // For now, keep it simple with one protestor. Can adjust from there.
-        this.createProtestors(40);
+        this.createProtestors(5);
+
+        // Track the police pressure by using an imaginery line on the x-axis.
+        this.policePressure = 150;
+        this.createPolice(10);
     },
 
     createProtestors: function(limit) {
@@ -46,10 +52,22 @@ var Game = Scene.extend({
         }, this);
     },
 
+    createPolice: function(limit) {
+        _.each(_.range(limit), function(i) {
+            console.log("cop");
+            var p = new entities.Police({
+                x: 50 + (i * 15), y: 0,
+                width: 32, height: 32,
+                world: this
+            });
+            this.entities.add(p);
+        }, this);
+    },
+
     // Identify if an entity is colliding with our world.
     collides: function(entity) {
         // hit ROCK BOTTOM
-        if (entity.rect.y >= (this.height() - entity.rect.height)) {
+        if (entity.rect.y >= (this.height() - entity.rect.height - GROUND_HEIGHT)) {
             return true;
         }
     },
@@ -62,22 +80,20 @@ var Game = Scene.extend({
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
     },
-    
+
     draw: function(surface) {
         surface.clear();
         this.view.clear();
 
-        //this.view.fill("#ff22cc");
-        //surface.fill("#ff22cc");
-
         this.scrollables.draw(this.view);
 
-        //console.log(this.scrollables);
-        //debugger
-
+        // Draw the police pressure line as useful debugging.
+        gamejs.draw.line(this.view, "#cccccc",
+            [this.policePressure, 0],
+            [this.policePressure, surface.getSize()[1]]);
         Scene.prototype.draw.call(this, surface, {clear: false});
     },
-    
+
     event: function(ev) {
         // Placeholder. Need to send event and identify active protestor.
     }
