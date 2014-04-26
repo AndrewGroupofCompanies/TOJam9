@@ -57,6 +57,7 @@ var Citizen = Entity.extend({
         if (dy > 0) {
             start = this.rect.y;
             this.rect.y += dy;
+            this.rect.y = Math.floor(this.rect.y);
             if (this.world.collides(this)) {
                 this.rect.y = Math.floor(this.rect.y);
                 while (this.world.collides(this)) {
