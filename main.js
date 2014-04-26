@@ -11,6 +11,7 @@ var _ = require('underscore'),
     GameController = gramework.input.GameController;
 
 var Images = {
+    cop01: './assets/images/cop01.png',
     bg_test: './assets/images/bg_test.jpg',
     sprite_test: './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
@@ -37,7 +38,7 @@ var Game = Scene.extend({
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
-            police: initSpriteSheet(imgfy(Images.sprite_test), 26, 30),
+            police: initSpriteSheet(imgfy(Images.cop01), 60, 30),
             protester01: initSpriteSheet(imgfy(Images.protester01), 30, 30),
             protester02: initSpriteSheet(imgfy(Images.protester02), 30, 30)
         };
@@ -105,18 +106,15 @@ var Game = Scene.extend({
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
-            
             var tmpSpriteSheet = "";
             if (_.random(1,2) === 1) {
                 tmpSpriteSheet = this.spriteSheets.protester01;
             } else {
                 tmpSpriteSheet = this.spriteSheets.protester02;
             }
-            
-
 
             var p = new entities.Protestor({
-                x: 200 + (i * 15), y: 0,
+                x: 120 + (i * 15), y: 0,
                 width: 30, height: 30,
                 world: this,
                 spriteSheet: tmpSpriteSheet
@@ -135,7 +133,8 @@ var Game = Scene.extend({
         _.each(_.range(limit), function(i) {
             var p = new entities.Police({
                 x: 25 + (i * 5), y: 0,
-                width: 32, height: 32,
+                width: 60, height: 30,
+                spriteSheet: this.spriteSheets.police,
                 world: this
             });
             this.entities.add(p);
