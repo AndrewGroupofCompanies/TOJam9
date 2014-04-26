@@ -17,12 +17,24 @@ var Game = Scene.extend({
 
         // For now, keep it simple with one protestor. Can adjust from there.
         this.createProtestors(40);
+        this.createPolice(10);
     },
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
             var p = new entities.Protestor({
                 x: 200 + (i * 15), y: 0,
+                width: 32, height: 32,
+                world: this
+            });
+            this.entities.add(p);
+        }, this);
+    },
+    
+    createPolice: function(limit) {
+        _.each(_.range(limit), function(i) {
+            var p = new entities.Police({
+                x: 50 + (i * 15), y: 0,
                 width: 32, height: 32,
                 world: this
             });

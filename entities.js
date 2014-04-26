@@ -8,6 +8,23 @@ var randomHex = function() {
     return '#' + (function co(lor){   return (lor += [0,1,2,3,4,5,6,7,8,9,'a','b','c','d','e','f'][Math.floor(Math.random()*16)]) && (lor.length == 6) ?  lor : co(lor); })('');
 };
 
+var blueHex = function() {
+  console.log('yo');
+  var blues = Math.floor(Math.random()*3)
+  switch (blues){
+    case 1:
+      blueColour="#0033CC"
+      break;
+    case 2:
+      blueColour="#002EB8"
+      break;
+    case 3:
+      blueColour="#0029A3"
+      break;
+  };
+  return blueColour
+};
+
 var Citizen = Entity.extend({
     initialize: function(options) {
         options = (options || {});
@@ -92,7 +109,15 @@ var Citizen = Entity.extend({
 });
 
 var Protestor = Citizen.extend({});
+var Police = Citizen.extend({
+   initialize: function(options){
+    Citizen.prototype.initialize.call(this, options)
+    this.hex = blueHex();
+    this.speed = _.random(0, 3);
+   }
+});
 
 module.exports = {
-    Protestor: Protestor
+    Protestor: Protestor,
+    Police: Police
 };
