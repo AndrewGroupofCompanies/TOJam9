@@ -58,7 +58,7 @@ var Game = Scene.extend({
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
     },
-
+    
     draw: function(surface) {
         surface.clear();
         this.view.clear();
@@ -67,16 +67,19 @@ var Game = Scene.extend({
         surface.fill("#ff22cc");
         Scene.prototype.draw.call(this, surface, {clear: false});
     },
-
+    
     event: function(ev) {
         // Placeholder. Need to send event and identify active protestor.
     }
 });
 
 var main = function() {
-    var game = new Game({});
+    var game = new Game({
+        pixelScale: 2
+    });
     var d = new Dispatcher(gamejs, {
-        initial: game
+        initial: game,
+        canvas: {flag: gamejs.display.DISABLE_SMOOTHING}
     });
 };
 
