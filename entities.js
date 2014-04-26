@@ -36,6 +36,8 @@ var Citizen = Entity.extend({
 
         this.world = options.world;
         this.velocity = new Vec2d(0, 0);
+        this.accel = 1.5;
+        this.maxSpeed = 2;
         this.speed = 0;
         this.onGround = false;
         this.hex = randomHex();
@@ -150,8 +152,6 @@ var Protestor = Citizen.extend({
 
         this.runSpeed = 1.5; // Our speed modifier.
         this.speed = this.runSpeed;
-        this.accel = 1.5;
-        this.maxSpeed = 2;
         this.canDeke = true;
         this.isDeking = false;
 
@@ -254,12 +254,22 @@ var Protestor = Citizen.extend({
 });
 
 var Police = Citizen.extend({
-   initialize: function(options){
-    Citizen.prototype.initialize.call(this, options);
+    initialize: function(options){
+        Citizen.prototype.initialize.call(this, options);
 
-    this.hex = blueHex();
-    this.speed = _.random(1, 3);
-   }
+        this.hex = blueHex();
+        this.speed = _.random(1, 3);
+    },
+
+    adjustVector: function(dt) {
+        Citizen.prototype.adjustVector.call(this, dt);
+        dt = (dt / 1000);
+
+        // Adjust accel and speed because we may be sprinting forward.
+        var accel = new Vec2d(this.accel, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.velocity = this.velocity.truncate(this.maxSpeed);
+    }
 });
 
 var Player = Protestor.extend({
