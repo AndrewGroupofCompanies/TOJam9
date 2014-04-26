@@ -184,7 +184,8 @@ var Game = Scene.extend({
             /*
              * TODO: Dont spawn these for now.*/
             this.Obstacles = new obstacles.ObstacleEmitter({
-                world: this
+                world: this,
+                images: [Images.fence, Images.barricade]
             });
         } else if (!this.Obstacles.alive) {
             this.Obstacles = null;
