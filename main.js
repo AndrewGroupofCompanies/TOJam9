@@ -101,7 +101,6 @@ var Game = Scene.extend({
             this.Obstacles = new obstacles.ObstacleEmitter({
                 world: this
             });
-            console.log("obstacleemitter made")
         } else if (!this.Obstacles.alive) {
             this.Obstacles = null;
         }
