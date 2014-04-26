@@ -18,6 +18,7 @@ var Obstacle = Entity.extend({
         this.type = options.type;
         console.log(this.type);
         this.image = gamejs.image.load(options.image);
+
     },
     
     update: function(dt) {

@@ -16,7 +16,7 @@ var Citizen = Entity.extend({
         deke: {frames: _.range(81, 90), rate: 30},
         duck: {frames: _.range(41, 50), rate: 30},
         stumble: {frames: _.range(121, 145), rate: 30},
-        captured: {frames: _.range(240, 255), rate: 30}
+        captured: {frames: _.range(240, 260), rate: 30}
     },
 
     initialize: function(options) {
@@ -29,6 +29,7 @@ var Citizen = Entity.extend({
         this.speed = 0;
         this.onGround = false;
         this.hex = randomHex();
+        this.z = 0;
 
         if (options.spriteSheet) {
             this.spriteSheet = options.spriteSheet;
@@ -103,8 +104,13 @@ var Citizen = Entity.extend({
         this.rect.y += this.velocity.getY();
         this.decideNextMovement(dt);
 
-        if (this.image) {
+        if (this.image && !this.anim.isFinished()) {
             this.image = this.anim.update(dt);
+        }
+
+        // Don't adjust any other animations post-capture
+        if (this.isCaptured) {
+            return;
         }
 
         if (this.anim && this.anim.isFinished()) {
@@ -236,7 +242,11 @@ var Protestor = Citizen.extend({
     },
 
     restoreMotion: function() {
+        this.isDeking = false;
+        this.isDucking = false;
+        this.isStumbling = false;
         this.accel = 1.5;
+        this.canDeke = true;
     },
 
     deke: function() {
@@ -248,8 +258,6 @@ var Protestor = Citizen.extend({
     },
 
     endDeke: function() {
-        this.isDeking = false;
-        this.canDeke = true;
         this.restoreMotion();
     },
 
@@ -261,8 +269,7 @@ var Protestor = Citizen.extend({
     },
 
     endDuck: function() {
-        this.isDucking = false;
-        this.canDeke = true;
+        this.restoreMotion();
     },
 
     stumble: function() {
@@ -274,8 +281,6 @@ var Protestor = Citizen.extend({
     },
 
     endStumble: function() {
-        this.isStumbling = false;
-        this.canDeke = true;
         this.restoreMotion();
     },
 
