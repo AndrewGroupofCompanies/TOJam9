@@ -14,7 +14,8 @@ var Citizen = Entity.extend({
     animSpec: {
         running: {frames: _.range(40), rate: 30, loop: true},
         deke: {frames: _.range(81, 90), rate: 30},
-        duck: {frames: _.range(41, 50), rate: 30}
+        duck: {frames: _.range(41, 50), rate: 30},
+        stumble: {frames: _.range(121, 145), rate: 30}
     },
 
     initialize: function(options) {
