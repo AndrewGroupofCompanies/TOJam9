@@ -346,6 +346,8 @@ var Police = Citizen.extend({
     initialize: function(options) {
         Citizen.prototype.initialize.call(this, options);
 
+        this.isPolice = true; // identifier
+
         this.collisionRect = this.rect.clone();
         this.collisionRect.width = 30;
 
@@ -356,8 +358,17 @@ var Police = Citizen.extend({
 
         // States
         this.isCapturing = false;
+        this.canCapture = false;
 
         this.anim.setFrame(_.random(0,7));
+    },
+
+    isDistracted: function() {
+        this.canCapture = false;
+    },
+
+    notDistracted: function() {
+        this.canCapture = true;
     },
 
     // Police won't always pass the pressure line, but we also want them to have
@@ -416,7 +427,11 @@ var Police = Citizen.extend({
         // them!
         if (this.isCapturing === false) {
             this.world.getProtestors().forEach(function(entity) {
+                // If the entity is not the player, they can't be captured if
+                // canCapture is true, but if they are the player, still
+                // possible.
                 if (entity.isCaptured) return;
+                if (this.canCapture === false && entity.isPlayer === false) return;
                 if (this.collisionRect.collideRect(entity.rect)) {
                     this.actionCapture(entity);
                 }
@@ -439,6 +454,8 @@ var Police = Citizen.extend({
 var Player = Protestor.extend({
     initialize: function(options) {
         Protestor.prototype.initialize.call(this, options);
+
+        this.isPlayer = true; // identifier;
 
         if (options.existing) {
             this.createFromProtestor(options.existing);
@@ -577,8 +594,14 @@ var Player = Protestor.extend({
             this.pressureCount = 0;
             if (this.isDistractingPolice()) {
                 console.log("Distracting Police!");
+                this.world.getPolice().forEach(function(p) {
+                    p.isDistracted();
+                });
             } else {
                 this.world.increasePolicePressure();
+                this.world.getPolice().forEach(function(p) {
+                    p.notDistracted();
+                });
             }
         }
 

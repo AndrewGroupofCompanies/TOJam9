@@ -123,6 +123,12 @@ var Game = Scene.extend({
         }, this);
     },
 
+    getPolice: function() {
+        return _.filter(this.entities._sprites, function(entity) {
+            return entity.isPolice === true;
+        });
+    },
+
     getProtestors: function() {
         return _.filter(this.entities._sprites, function(entity) {
             return entity.isProtestor === true;
@@ -184,12 +190,10 @@ var Game = Scene.extend({
         if (this.Obstacles && this.Obstacles.alive) {
             this.Obstacles.update(dt);
         } else if (this.Obstacles === null) {
-            /*
             this.Obstacles = new obstacles.ObstacleEmitter({
                 world: this,
                 images: [Images.fence, Images.barricade]
             });
-            */
         } else if (!this.Obstacles.alive) {
             this.Obstacles = null;
         }
