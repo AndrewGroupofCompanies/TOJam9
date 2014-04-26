@@ -90,7 +90,7 @@ var Game = Scene.extend({
             takeover: gamejs.event.K_t
         });
         this.player = null;
-        this.pluckProtestor();
+        this.spawnPlayer();
     },
 
     createScrollable: function(z) {
@@ -116,7 +116,7 @@ var Game = Scene.extend({
             }
 
             var p = new entities.Protestor({
-                x: 120 + (i * 15), y: 0,
+                x: 80 + (i * 15), y: 0,
                 width: 30, height: 30,
                 world: this,
                 spriteSheet: tmpSpriteSheet
@@ -134,7 +134,7 @@ var Game = Scene.extend({
     createPolice: function(limit) {
         _.each(_.range(limit), function(i) {
             var p = new entities.Police({
-                x: 25 + (i * 5), y: 0,
+                x: (i * 2), y: 0,
                 width: 60, height: 30,
                 spriteSheet: this.spriteSheets.police,
                 world: this
@@ -145,7 +145,7 @@ var Game = Scene.extend({
 
     // Pluck a random protestor from the group. The player will now control this
     // one.
-    pluckProtestor: function() {
+    spawnPlayer: function() {
         var protestor = _.sample(this.getProtestors(), 1)[0];
 
         this.player = new entities.Player({
@@ -189,7 +189,6 @@ var Game = Scene.extend({
             this.Obstacles = new obstacles.ObstacleEmitter({
                 world: this
             });
-            
         } else if (!this.Obstacles.alive) {
             this.Obstacles = null;
         }
@@ -234,7 +233,7 @@ var Game = Scene.extend({
                 console.log("Killed player");
                 this.player.kill();
             }
-            this.pluckProtestor();
+            this.spawnPlayer();
         }
     }
 });
