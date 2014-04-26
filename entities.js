@@ -15,7 +15,8 @@ var Citizen = Entity.extend({
         running: {frames: _.range(40), rate: 30, loop: true},
         deke: {frames: _.range(81, 90), rate: 30},
         duck: {frames: _.range(41, 50), rate: 30},
-        stumble: {frames: _.range(121, 145), rate: 30}
+        stumble: {frames: _.range(121, 145), rate: 30},
+        captured: {frames: _.range(240, 255), rate: 30}
     },
 
     initialize: function(options) {
@@ -171,10 +172,10 @@ var Protestor = Citizen.extend({
     },
 
     // Is captured by the cops, just get off the screen.
-    // TODO: Frame anim.
     isBeingCaptured: function() {
-        this.speed = -1;
+        this.speed = -10;
         this.isCaptured = true;
+        this.setAnimation('captured');
     },
 
     adjustVector: function(dt) {
@@ -287,6 +288,12 @@ var Protestor = Citizen.extend({
     },
 
     update: function(dt) {
+        Citizen.prototype.update.apply(this, arguments);
+
+        if (this.isCaptured) {
+            return;
+        }
+
         if (this.duckCounter > 0) {
             this.duckCounter -= dt;
         }
@@ -324,14 +331,13 @@ var Protestor = Citizen.extend({
                 }, this);
             }
         }
-
-        Citizen.prototype.update.apply(this, arguments);
     }
 });
 
 var Police = Citizen.extend({
     animSpec: {
         running: {frames: _.range(8), rate: 30, loop: true},
+        capturing: {frames: _.range(40, 55), rate: 30, loop: false}
     },
 
     initialize: function(options) {
@@ -371,16 +377,17 @@ var Police = Citizen.extend({
     actionCapture: function(entity) {
         console.log("actionCapture", entity);
 
+        this.accel = 5;
         this.isCapturing = true;
         entity.isBeingCaptured();
 
+        this.setAnimation("capturing");
+
         // Set speed to negative, so the two go off the screen.
-        this.speed = -1;
+        //this.speed = -10;
     },
 
     adjustVector: function(dt) {
-        if (this.isCapturing) return;
-
         Citizen.prototype.adjustVector.call(this, dt);
         dt = (dt / 1000);
 
@@ -388,6 +395,8 @@ var Police = Citizen.extend({
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
         this.velocity = this.velocity.truncate(this.maxSpeed);
+
+        if (this.isCapturing) return;
 
         if (this.nearPoliceLine()) {
             this.speed = -0.5;
@@ -413,6 +422,14 @@ var Police = Citizen.extend({
 
         this.collisionRect.x = this.rect.x;
         this.collisionRect.y = this.rect.y;
+    },
+
+    draw: function(surface) {
+        if (this.isCapturing) {
+            gamejs.draw.circle(surface, "rgb(100, 0, 100)",
+                [this.rect.left + 30, this.rect.bottom - 2], 4, 2);
+        }
+        Citizen.prototype.draw.apply(this, arguments);
     }
 });
 
@@ -446,6 +463,18 @@ var Player = Protestor.extend({
         this.spriteSheet = p.spriteSheet;
         this.anim = p.anim;
         this.image = this.anim.update(0);
+    },
+
+    isBeingCaptured: function() {
+        Protestor.prototype.isBeingCaptured.call(this);
+
+        // We no longer control this player. We should make the player a new
+        // protestor.
+        this.world.spawnPlayer();
+
+        if (this.rect.x <= 0) {
+            this.kill();
+        }
     },
 
     adjustVector: function(dt) {
@@ -493,8 +522,10 @@ var Player = Protestor.extend({
     },
 
     draw: function(surface) {
-        gamejs.draw.circle(surface, "rgb(255, 0, 0)",
-            [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
+        if (this.isCaptured === false) {
+            gamejs.draw.circle(surface, "rgb(255, 0, 0)",
+                [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
+        }
         Protestor.prototype.draw.apply(this, arguments);
     },
 
