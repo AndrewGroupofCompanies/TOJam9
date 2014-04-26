@@ -63,6 +63,7 @@ var Citizen = Entity.extend({
         return [collidedX, collidedY];
     },
 
+    // Velocity handling.
     adjustVector: function(dt) {
         dt = (dt / 1000); // Sanity.
         var vec = new Vec2d().add(this.world.gravity);
@@ -72,12 +73,13 @@ var Citizen = Entity.extend({
         // slower than others, eventually getting caught.
         if (this.speed !== 0) {
             var setTo = (this.world.velocity.magnitude() * 0.0025 * this.speed);
-            this.velocity.setX(setTo);
+            //this.velocity.setX(setTo);
         } else {
-            this.velocity.setX(-(this.world.velocity.magnitude() * 0.0025));
+            //this.velocity.setX(-(this.world.velocity.magnitude() * 0.0025));
         }
     },
 
+    // Collision code!
     decideNextMovement: function(dt) {
         dt = (dt / 1000);
 
@@ -119,12 +121,29 @@ var Protestor = Citizen.extend({
     initialize: function(options) {
         Citizen.prototype.initialize.call(this, options);
 
-        this.accel = 2;
-        this.maxSpeed = 40;
-        this.sprintTime = 0;
+        this.runSpeed = 1.5; // Our speed modifier.
+        this.speed = this.runSpeed;
+        this.accel = 1.5;
+        this.maxSpeed = 2;
 
-        // Police padding
-        this.awarenessDistance = 10;
+        // Police padding. If we get too near the police and are aware of them,
+        // we should
+        this.awarenessDistance = 40;
+
+        // Eventually police can advance, and we won't be aware of this. This is
+        // where we can get captured.
+        this.aware = true;
+
+        this.decideCounterStart = 3;
+        this.decideCounter = this.resetDecision();
+    },
+
+    makeDecision: function() {
+        return _.random(0, 10) > 3;
+    },
+
+    resetDecision: function() {
+        return this.decideCounterStart;
     },
 
     adjustVector: function(dt) {
@@ -132,33 +151,46 @@ var Protestor = Citizen.extend({
 
         dt = (dt / 1000);
 
-        // Adjust the speed based on police pressure.
+        // If we're near police we should ensure that the movement is positive.
         if (this.nearPolice()) {
             console.log(this.hex, " is near the police!");
-            this.speed = 5;
-            this.sprintTime = 100;
+            this.speed = this.runSpeed;
+        } else if (this.nearFront()) {
+            console.log(this.hex, " is near the front!");
+            this.speed = -(this.runSpeed);
+        }
+
+        // Every now and then, let's decide what to do. Stay at our speed,
+        // or adjust it slightly.
+        this.decideCounter -= dt;
+        if (this.decideCounter <= 0) {
+            console.log(this.hex, " is deciding what to do");
+            // Generally, we'll stay where we are.
+            if (this.makeDecision()) {
+                this.speed += _.first(_.sample(
+                    [-(this.runSpeed), this.runSpeed]
+                , 1));
+            }
+            this.decideCounter = this.resetDecision();
         }
 
         // Adjust accel and speed because we may be sprinting forward.
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
         this.velocity = this.velocity.truncate(this.maxSpeed);
-
-        // Stop sprinting once sprint time is done.
-        if (this.sprintTime > 0) {
-            this.sprintTime --;
-
-            if ((this.sprintTime / this.speed) <= 15) {
-                this.speed -= 1;
-            }
-        }
-
-        if (this.speed < 0) { console.log("We got no speed."); }
     },
 
     // Protestor is getting awfully close to the police!
     nearPolice: function() {
         if ((this.rect.x - this.awarenessDistance) <= this.world.policePressure) {
+            return true;
+        }
+        return false;
+    },
+
+    // We're near the front of the pack, just hold back.
+    nearFront: function() {
+        if ((this.rect.x + this.rect.width) >= this.world.frontLine) {
             return true;
         }
         return false;

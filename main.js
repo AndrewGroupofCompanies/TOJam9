@@ -15,12 +15,13 @@ var Game = Scene.extend({
         this.speed = -10;
         this.accel = 5;
 
-        // For now, keep it simple with one protestor. Can adjust from there.
-        this.createProtestors(5);
+        // The front line of the protestors. Let's keep them grouped.
+        this.frontLine = this.surface.getSize()[0] - 100;
+        this.createProtestors(15);
 
         // Track the police pressure by using an imaginery line on the x-axis.
-        this.policePressure = 150;
-        this.createPolice(10);
+        this.policePressure = 100;
+        //this.createPolice(10);
     },
 
     createProtestors: function(limit) {
@@ -36,7 +37,6 @@ var Game = Scene.extend({
 
     createPolice: function(limit) {
         _.each(_.range(limit), function(i) {
-            console.log("cop");
             var p = new entities.Police({
                 x: 50 + (i * 15), y: 0,
                 width: 32, height: 32,
@@ -74,6 +74,11 @@ var Game = Scene.extend({
         gamejs.draw.line(this.view, "#cccccc",
             [this.policePressure, 0],
             [this.policePressure, surface.getSize()[1]]);
+
+        // Front line.
+        gamejs.draw.line(this.view, "#cccccc",
+            [this.frontLine, 0],
+            [this.frontLine, surface.getSize()[1]]);
         Scene.prototype.draw.call(this, surface, {clear: false});
     },
 
