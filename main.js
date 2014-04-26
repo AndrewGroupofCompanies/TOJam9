@@ -6,19 +6,31 @@ var _ = require('underscore'),
     scrollables = require('./scrollables'),
     Vec2d = gramework.vectors.Vec2d,
     GameController = gramework.input.GameController,
+    animate = gramework.animate,
     entities = require('./entities');
 
 var Images = {
     bg_test: './assets/images/bg_test.jpg',
     sprite_test: './assets/images/spritesheet-enemy.png',
-    sprite_test_2: './assets/images/spritesheet-player.png'
+    sprite_test_2: './assets/images/spritesheet-player.png',
+    tree_01: './assets/images/tree_01.png'
 };
+
+var initSpriteSheet = function(image, height, width) {
+    var ss = new animate.SpriteSheet(image, width, height);
+    return ss;
+};
+
 
 var GROUND_HEIGHT = 20;
 
 var Game = Scene.extend({
     initialize: function(options) {
         this.gravity = new Vec2d(0, 50);
+
+        this.spriteSheets = {
+            police: initSpriteSheet(Images.sprite_test, 24, 30)
+        };
 
         this.bg = new scrollables.Scrollable({
             image: Images.bg_test,
@@ -39,7 +51,7 @@ var Game = Scene.extend({
         // The front line of the protestors. Let's keep them grouped.
         this.frontLine = this.surface.getSize()[0] - 50;
         this.createProtestors(15);
-
+        this.createScrollable(0);
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
         //this.createPolice(10);
@@ -48,18 +60,26 @@ var Game = Scene.extend({
         });
     },
 
+    createScrollable: function(z) {
+        var s = new scrollables.Scrollable({
+            height: 64,
+            width: 64,
+            x:0,
+            y:0,
+            z:z,
+            image: Images.tree_01
+        });
+        this.scrollables.add(s);
+    },
+
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
             var p = new entities.Protestor({
                 x: 200 + (i * 15), y: 0,
-                width: 21, height: 30,
+                width: 24, height: 30,
                 world: this,
                 
-                spriteSheet: {
-                    path: Images.sprite_test_2,
-                    height: 30,
-                    width: 21
-                }  
+                spriteSheet: this.spriteSheets.police
             });
             this.entities.add(p);
         }, this);
@@ -91,6 +111,7 @@ var Game = Scene.extend({
 
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.scrollables.update(dt);
     },
 
     draw: function(surface) {

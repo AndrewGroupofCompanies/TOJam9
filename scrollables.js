@@ -14,7 +14,7 @@ var Scrollable = Entity.extend({
     },
 
     update: function(dt) {
-        
+
     }
 });
 
