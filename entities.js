@@ -134,7 +134,6 @@ var Protestor = Citizen.extend({
 
         // Adjust the speed based on police pressure.
         if (this.nearPolice()) {
-            console.log(this.hex, " is near the police!");
             this.speed = 5;
             this.sprintTime = 100;
         }

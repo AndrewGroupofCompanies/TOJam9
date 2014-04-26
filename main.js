@@ -4,6 +4,7 @@ var _ = require('underscore'),
     Dispatcher = gramework.Dispatcher,
     Scene = gramework.Scene,
     entities = require('./entities'),
+    obstacles = require('./obstacles'),
     Vec2d = gramework.vectors.Vec2d;
 
 var Game = Scene.extend({
@@ -17,10 +18,13 @@ var Game = Scene.extend({
 
         // For now, keep it simple with one protestor. Can adjust from there.
         this.createProtestors(5);
-
+        
+        
+        this.Obstacles = null;
+        
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 150;
-        this.createPolice(10);
+        this.createPolice(2);
     },
 
     createProtestors: function(limit) {
@@ -36,9 +40,8 @@ var Game = Scene.extend({
 
     createPolice: function(limit) {
         _.each(_.range(limit), function(i) {
-            console.log("cop");
             var p = new entities.Police({
-                x: 50 + (i * 15), y: 0,
+                x: 25 + (i * 5), y: 0,
                 width: 32, height: 32,
                 world: this
             });
@@ -61,6 +64,17 @@ var Game = Scene.extend({
 
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
+        
+        if (this.Obstacles && this.Obstacles.alive) {
+            this.Obstacles.update(dt);
+        } else if (this.Obstacles === null) {
+            this.Obstacles = new obstacles.ObstacleEmitter({
+                world: this
+            });
+            console.log("obstacleemitter made")
+        } else if (!this.Obstacles.alive) {
+            this.Obstacles = null;
+        }
     },
 
     draw: function(surface) {
