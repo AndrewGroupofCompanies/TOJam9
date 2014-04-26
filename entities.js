@@ -282,7 +282,24 @@ var Police = Citizen.extend({
         Citizen.prototype.initialize.call(this, options);
 
         this.hex = blueHex();
-        this.speed = _.random(1, 3);
+        this.speed = 0.5;
+        this.pressurePadding = 20;
+    },
+
+    // Police won't always pass the pressure line, but we also want them to have
+    // some variable movement.
+    nearPoliceLine: function() {
+        if ((this.rect.x + this.rect.width + this.pressurePadding) >= this.world.policePressure) {
+            return true;
+        }
+        return false;
+    },
+
+    nearBack: function() {
+        if (this.rect.x <= this.world.backLine) {
+            return true;
+        }
+        return false;
     },
 
     adjustVector: function(dt) {
@@ -293,6 +310,12 @@ var Police = Citizen.extend({
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
         this.velocity = this.velocity.truncate(this.maxSpeed);
+
+        if (this.nearPoliceLine()) {
+            this.speed = -0.5;
+        } else if (this.nearBack()) {
+            this.speed = 0.5;
+        }
     }
 });
 

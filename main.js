@@ -59,6 +59,7 @@ var Game = Scene.extend({
 
         // The front line of the protestors. Let's keep them grouped.
         this.frontLine = this.surface.getSize()[0] - 50;
+        this.backLine = 10;
         this.createProtestors(15);
         this.createScrollable(3);
         this.createScrollable(5);
