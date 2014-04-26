@@ -4,10 +4,11 @@ var _ = require('underscore'),
     Dispatcher = gramework.Dispatcher,
     Scene = gramework.Scene,
     scrollables = require('./scrollables'),
-    Vec2d = gramework.vectors.Vec2d,
-    GameController = gramework.input.GameController,
     animate = gramework.animate,
-    entities = require('./entities');
+    entities = require('./entities'),
+    obstacles = require('./obstacles'),
+    Vec2d = gramework.vectors.Vec2d,
+    GameController = gramework.input.GameController;
 
 var Images = {
     bg_test: './assets/images/bg_test.jpg',
@@ -16,7 +17,7 @@ var Images = {
     tree_01: './assets/images/tree_01.png'
 };
 
-var initSpriteSheet = function(image, height, width) {
+var initSpriteSheet = function(image, width, height) {
     var ss = new animate.SpriteSheet(image, width, height);
     return ss;
 };
@@ -29,7 +30,7 @@ var Game = Scene.extend({
         this.gravity = new Vec2d(0, 50);
 
         this.spriteSheets = {
-            police: initSpriteSheet(Images.sprite_test, 24, 30)
+            police: initSpriteSheet(Images.sprite_test, 26, 30)
         };
 
         this.bg = new scrollables.Scrollable({
@@ -51,13 +52,20 @@ var Game = Scene.extend({
         // The front line of the protestors. Let's keep them grouped.
         this.frontLine = this.surface.getSize()[0] - 50;
         this.createProtestors(15);
-        this.createScrollable(0);
+        this.createScrollable(9);
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
+        
+        this.Obstacles = null;
+        
         //this.createPolice(10);
         this.controller = new GameController({
-            pressure: gamejs.event.K_p
+            pressure: gamejs.event.K_p,
+            takeover: gamejs.event.K_t
         });
+
+        this.player = null;
+        this.pluckProtestor();
     },
 
     createScrollable: function(z) {
@@ -67,9 +75,11 @@ var Game = Scene.extend({
             x:0,
             y:0,
             z:z,
-            image: Images.tree_01
+            image: Images.tree_01,
+            world: this
         });
         this.scrollables.add(s);
+        console.log(s);
     },
 
     createProtestors: function(limit) {
@@ -85,15 +95,35 @@ var Game = Scene.extend({
         }, this);
     },
 
+    getProtestors: function() {
+        return _.filter(this.entities._sprites, function(entity) {
+            return entity.isProtestor === true;
+        });
+    },
+
     createPolice: function(limit) {
         _.each(_.range(limit), function(i) {
             var p = new entities.Police({
-                x: 50 + (i * 15), y: 0,
+                x: 25 + (i * 5), y: 0,
                 width: 32, height: 32,
                 world: this
             });
             this.entities.add(p);
         }, this);
+    },
+
+    // Pluck a random protestor from the group. The player will now control this
+    // one.
+    pluckProtestor: function() {
+        var protestor = _.sample(this.getProtestors(), 1)[0];
+
+        this.player = new entities.Player({
+            existing: protestor
+        });
+        this.entities.add(this.player);
+
+        protestor.kill();
+        console.log("Added new player", this.player.hex);
     },
 
     // Identify if an entity is colliding with our world.
@@ -112,6 +142,17 @@ var Game = Scene.extend({
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
         this.scrollables.update(dt);
+        
+        if (this.Obstacles && this.Obstacles.alive) {
+            this.Obstacles.update(dt);
+        } else if (this.Obstacles === null) {
+            this.Obstacles = new obstacles.ObstacleEmitter({
+                world: this
+            });
+            console.log("obstacleemitter made")
+        } else if (!this.Obstacles.alive) {
+            this.Obstacles = null;
+        }
     },
 
     draw: function(surface) {
@@ -133,11 +174,22 @@ var Game = Scene.extend({
     },
 
     event: function(ev) {
+        if (this.player !== null) {
+            this.player.event(ev);
+        }
+
         // Placeholder. Need to send event and identify active protestor.
         var handled = this.controller.handle(ev);
         if (!handled) return;
         if (handled.value === this.controller.controls.pressure) {
             this.policePressure += 10;
+        } else if (handled.value === this.controller.controls.takeover) {
+            if (this.player !== null) {
+                // Kill the active player protestor.
+                console.log("Killed player");
+                this.player.kill();
+            }
+            this.pluckProtestor();
         }
     }
 });
