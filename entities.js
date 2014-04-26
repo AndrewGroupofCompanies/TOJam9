@@ -178,6 +178,7 @@ var Protestor = Citizen.extend({
     // Is captured by the cops, just get off the screen.
     isBeingCaptured: function() {
         this.speed = -10;
+        this.accel = 2;
         this.isCaptured = true;
         this.setAnimation('captured');
     },
@@ -474,14 +475,15 @@ var Player = Protestor.extend({
         // We no longer control this player. We should make the player a new
         // protestor.
         this.world.spawnPlayer();
-
-        if (this.rect.x <= 0) {
-            this.kill();
-        }
     },
 
     adjustVector: function(dt) {
         dt = (dt / 1000); // Sanity.
+
+        if (this.isCaptured) {
+            return;
+        }
+
 
         // Adjust speed based on input.
         if (this.isDeking) {
@@ -542,6 +544,10 @@ var Player = Protestor.extend({
     update: function(dt) {
         if (this.tapCountdown > 0) {
             this.tapCountdown -= dt;
+        }
+
+        if (this.rect.x <= 0) {
+            this.kill();
         }
 
         var collisions = gamejs.sprite.spriteCollide(this, this.world.entities, false);
