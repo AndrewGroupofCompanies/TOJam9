@@ -65,17 +65,19 @@ var Game = Scene.extend({
         this.createScrollable(7);
         this.createScrollable(-10);
         this.createScrollable(-1);
+
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
+        this.createPolice(10);
 
+        // Obstacles
         this.Obstacles = null;
 
-        //this.createPolice(10);
+        // Player management
         this.controller = new GameController({
             pressure: gamejs.event.K_p,
             takeover: gamejs.event.K_t
         });
-
         this.player = null;
         this.pluckProtestor();
     },
@@ -91,7 +93,6 @@ var Game = Scene.extend({
             world: this
         });
         this.scrollables.add(s);
-        console.log(s);
     },
 
     createProtestors: function(limit) {
@@ -116,7 +117,7 @@ var Game = Scene.extend({
     createPolice: function(limit) {
         _.each(_.range(limit), function(i) {
             var p = new entities.Police({
-                x: 25 + (i * 5), y: 0,
+                x: 250 + (i * 5), y: 0,
                 width: 32, height: 32,
                 world: this
             });
@@ -158,9 +159,12 @@ var Game = Scene.extend({
         if (this.Obstacles && this.Obstacles.alive) {
             this.Obstacles.update(dt);
         } else if (this.Obstacles === null) {
+            /*
+             * TODO: Dont spawn these for now.
             this.Obstacles = new obstacles.ObstacleEmitter({
                 world: this
             });
+            */
         } else if (!this.Obstacles.alive) {
             this.Obstacles = null;
         }

@@ -109,9 +109,10 @@ var Citizen = Entity.extend({
             this.image = this.anim.update(dt);
         }
 
-        if (this.anim.isFinished()) {
+        if (this.anim && this.anim.isFinished()) {
             this.anim.start('running');
         }
+
     },
 
     draw: function(surface) {
@@ -252,6 +253,15 @@ var Protestor = Citizen.extend({
     }
 });
 
+var Police = Citizen.extend({
+   initialize: function(options){
+    Citizen.prototype.initialize.call(this, options);
+
+    this.hex = blueHex();
+    this.speed = _.random(1, 3);
+   }
+});
+
 var Player = Protestor.extend({
     initialize: function(options) {
         Protestor.prototype.initialize.call(this, options);
@@ -330,12 +340,10 @@ var Player = Protestor.extend({
     },
 
     draw: function(surface) {
-        var surf = new gamejs.Surface(12, 12);
-        gamejs.draw.circle(surf, "rgb(255,0,0)", [6,6], 6, 2);
-
-        surface.blit(surf, new gamejs.Rect([this.rect.left + 5, this.rect.bottom - 2, 12, 5]));
-
         Protestor.prototype.draw.apply(this, arguments);
+
+        gamejs.draw.circle(surface, "rgb(255, 0, 0)",
+            [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
     },
 
     update: function(dt) {
@@ -345,15 +353,6 @@ var Player = Protestor.extend({
 
         Protestor.prototype.update.apply(this, arguments);
     }
-});
-
-var Police = Citizen.extend({
-   initialize: function(options){
-    Citizen.prototype.initialize.call(this, options);
-
-    this.hex = blueHex();
-    this.speed = _.random(0, 3);
-   }
 });
 
 module.exports = {
