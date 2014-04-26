@@ -18,14 +18,18 @@ var Game = Scene.extend({
 
         // The front line of the protestors. Let's keep them grouped.
         this.frontLine = this.surface.getSize()[0] - 100;
-        this.createProtestors(15);
+        this.createProtestors(5);
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 100;
         //this.createPolice(10);
         this.controller = new GameController({
-            pressure: gamejs.event.K_p
+            pressure: gamejs.event.K_p,
+            takeover: gamejs.event.K_t
         });
+
+        this.player = null;
+        this.pluckProtestor();
     },
 
     createProtestors: function(limit) {
@@ -39,6 +43,12 @@ var Game = Scene.extend({
         }, this);
     },
 
+    getProtestors: function() {
+        return _.filter(this.entities._sprites, function(entity) {
+            return entity.isProtestor === true;
+        });
+    },
+
     createPolice: function(limit) {
         _.each(_.range(limit), function(i) {
             var p = new entities.Police({
@@ -48,6 +58,20 @@ var Game = Scene.extend({
             });
             this.entities.add(p);
         }, this);
+    },
+
+    // Pluck a random protestor from the group. The player will now control this
+    // one.
+    pluckProtestor: function() {
+        var protestor = _.sample(this.getProtestors(), 1)[0];
+
+        this.player = new entities.Player({
+            existing: protestor
+        });
+        this.entities.add(this.player);
+
+        protestor.kill();
+        console.log("Added new player", this.player.hex);
     },
 
     // Identify if an entity is colliding with our world.
@@ -87,11 +111,22 @@ var Game = Scene.extend({
     },
 
     event: function(ev) {
+        if (this.player !== null) {
+            this.player.event(ev);
+        }
+
         // Placeholder. Need to send event and identify active protestor.
         var handled = this.controller.handle(ev);
         if (!handled) return;
         if (handled.value === this.controller.controls.pressure) {
             this.policePressure += 10;
+        } else if (handled.value === this.controller.controls.takeover) {
+            if (this.player !== null) {
+                // Kill the active player protestor.
+                console.log("Killed player");
+                this.player.kill();
+            }
+            this.pluckProtestor();
         }
     }
 });

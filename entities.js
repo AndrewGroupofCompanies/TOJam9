@@ -2,7 +2,8 @@ var _ = require('underscore'),
     gamejs = require('gamejs'),
     gramework = require('gramework'),
     Entity = gramework.Entity,
-    Vec2d = gramework.vectors.Vec2d;
+    Vec2d = gramework.vectors.Vec2d,
+    GameController = gramework.input.GameController;
 
 var randomHex = function() {
     return '#' + (function co(lor){   return (lor += [0,1,2,3,4,5,6,7,8,9,'a','b','c','d','e','f'][Math.floor(Math.random()*16)]) && (lor.length == 6) ?  lor : co(lor); })('');
@@ -112,6 +113,8 @@ var Protestor = Citizen.extend({
     initialize: function(options) {
         Citizen.prototype.initialize.call(this, options);
 
+        this.isProtestor = true; // Identifier.
+
         this.runSpeed = 1.5; // Our speed modifier.
         this.speed = this.runSpeed;
         this.accel = 1.5;
@@ -190,6 +193,65 @@ var Protestor = Citizen.extend({
     }
 });
 
+var Player = Protestor.extend({
+    initialize: function(options) {
+        Protestor.prototype.initialize.call(this, options);
+
+        if (options.existing) {
+            this.createFromProtestor(options.existing);
+        }
+
+        this.controller = new GameController({
+            sprint: gamejs.event.K_SPACE
+        });
+    },
+
+    // A player just takes over a protestor.
+    createFromProtestor: function(p) {
+        this.speed = p.speed;
+        this.velocity = p.velocity;
+        this.world = p.world;
+        this.rect = p.rect;
+        this.hex = "#000000";
+        this.isProtestor = false;
+    },
+
+    adjustVector: function(dt) {
+        dt = (dt / 1000); // Sanity.
+        var vec = new Vec2d().add(this.world.gravity);
+        this.velocity.add(vec.mul(dt));
+
+        // If we're near police we should warn the active Player.
+        if (this.nearPolice()) {
+            // TODO
+        }
+
+        // Adjust speed based on input.
+        if (this.isPushing) {
+            this.speed = this.runSpeed;
+        } else {
+            this.speed = -1;
+        }
+
+        // Adjust accel and speed because we may be sprinting forward.
+        var accel = new Vec2d(this.accel, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.velocity = this.velocity.truncate(this.maxSpeed);
+    },
+
+    event: function(ev) {
+        var key = this.controller.handle(ev);
+
+        this.isPushing = false;
+
+        if (!key) return;
+        if (key.value === this.controller.controls.sprint) {
+            this.isPushing = true;
+        }
+
+    }
+});
+
 var Police = Citizen.extend({
    initialize: function(options){
     Citizen.prototype.initialize.call(this, options);
@@ -201,5 +263,6 @@ var Police = Citizen.extend({
 
 module.exports = {
     Protestor: Protestor,
-    Police: Police
+    Police: Police,
+    Player: Player
 };
