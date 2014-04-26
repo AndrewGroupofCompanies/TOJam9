@@ -48,7 +48,7 @@ ObstacleEmitter.prototype = {
                 x: this.world.width(),
                 y: this.world.height() - 30,
                 height: 30,
-                width: 30
+                width: 2
             }));
             this.currentDuration = 0;
             this.count -= 1;
