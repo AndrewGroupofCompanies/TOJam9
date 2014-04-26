@@ -235,6 +235,9 @@ var Player = Protestor.extend({
         this.rect = p.rect;
         this.hex = "#000000";
         this.isProtestor = false;
+        this.spriteSheet = p.spriteSheet;
+        this.anim = p.anim;
+        this.image = this.anim.update(0);
     },
 
     adjustVector: function(dt) {
@@ -266,10 +269,23 @@ var Player = Protestor.extend({
         this.isPushing = false;
 
         if (!key) return;
-        if (key.value === this.controller.controls.sprint) {
-            this.isPushing = true;
-        }
+        if (key.action === "keyDown") {
+            if (key.value === this.controller.controls.sprint) {
+                this.isPushing = true;
+            }
 
+        } else if (key.action === "keyUp") {
+
+        }
+    },
+
+    draw: function(surface) {
+        var surf = new gamejs.Surface(12, 12);
+        gamejs.draw.circle(surf, "rgb(255,0,0)", [6,6], 6, 2);
+
+        surface.blit(surf, new gamejs.Rect([this.rect.left + 5, this.rect.bottom - 2, 12, 5]));
+
+        Protestor.prototype.draw.apply(this, arguments);
     }
 });
 

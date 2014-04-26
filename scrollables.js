@@ -27,11 +27,16 @@ var Scrollable = Entity.extend({
 });
 
 var SceneryGenerator = function(options) {
+    this.world = options.world || null;
     this.initialize(options);
 };
 
 _.extend(SceneryGenerator.prototype, {
     initialize: function(options) {
+        
+    },
+
+    generateScenery: function(sceneryType, z) {
 
     }
 });

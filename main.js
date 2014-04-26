@@ -31,6 +31,7 @@ var Game = Scene.extend({
     initialize: function(options) {
         this.gravity = new Vec2d(0, 50);
 
+        //Gotta init them spriteSheets
         this.spriteSheets = {
             police: initSpriteSheet(Images.sprite_test, 26, 30),
             protester01: initSpriteSheet(Images.protester01, 30, 30)
