@@ -136,9 +136,13 @@ var Protestor = Citizen.extend({
         this.runSpeed = 1.5; // Our speed modifier.
         this.speed = this.runSpeed;
         this.canDeke = true;
+        this.stumbleCounter = 0;
+        this.duckCounter = 0;
+        // A lot of states to manage....
         this.isDeking = false;
         this.isDucking = false;
         this.isCaptured = false;
+        this.isStumbling = false;
 
         // Police padding. If we get too near the police and are aware of them,
         // we should
@@ -229,6 +233,10 @@ var Protestor = Citizen.extend({
         return false;
     },
 
+    restoreMotion: function() {
+        this.accel = 1.5;
+    },
+
     deke: function() {
         this.isDeking = true;
         this.canDeke = false;
@@ -240,7 +248,7 @@ var Protestor = Citizen.extend({
     endDeke: function() {
         this.isDeking = false;
         this.canDeke = true;
-        this.accel = 1.5;
+        this.restoreMotion();
     },
 
     duck: function() {
@@ -253,6 +261,28 @@ var Protestor = Citizen.extend({
     endDuck: function() {
         this.isDucking = false;
         this.canDeke = true;
+    },
+
+    stumble: function() {
+        this.setAnimation("stumble");
+        this.stumbleCounter = 500;
+        this.accel = -1.5;
+        this.isStumbling = true;
+        this.canDeke = false;
+    },
+
+    endStumble: function() {
+        this.isStumbling = false;
+        this.canDeke = true;
+        this.restoreMotion();
+    },
+
+    clothesline: function() {
+
+    },
+
+    endClothesline: function() {
+
     },
 
     update: function(dt) {
@@ -271,6 +301,27 @@ var Protestor = Citizen.extend({
         if (this.dekeCounter <= 0 && this.isDeking) {
             console.log("alas, my deke has finished");
             this.endDeke();
+        }
+
+        if (this.stumbleCounter > 0) {
+            this.stumbleCounter -= dt;
+        }
+
+        if (this.stumbleCounter <= 0 && this.isStumbling) {
+            this.endStumble();
+        }
+
+        // NPC-specific behaviour
+        if (this.isProtestor) {
+            var collisions = gamejs.sprite.spriteCollide(this, this.world.entities, false);
+
+            if (collisions.length > 0) {
+                collisions.forEach(function(collision){
+                    if (collision.name === 'obstacle') {
+                        this.deke();
+                    }
+                }, this);
+            }
         }
 
         Citizen.prototype.update.apply(this, arguments);
@@ -465,7 +516,7 @@ var Player = Protestor.extend({
             collisions.forEach(function(collision){
                 if (collision.name === 'obstacle') {
                     if (this.isPushing) {
-                        //this.stumble();
+                        this.stumble();
                     } else {
                         this.duck();
                     }
