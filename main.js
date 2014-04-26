@@ -103,13 +103,12 @@ var Game = Scene.extend({
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
-            var tmpSpriteSheet = "";
-            if (_.random(1,2) === 1) {
-                tmpSpriteSheet = this.spriteSheets.protester01;
-            } else {
-                tmpSpriteSheet = this.spriteSheets.protester02;
-            }
-
+            
+            var randomNum= _.random(1,4);
+            var spriteId  = 'protester0' + randomNum;
+            console.log(spriteId);
+            tmpSpriteSheet = this.spriteSheets[spriteId];
+            
             var p = new entities.Protestor({
                 x: 80 + (i * 15), y: 0,
                 width: 30, height: 30,
