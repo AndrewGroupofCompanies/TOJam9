@@ -15,6 +15,13 @@ var Obstacle = Entity.extend({
         this.name = 'obstacle';
 
         this.hex = "#000000";
+        this.type = options.type;
+        console.log(this.type);
+        if(this.type === 1){
+            this.image = Images.fence;
+        } else {
+            this.image = Images.barricade;
+        };
     },
     
     update: function(dt) {
@@ -40,6 +47,10 @@ ObstacleEmitter.prototype = {
         return ( _.random(2, 10));
     },
     
+    ObstacleType: function() {
+        return ( _.random(1, 2));
+    },
+    
     update: function(dt) {        
         this.currentDuration += dt;
         if(this.count > 0 && this.currentDuration >= this.duration) {
@@ -48,7 +59,8 @@ ObstacleEmitter.prototype = {
                 x: this.world.width(),
                 y: this.world.height() - 30,
                 height: 30,
-                width: 2
+                width: 2,
+                type: this.ObstacleType()
             }));
             this.currentDuration = 0;
             this.count -= 1;
