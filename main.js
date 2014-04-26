@@ -16,16 +16,29 @@ var Game = Scene.extend({
         this.accel = 5;
 
         // For now, keep it simple with one protestor. Can adjust from there.
-        this.createProtestors(5); // 40);
+        this.createProtestors(5);
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 150;
+        this.createPolice(10);
     },
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
             var p = new entities.Protestor({
                 x: 200 + (i * 15), y: 0,
+                width: 32, height: 32,
+                world: this
+            });
+            this.entities.add(p);
+        }, this);
+    },
+
+    createPolice: function(limit) {
+        _.each(_.range(limit), function(i) {
+            console.log("cop");
+            var p = new entities.Police({
+                x: 50 + (i * 15), y: 0,
                 width: 32, height: 32,
                 world: this
             });
@@ -70,9 +83,12 @@ var Game = Scene.extend({
 });
 
 var main = function() {
-    var game = new Game({});
+    var game = new Game({
+        pixelScale: 2
+    });
     var d = new Dispatcher(gamejs, {
-        initial: game
+        initial: game,
+        canvas: {flag: gamejs.display.DISABLE_SMOOTHING}
     });
 };
 
