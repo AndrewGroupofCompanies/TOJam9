@@ -2,6 +2,7 @@ var _ = require('underscore'),
     gamejs = require('gamejs'),
     gramework = require('gramework'),
     Entity = gramework.Entity,
+    animate = gramework.animate,
     Vec2d = gramework.vectors.Vec2d;
 
 var randomHex = function() {
@@ -33,6 +34,15 @@ var Citizen = Entity.extend({
         this.velocity = new Vec2d(0, 0);
         this.speed = 0;
         this.onGround = false;
+
+        if (options.spriteSheet) {
+            this.spriteSheet = new animate.SpriteSheet(options.spriteSheet.path, options.spriteSheet.width, options.spriteSheet.height);
+            this.anim = new animate.Animation(this.spriteSheet, "running", {
+                running: {frames: _.range(20), rate: 20}
+            });
+
+            this.image = this.anim.update(0);
+        }   
 
         this.hex = randomHex();
     },
@@ -107,10 +117,20 @@ var Citizen = Entity.extend({
         this.rect.x += this.velocity.getX();
         this.rect.y += this.velocity.getY();
         this.decideNextMovement(dt);
+
+        if (this.image) {
+            this.image = this.anim.update(dt);
+        }
     },
 
     draw: function(surface) {
-        gamejs.draw.rect(surface, this.hex, this.rect);
+        
+
+        if (this.image) {
+            Entity.prototype.draw.apply(this, arguments);
+        } else {
+            gamejs.draw.rect(surface, this.hex, this.rect);
+        }
     }
 
 });

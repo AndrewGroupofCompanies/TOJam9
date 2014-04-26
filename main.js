@@ -7,9 +7,10 @@ var _ = require('underscore'),
     scrollables = require('./scrollables'),
     Vec2d = gramework.vectors.Vec2d;
 
-var assets = [
-    './assets/images/bg_test.jpg'
-];
+var Images = {
+    bg_test: './assets/images/bg_test.jpg',
+    sprite_test: './assets/images/spritesheet-enemy.png'
+};
 
 var GROUND_HEIGHT = 40;
 
@@ -18,7 +19,7 @@ var Game = Scene.extend({
         this.gravity = new Vec2d(0, 50);
 
         this.bg = new scrollables.Scrollable({
-            image: './assets/images/bg_test.jpg',
+            image: Images.bg_test,
             height: 256,
             width: 512,
             x: 0,
@@ -34,7 +35,7 @@ var Game = Scene.extend({
         this.scrollables.add(this.bg);
 
         // For now, keep it simple with one protestor. Can adjust from there.
-        this.createProtestors(5);
+        this.createProtestors(25);
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 150;
@@ -46,7 +47,12 @@ var Game = Scene.extend({
             var p = new entities.Protestor({
                 x: 200 + (i * 15), y: 0,
                 width: 32, height: 32,
-                world: this
+                world: this,
+                spriteSheet: {
+                    path: Images.sprite_test,
+                    height: 30,
+                    width: 26
+                }  
             });
             this.entities.add(p);
         }, this);
@@ -109,6 +115,10 @@ var main = function() {
     });
 };
 
-gamejs.preload(assets);
+var images = Object.keys(Images).map(function(img) {
+    return Images[img];
+});
+
+gamejs.preload(images);
 gamejs.ready(main);
 
