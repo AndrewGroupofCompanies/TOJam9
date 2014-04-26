@@ -15,9 +15,13 @@ var Images = {
     bg_test: './assets/images/bg_test.jpg',
     sprite_test: './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
+    protester01: './assets/images/protester_01_pete.png',
+    protester02: './assets/images/protester_02_pete.png',
+    protester03: './assets/images/protester_03_pete.png',
+    protester04: './assets/images/protester_04_xyz.png',
+    protester05: './assets/images/protester_05_xyz.png',
+    protester06: './assets/images/protester_06_xyz.png',
     tree_01: './assets/images/tree_01.png',
-    protester01: './assets/images/protester01.png',
-    protester02: './assets/images/protester02.png',
     fence: './assets/images/fencebroken.png',
     barricade: './assets/images/barricade.png',
     terrain: './assets/images/terrain01.png'
@@ -37,13 +41,16 @@ var GROUND_HEIGHT = 20;
 
 var Game = Scene.extend({
     initialize: function(options) {
-        this.gravity = new Vec2d(0, 50);
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
             police: initSpriteSheet(imgfy(Images.cop01), 60, 30),
             protester01: initSpriteSheet(imgfy(Images.protester01), 30, 30),
-            protester02: initSpriteSheet(imgfy(Images.protester02), 30, 30)
+            protester02: initSpriteSheet(imgfy(Images.protester02), 30, 30),
+            protester03: initSpriteSheet(imgfy(Images.protester03), 30, 30),
+            protester04: initSpriteSheet(imgfy(Images.protester04), 30, 30),
+            protester05: initSpriteSheet(imgfy(Images.protester05), 30, 30),
+            protester06: initSpriteSheet(imgfy(Images.protester06), 30, 30),
         };
 
         this.terrain = new scrollables.AllTerrain({
@@ -64,7 +71,7 @@ var Game = Scene.extend({
         this.velocity = new Vec2d(0, 0);
         this.speed = -10;
         this.accel = 5;
-
+        this.runningPlane = this.surface.getSize()[1] - 50;
 
         // The front line of the protestors. Let's keep them grouped.
         this.frontLine = this.surface.getSize()[0] - 50;
@@ -100,21 +107,23 @@ var Game = Scene.extend({
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
-            var tmpSpriteSheet = "";
-            if (_.random(1,2) === 1) {
-                tmpSpriteSheet = this.spriteSheets.protester01;
-            } else {
-                tmpSpriteSheet = this.spriteSheets.protester02;
-            }
-
+            var randomNum= _.random(1,6);
+            var spriteId  = 'protester0' + randomNum;
+            var tmpSpriteSheet = this.spriteSheets[spriteId];
             var p = new entities.Protestor({
-                x: 80 + (i * 15), y: 0,
+                x: 80 + (i * 15), y: this.runningPlane,
                 width: 30, height: 30,
                 world: this,
                 spriteSheet: tmpSpriteSheet
             });
             this.entities.add(p);
         }, this);
+    },
+
+    getPolice: function() {
+        return _.filter(this.entities._sprites, function(entity) {
+            return entity.isPolice === true;
+        });
     },
 
     getProtestors: function() {
@@ -126,7 +135,7 @@ var Game = Scene.extend({
     createPolice: function(limit) {
         _.each(_.range(limit), function(i) {
             var p = new entities.Police({
-                x: (i * 2), y: 0,
+                x: (i * 5), y: this.runningPlane,
                 width: 60, height: 30,
                 spriteSheet: this.spriteSheets.police,
                 world: this
@@ -178,8 +187,6 @@ var Game = Scene.extend({
         if (this.Obstacles && this.Obstacles.alive) {
             this.Obstacles.update(dt);
         } else if (this.Obstacles === null) {
-            /*
-             * TODO: Dont spawn these for now.*/
             this.Obstacles = new obstacles.ObstacleEmitter({
                 world: this,
                 images: [Images.fence, Images.barricade]
