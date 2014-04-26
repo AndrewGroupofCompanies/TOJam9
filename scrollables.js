@@ -62,6 +62,51 @@ _.extend(SceneryGenerator.prototype, {
     }
 });
 
+var TerrainLayer = Entity.extend({
+    initialize: function(options) {
+        this.z = options.z;
+        this.scale_factor = 1 / Math.pow(Math.E, (this.z / 5));
+        this.image = new gamejs.Surface(this.rect);
+        this.rect.height = Math.floor((this.rect.height * this.scale_factor)/3.5);
+        this.rect.top += Math.floor(this.scale_factor * 20);
+        this.imageFile = gamejs.image.load(options.image);
+        var dims = this.imageFile.getSize();
+        var newDims = [Math.floor((dims[0] * this.scale_factor)/3.5), this.rect.height];
+        this.imageFile = gamejs.transform.scale(this.imageFile, newDims);
+
+        for(var i; i * newDims[0] < this.rect.width; i++) {
+            
+        }
+    },
+
+    draw: function(surface) {
+        //this.image.fill('rgb('+ ((this.z + 3) * 10) +',0,0)');
+        Entity.prototype.draw.apply(this, arguments);
+    }
+});
+
+var AllTerrain = function(options) {
+    this.layers = new gamejs.sprite.Group();
+    _.range(-3,9).forEach(function(zVal){
+        this.layers.add(new TerrainLayer({
+            z: zVal,
+            width: options.width,
+            height: 32,
+            x: 0,
+            y: 80,
+            image: options.image
+        }));
+    }, this);
+};
+
+_.extend(AllTerrain.prototype, {
+    draw: function(surface) {
+        this.layers.draw(surface);
+    }
+});
+
 module.exports = {
-    SceneryGenerator: SceneryGenerator
+    SceneryGenerator: SceneryGenerator,
+    TerrainLayer: TerrainLayer,
+    AllTerrain: AllTerrain
 };

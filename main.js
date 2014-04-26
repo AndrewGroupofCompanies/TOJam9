@@ -19,7 +19,8 @@ var Images = {
     protester01: './assets/images/protester01.png',
     protester02: './assets/images/protester02.png',
     fence: './assets/images/fencebroken.png',
-    barricade: './assets/images/barricade.png'
+    barricade: './assets/images/barricade.png',
+    terrain: './assets/images/terrain01.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -45,6 +46,11 @@ var Game = Scene.extend({
             protester02: initSpriteSheet(imgfy(Images.protester02), 30, 30)
         };
 
+        this.terrain = new scrollables.AllTerrain({
+            width: 1024,
+            image: Images.terrain
+        });
+
         var previousAdd = this.entities.add;
         this.entities.add = function(list) {
             previousAdd.apply(this, arguments);
@@ -53,16 +59,7 @@ var Game = Scene.extend({
                 return b.z-a.z;
             });
         };
-        /*
-        this.bg = new scrollables.Scrollable({
-            image: Images.bg_test,
-            height: 128,
-            width: 256,
-            x: 0,
-            y: 0,
-            z: 0
-        });
-        */
+
         // Handles world speed.
         this.velocity = new Vec2d(0, 0);
         this.speed = -10;
@@ -197,6 +194,8 @@ var Game = Scene.extend({
         this.view.clear();
 
         this.surface.fill('#fff');
+
+        this.terrain.draw(this.view);
 
             //this.scrollables.draw(this.view);
 
