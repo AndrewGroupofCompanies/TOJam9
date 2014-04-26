@@ -220,6 +220,6 @@ var main = function() {
     });
 };
 
-gamejs.preload(_.values(Images));
+gramework.gamejs.preload(_.values(Images));
 gamejs.ready(main);
 
