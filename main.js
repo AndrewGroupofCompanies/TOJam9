@@ -5,8 +5,8 @@ var _ = require('underscore'),
     Scene = gramework.Scene,
     entities = require('./entities'),
     obstacles = require('./obstacles'),
-    Vec2d = gramework.vectors.Vec2d;
-    GameController = gramework.input.GameController,
+    Vec2d = gramework.vectors.Vec2d,
+    GameController = gramework.input.GameController;
 
 var Game = Scene.extend({
     initialize: function(options) {
