@@ -212,10 +212,6 @@ var main = function() {
     });
 };
 
-var images = Object.keys(Images).map(function(img) {
-    return Images[img];
-});
-
-gamejs.preload(images);
+gamejs.preload(_.values(Images));
 gamejs.ready(main);
 
