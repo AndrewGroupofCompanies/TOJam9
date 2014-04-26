@@ -153,6 +153,13 @@ var Game = Scene.extend({
         }
     },
 
+    // Police are getting madder!
+    increasePolicePressure: function(step) {
+        step = (step || 1);
+        this.policePressure += step;
+        this.policeDistraction += step;
+    },
+
     update: function(dt) {
         Scene.prototype.update.call(this, dt);
 

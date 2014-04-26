@@ -283,6 +283,7 @@ var Police = Citizen.extend({
 
         this.hex = blueHex();
         this.speed = 0.5;
+
         this.pressurePadding = 15;
     },
 
@@ -332,6 +333,8 @@ var Player = Protestor.extend({
         });
 
         this.tapCountdown = 0;
+        this.pressureCount = 0;
+        this.pressureDelay = 1000; // in milliseconds.
     },
 
     // A player just takes over a protestor.
@@ -402,13 +405,21 @@ var Player = Protestor.extend({
         Protestor.prototype.draw.apply(this, arguments);
     },
 
+    // In policeDistraction zone.
+    isDistractingPolice: function() {
+        //console.log(this.rect.x, this.world.policeDistraction);
+        if (this.rect.x <= this.world.policeDistraction) {
+            return true;
+        }
+        return false;
+    },
+
     update: function(dt) {
         if (this.tapCountdown > 0) {
             this.tapCountdown -= dt;
         }
 
         var collisions = gamejs.sprite.spriteCollide(this, this.world.entities, false);
-
         if (collisions.length > 0) {
             collisions.forEach(function(collision){
                 if (collision.name === 'obstacle') {
@@ -419,6 +430,19 @@ var Player = Protestor.extend({
                     }
                 }
             }, this);
+        }
+
+        // Check if we are inside the police distraction zone. If we are, we're
+        // doing a good job. We only check this every second, as to not go
+        // insane on increasing pressure.
+        this.pressureCount += dt;
+        if (this.pressureCount >= this.pressureDelay) {
+            this.pressureCount = 0;
+            if (this.isDistractingPolice()) {
+                console.log("Good job!");
+            } else {
+                this.world.increasePolicePressure();
+            }
         }
 
         Protestor.prototype.update.apply(this, arguments);
