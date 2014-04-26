@@ -13,15 +13,19 @@ var Citizenkane = Entity.extend({
         this.velocity = new Vec2d(0, 0);
         this.speed    = 0;
         this.onGround = false;
-        this.hex      = '#77ff77';
+        this.xwidth = 30;
+        this.xheight = 30;
 
-        this.sprite = new animate.SpriteSheet('./assets/spritesheet-test.png', 30, 30);
+        this.sprite = new animate.SpriteSheet('./assets/spritesheet-test.png', this.xwidth, this.xheight);
 
         this.anim = new animate.Animation(this.sprite, "static", {
-            static: {frames: 4, rate: 10.5}
+            static: {frames: _.range(4), rate: 2}
         });
+
         // TODO: Shouldnt need to do this.
         this.image = this.anim.update(0);
+
+        this.anim.start('static');
     },
 
     update: function(dt) {
@@ -29,7 +33,11 @@ var Citizenkane = Entity.extend({
     },
 
     draw: function(surface) {
-        gamejs.draw.rect(surface, this.hex, this.rect);
+        if (this.image) {
+            Entity.prototype.draw.apply(this, arguments);
+        } else {
+            gamejs.draw.rect(surface, this.hex, this.rect);
+        }
     }
 
 });
