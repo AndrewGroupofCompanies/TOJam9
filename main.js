@@ -69,6 +69,11 @@ var Game = Scene.extend({
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
+
+        // Police distraction is a "safe" zone in which while the active player
+        // is in it, the police pressure does not increase. We keep track
+        // of this so that when we're ahead of it, pressure increases!
+        this.policeDistraction = this.policePressure + 50;
         this.createPolice(10);
 
         // Obstacles
@@ -181,6 +186,11 @@ var Game = Scene.extend({
         gamejs.draw.line(this.view, "#cccccc",
             [this.policePressure, 0],
             [this.policePressure, surface.getSize()[1]]);
+
+        // Police distraction zone.
+        gamejs.draw.line(this.view, "#cccccc",
+            [this.policeDistraction, 0],
+            [this.policeDistraction, surface.getSize()[1]]);
 
         // Front line.
         gamejs.draw.line(this.view, "#cccccc",

@@ -283,7 +283,7 @@ var Police = Citizen.extend({
 
         this.hex = blueHex();
         this.speed = 0.5;
-        this.pressurePadding = 20;
+        this.pressurePadding = 15;
     },
 
     // Police won't always pass the pressure line, but we also want them to have
@@ -399,7 +399,6 @@ var Player = Protestor.extend({
     draw: function(surface) {
         gamejs.draw.circle(surface, "rgb(255, 0, 0)",
             [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
-        
         Protestor.prototype.draw.apply(this, arguments);
     },
 
