@@ -374,10 +374,10 @@ var Player = Protestor.extend({
     },
 
     draw: function(surface) {
-        Protestor.prototype.draw.apply(this, arguments);
-
         gamejs.draw.circle(surface, "rgb(255, 0, 0)",
             [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
+        
+        Protestor.prototype.draw.apply(this, arguments);
     },
 
     update: function(dt) {
