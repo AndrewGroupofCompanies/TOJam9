@@ -155,7 +155,7 @@ var Protestor = Citizen.extend({
         // or adjust it slightly.
         this.decideCounter -= dt;
         if (this.decideCounter <= 0) {
-            console.log(this.hex, " is deciding what to do");
+            //console.log(this.hex, " is deciding what to do");
             // Generally, we'll stay where we are.
             if (this.makeDecision()) {
                 this.speed += _.first(_.sample(
