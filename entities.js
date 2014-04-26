@@ -36,6 +36,8 @@ var Citizen = Entity.extend({
 
         this.world = options.world;
         this.velocity = new Vec2d(0, 0);
+        this.accel = 1.5;
+        this.maxSpeed = 2;
         this.speed = 0;
         this.onGround = false;
         this.hex = randomHex();
@@ -109,9 +111,10 @@ var Citizen = Entity.extend({
             this.image = this.anim.update(dt);
         }
 
-        if (this.anim.isFinished()) {
+        if (this.anim && this.anim.isFinished()) {
             this.anim.start('running');
         }
+
     },
 
     draw: function(surface) {
@@ -146,12 +149,10 @@ var Protestor = Citizen.extend({
 
             this.image = this.anim.update(0);
             this.anim.setFrame(_.random(0,23));
-        }   
+        }
 
         this.runSpeed = 1.5; // Our speed modifier.
         this.speed = this.runSpeed;
-        this.accel = 1.5;
-        this.maxSpeed = 2;
         this.canDeke = true;
         this.isDeking = false;
         this.isDucking = false;
@@ -276,6 +277,25 @@ var Protestor = Citizen.extend({
     }
 });
 
+var Police = Citizen.extend({
+    initialize: function(options){
+        Citizen.prototype.initialize.call(this, options);
+
+        this.hex = blueHex();
+        this.speed = _.random(1, 3);
+    },
+
+    adjustVector: function(dt) {
+        Citizen.prototype.adjustVector.call(this, dt);
+        dt = (dt / 1000);
+
+        // Adjust accel and speed because we may be sprinting forward.
+        var accel = new Vec2d(this.accel, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.velocity = this.velocity.truncate(this.maxSpeed);
+    }
+});
+
 var Player = Protestor.extend({
     initialize: function(options) {
         Protestor.prototype.initialize.call(this, options);
@@ -323,8 +343,6 @@ var Player = Protestor.extend({
             this.speed = -1;
         }
 
-        
-
         // Adjust accel and speed because we may be sprinting forward.
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
@@ -356,12 +374,10 @@ var Player = Protestor.extend({
     },
 
     draw: function(surface) {
-        var surf = new gamejs.Surface(12, 12);
-        gamejs.draw.circle(surf, "rgb(255,0,0)", [6,6], 6, 2);
-
-        surface.blit(surf, new gamejs.Rect([this.rect.left + 5, this.rect.bottom - 2, 12, 5]));
-
         Protestor.prototype.draw.apply(this, arguments);
+
+        gamejs.draw.circle(surface, "rgb(255, 0, 0)",
+            [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
     },
 
     update: function(dt) {
@@ -385,15 +401,6 @@ var Player = Protestor.extend({
 
         Protestor.prototype.update.apply(this, arguments);
     }
-});
-
-var Police = Citizen.extend({
-   initialize: function(options){
-    Citizen.prototype.initialize.call(this, options);
-
-    this.hex = blueHex();
-    this.speed = _.random(0, 3);
-   }
 });
 
 module.exports = {

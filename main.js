@@ -23,6 +23,9 @@ var initSpriteSheet = function(image, width, height) {
     return ss;
 };
 
+var imgfy = function(image) {
+    return gamejs.image.load(image);
+};
 
 var GROUND_HEIGHT = 20;
 
@@ -33,8 +36,8 @@ var Game = Scene.extend({
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
-            police: initSpriteSheet(Images.sprite_test, 26, 30),
-            protester01: initSpriteSheet(Images.protester01, 30, 30)
+            police: initSpriteSheet(imgfy(Images.sprite_test), 26, 30),
+            protester01: initSpriteSheet(imgfy(Images.protester01), 30, 30)
         };
 
         this.bg = new scrollables.Scrollable({
@@ -62,17 +65,19 @@ var Game = Scene.extend({
         this.createScrollable(7);
         this.createScrollable(-10);
         this.createScrollable(-1);
+
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
+        this.createPolice(10);
 
+        // Obstacles
         this.Obstacles = null;
 
-        //this.createPolice(10);
+        // Player management
         this.controller = new GameController({
             pressure: gamejs.event.K_p,
             takeover: gamejs.event.K_t
         });
-
         this.player = null;
         this.pluckProtestor();
     },
@@ -88,7 +93,6 @@ var Game = Scene.extend({
             world: this
         });
         this.scrollables.add(s);
-        console.log(s);
     },
 
     createProtestors: function(limit) {
@@ -155,9 +159,12 @@ var Game = Scene.extend({
         if (this.Obstacles && this.Obstacles.alive) {
             this.Obstacles.update(dt);
         } else if (this.Obstacles === null) {
+            /*
+             * TODO: Dont spawn these for now.
             this.Obstacles = new obstacles.ObstacleEmitter({
                 world: this
             });
+            */
         } else if (!this.Obstacles.alive) {
             this.Obstacles = null;
         }
