@@ -68,15 +68,6 @@ var Citizen = Entity.extend({
         dt = (dt / 1000); // Sanity.
         var vec = new Vec2d().add(this.world.gravity);
         this.velocity.add(vec.mul(dt));
-
-        // Adjust X vector based on the world speed. Some protestors will be
-        // slower than others, eventually getting caught.
-        if (this.speed !== 0) {
-            var setTo = (this.world.velocity.magnitude() * 0.0025 * this.speed);
-            //this.velocity.setX(setTo);
-        } else {
-            //this.velocity.setX(-(this.world.velocity.magnitude() * 0.0025));
-        }
     },
 
     // Collision code!
