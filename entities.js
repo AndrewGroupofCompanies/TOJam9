@@ -31,6 +31,9 @@ var Citizen = Entity.extend({
         this.hex = randomHex();
         this.z = 0;
 
+        // Default collision rect is nothing different.
+        this.collisionRect = this.rect.clone();
+
         if (options.spriteSheet) {
             this.spriteSheet = options.spriteSheet;
             this.anim = new animate.Animation(this.spriteSheet, "running", this.animSpec);
@@ -100,6 +103,9 @@ var Citizen = Entity.extend({
         this.adjustVector(dt);
         this.rect.x += this.velocity.getX();
         this.rect.y += this.velocity.getY();
+        this.collisionRect.x = this.rect.x;
+        this.collisionRect.y = this.rect.y;
+
         this.decideNextMovement(dt);
 
         if (this.image && !this.anim.isFinished()) {
@@ -160,6 +166,8 @@ var Protestor = Citizen.extend({
 
         this.decideCounterStart = 3;
         this.decideCounter = this.resetDecision();
+
+        this.collisionRect.width = this.rect.width / 2;
 
         // We create player without an anim right away, so need to be careful.
         if (this.anim) {
@@ -293,6 +301,9 @@ var Protestor = Citizen.extend({
     update: function(dt) {
         Citizen.prototype.update.apply(this, arguments);
 
+        // Protestors collision rect is a bit above rect x;
+        this.collisionRect.x = this.rect.x + 10;
+
         if (this.isCaptured) {
             return;
         }
@@ -324,16 +335,22 @@ var Protestor = Citizen.extend({
 
         // NPC-specific behaviour
         if (this.isProtestor) {
-            var collisions = gamejs.sprite.spriteCollide(this, this.world.entities, false);
-
-            if (collisions.length > 0) {
-                collisions.forEach(function(collision){
-                    if (collision.name === 'obstacle') {
+            // Identify obstacles and deke them out if necessary.
+            this.world.getObstacles().forEach(function(o) {
+                if (this.collisionRect.collideRect(o.collisionRect)) {
+                    if (o.high) {
+                        this.duck();
+                    } else if (o.low) {
                         this.deke();
                     }
-                }, this);
-            }
+                }
+            }, this);
         }
+    },
+
+    draw: function(surface) {
+        //gamejs.draw.rect(surface, "#ffcc00", this.collisionRect);
+        Citizen.prototype.draw.call(this, surface);
     }
 });
 
@@ -447,6 +464,7 @@ var Police = Citizen.extend({
             gamejs.draw.circle(surface, "rgb(100, 0, 100)",
                 [this.rect.left + 30, this.rect.bottom - 2], 4, 2);
         }
+
         Citizen.prototype.draw.apply(this, arguments);
     }
 });
@@ -566,7 +584,7 @@ var Player = Protestor.extend({
             this.kill();
         }
 
-        if (this.isCaptured) {
+        if (this.isCaptured === false) {
             var collisions = gamejs.sprite.spriteCollide(this, this.world.entities, false);
             if (collisions.length > 0) {
                 collisions.forEach(function(collision){
@@ -593,7 +611,6 @@ var Player = Protestor.extend({
         if (this.pressureCount >= this.pressureDelay) {
             this.pressureCount = 0;
             if (this.isDistractingPolice()) {
-                console.log("Distracting Police!");
                 this.world.getPolice().forEach(function(p) {
                     p.isDistracted();
                 });
