@@ -268,7 +268,7 @@ var main = function() {
     });
     var d = new Dispatcher(gamejs, {
         initial: game,
-        canvas: {flag: gamejs.display.DISABLE_SMOOTHING}
+        canvas: {flag: gamejs.display.DISABLE_SMOOTHING | gamejs.display.FULLSCREEN}
     });
 };
 
