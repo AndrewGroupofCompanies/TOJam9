@@ -39,7 +39,7 @@ var Citizen = Entity.extend({
         if (options.spriteSheet) {
             this.spriteSheet = options.spriteSheet;
             this.anim = new animate.Animation(this.spriteSheet, "running", {
-                running: {frames: _.range(24), rate: 30}
+                running: {frames: _.range(40), rate: 30}
             });
 
             this.image = this.anim.update(0);

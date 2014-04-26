@@ -49,7 +49,6 @@ ObstacleEmitter.prototype = {
                 height: 30,
                 width: 30
             }));
-            console.log('im makin obstacles, b');
             this.currentDuration = 0;
             this.count -= 1;
             this.duration = this.randomDuration();
@@ -58,7 +57,6 @@ ObstacleEmitter.prototype = {
         //console.log(this.currentDuration);
 
         if (this.count === 0) {
-            console.log("peace out");
             this.alive = false;
         };
     }

@@ -14,7 +14,8 @@ var Images = {
     bg_test: './assets/images/bg_test.jpg',
     sprite_test: './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
-    tree_01: './assets/images/tree_01.png'
+    tree_01: './assets/images/tree_01.png',
+    protester01: './assets/images/protester01.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -31,7 +32,8 @@ var Game = Scene.extend({
         this.gravity = new Vec2d(0, 50);
 
         this.spriteSheets = {
-            police: initSpriteSheet(Images.sprite_test, 26, 30)
+            police: initSpriteSheet(Images.sprite_test, 26, 30),
+            protester01: initSpriteSheet(Images.protester01, 30, 30)
         };
 
         this.bg = new scrollables.Scrollable({
@@ -39,7 +41,8 @@ var Game = Scene.extend({
             height: 128,
             width: 256,
             x: 0,
-            y: 0
+            y: 0,
+            z: 0
         });
 
         // Handles world speed.
@@ -53,6 +56,10 @@ var Game = Scene.extend({
         // The front line of the protestors. Let's keep them grouped.
         this.frontLine = this.surface.getSize()[0] - 50;
         this.createProtestors(15);
+        this.createScrollable(3);
+        this.createScrollable(5);
+        this.createScrollable(7);
+        this.createScrollable(-10);
         this.createScrollable(9);
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
@@ -73,8 +80,8 @@ var Game = Scene.extend({
         var s = new scrollables.Scrollable({
             height: 64,
             width: 64,
-            x:0,
-            y:0,
+            x:256,
+            y:50,
             z:z,
             image: Images.tree_01,
             world: this
@@ -87,10 +94,10 @@ var Game = Scene.extend({
         _.each(_.range(limit), function(i) {
             var p = new entities.Protestor({
                 x: 200 + (i * 15), y: 0,
-                width: 24, height: 30,
+                width: 30, height: 30,
                 world: this,
                 
-                spriteSheet: this.spriteSheets.police
+                spriteSheet: this.spriteSheets.protester01
             });
             this.entities.add(p);
         }, this);
@@ -150,7 +157,6 @@ var Game = Scene.extend({
             this.Obstacles = new obstacles.ObstacleEmitter({
                 world: this
             });
-            console.log("obstacleemitter made")
         } else if (!this.Obstacles.alive) {
             this.Obstacles = null;
         }
