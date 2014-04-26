@@ -280,12 +280,13 @@ var Protestor = Citizen.extend({
 var Police = Citizen.extend({
     animSpec: {
         running: {frames: _.range(8), rate: 30, loop: true},
-        deke: {frames: _.range(81, 90), rate: 30},
-        duck: {frames: _.range(41, 50), rate: 30}
     },
 
     initialize: function(options) {
         Citizen.prototype.initialize.call(this, options);
+
+        this.collisionRect = this.rect.clone();
+        this.collisionRect.width = 30;
 
         this.hex = "#0033CC";
         this.speed = 0.5;
@@ -301,14 +302,14 @@ var Police = Citizen.extend({
     // Police won't always pass the pressure line, but we also want them to have
     // some variable movement.
     nearPoliceLine: function() {
-        if ((this.rect.x + this.rect.width + this.pressurePadding) >= this.world.policePressure) {
+        if ((this.collisionRect.x + this.collisionRect.width + this.pressurePadding) >= this.world.policePressure) {
             return true;
         }
         return false;
     },
 
     nearBack: function() {
-        if (this.rect.x <= this.world.backLine) {
+        if (this.collisionRect.x <= this.world.backLine) {
             return true;
         }
         return false;
@@ -352,11 +353,14 @@ var Police = Citizen.extend({
         if (this.isCapturing === false) {
             this.world.getProtestors().forEach(function(entity) {
                 if (entity.isCaptured) return;
-                if (this.rect.collideRect(entity.rect)) {
+                if (this.collisionRect.collideRect(entity.rect)) {
                     this.actionCapture(entity);
                 }
             }, this);
         }
+
+        this.collisionRect.x = this.rect.x;
+        this.collisionRect.y = this.rect.y;
     }
 });
 
