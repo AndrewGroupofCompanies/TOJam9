@@ -17,6 +17,11 @@ var Obstacle = Entity.extend({
         this.hex = "#000000";
         this.type = options.type;
         console.log(this.type);
+        if(this.type === 1){
+            this.image = Images.fence;
+        } else {
+            this.image = Images.barricade;
+        };
     },
     
     update: function(dt) {

@@ -17,7 +17,9 @@ var Images = {
     sprite_test_2: './assets/images/spritesheet-player.png',
     tree_01: './assets/images/tree_01.png',
     protester01: './assets/images/protester01.png',
-    protester02: './assets/images/protester02.png'
+    protester02: './assets/images/protester02.png',
+    fence: './assets/images/fencebroken.png',
+    barricade: './assets/images/barricade.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
