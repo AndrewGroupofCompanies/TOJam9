@@ -11,6 +11,13 @@ var randomHex = function() {
 };
 
 var Citizen = Entity.extend({
+    animSpec: {
+        running: {frames: _.range(40), rate: 30, loop: true},
+        deke: {frames: _.range(81, 90), rate: 30},
+        duck: {frames: _.range(41, 50), rate: 30},
+        stumble: {frames: _.range(121, 145), rate: 30}
+    },
+
     initialize: function(options) {
         options = (options || {});
 
@@ -21,6 +28,14 @@ var Citizen = Entity.extend({
         this.speed = 0;
         this.onGround = false;
         this.hex = randomHex();
+
+        if (options.spriteSheet) {
+            this.spriteSheet = options.spriteSheet;
+            this.anim = new animate.Animation(this.spriteSheet, "running", this.animSpec);
+            this.image = this.anim.update(0);
+            this.anim.setFrame(0);
+        }
+
     },
 
     canMove: function(dx, dy) {
@@ -119,19 +134,6 @@ var Protestor = Citizen.extend({
 
         this.isProtestor = true; // Identifier.
 
-        if (options.spriteSheet) {
-            this.spriteSheet = options.spriteSheet;
-            this.anim = new animate.Animation(this.spriteSheet, "running", {
-                running: {frames: _.range(40), rate: 30, loop: true},
-                deke: {frames: _.range(81, 90), rate: 30},
-                duck: {frames: _.range(41, 50), rate: 30},
-                stumble: {frames: _.range(121, 145), rate: 30}
-            });
-
-            this.image = this.anim.update(0);
-            this.anim.setFrame(_.random(0,23));
-        }
-
         this.runSpeed = 1.5; // Our speed modifier.
         this.speed = this.runSpeed;
         this.canDeke = true;
@@ -140,6 +142,7 @@ var Protestor = Citizen.extend({
         // A lot of states to manage....
         this.isDeking = false;
         this.isDucking = false;
+        this.isCaptured = false;
         this.isStumbling = false;
 
         // Police padding. If we get too near the police and are aware of them,
@@ -152,6 +155,11 @@ var Protestor = Citizen.extend({
 
         this.decideCounterStart = 3;
         this.decideCounter = this.resetDecision();
+
+        // We create player without an anim right away, so need to be careful.
+        if (this.anim) {
+            this.anim.setFrame(_.random(0,23));
+        }
     },
 
     makeDecision: function() {
@@ -162,8 +170,20 @@ var Protestor = Citizen.extend({
         return this.decideCounterStart;
     },
 
+    // Is captured by the cops, just get off the screen.
+    // TODO: Frame anim.
+    isBeingCaptured: function() {
+        this.speed = -1;
+        this.isCaptured = true;
+    },
+
     adjustVector: function(dt) {
         Citizen.prototype.adjustVector.call(this, dt);
+
+        // No movement exept for normal speed adjustment.
+        if (this.isCaptured) {
+            return;
+        }
 
         dt = (dt / 1000);
 
@@ -310,32 +330,57 @@ var Protestor = Citizen.extend({
 });
 
 var Police = Citizen.extend({
-    initialize: function(options){
+    animSpec: {
+        running: {frames: _.range(8), rate: 30, loop: true},
+    },
+
+    initialize: function(options) {
         Citizen.prototype.initialize.call(this, options);
+
+        this.collisionRect = this.rect.clone();
+        this.collisionRect.width = 30;
 
         this.hex = "#0033CC";
         this.speed = 0.5;
 
         this.pressurePadding = 15;
+
+        // States
+        this.isCapturing = false;
+
+        this.anim.setFrame(_.random(0,7));
     },
 
     // Police won't always pass the pressure line, but we also want them to have
     // some variable movement.
     nearPoliceLine: function() {
-        if ((this.rect.x + this.rect.width + this.pressurePadding) >= this.world.policePressure) {
+        if ((this.collisionRect.x + this.collisionRect.width + this.pressurePadding) >= this.world.policePressure) {
             return true;
         }
         return false;
     },
 
     nearBack: function() {
-        if (this.rect.x <= this.world.backLine) {
+        if (this.collisionRect.x <= this.world.backLine) {
             return true;
         }
         return false;
     },
 
+    // This cop is busy capturing someone now.
+    actionCapture: function(entity) {
+        console.log("actionCapture", entity);
+
+        this.isCapturing = true;
+        entity.isBeingCaptured();
+
+        // Set speed to negative, so the two go off the screen.
+        this.speed = -1;
+    },
+
     adjustVector: function(dt) {
+        if (this.isCapturing) return;
+
         Citizen.prototype.adjustVector.call(this, dt);
         dt = (dt / 1000);
 
@@ -349,6 +394,25 @@ var Police = Citizen.extend({
         } else if (this.nearBack()) {
             this.speed = 0.5;
         }
+    },
+
+    update: function(dt) {
+        Citizen.prototype.update.call(this, dt);
+
+        // Police identify when they sense a protestor within their graps. When
+        // they do, they make a lounge for them, and may potentially capture
+        // them!
+        if (this.isCapturing === false) {
+            this.world.getProtestors().forEach(function(entity) {
+                if (entity.isCaptured) return;
+                if (this.collisionRect.collideRect(entity.rect)) {
+                    this.actionCapture(entity);
+                }
+            }, this);
+        }
+
+        this.collisionRect.x = this.rect.x;
+        this.collisionRect.y = this.rect.y;
     }
 });
 
@@ -378,7 +442,7 @@ var Player = Protestor.extend({
         this.world = p.world;
         this.rect = p.rect;
         this.hex = "#000000";
-        this.isProtestor = false;
+        this.isProtestor = true;
         this.spriteSheet = p.spriteSheet;
         this.anim = p.anim;
         this.image = this.anim.update(0);
