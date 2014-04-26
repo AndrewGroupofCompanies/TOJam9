@@ -42,6 +42,15 @@ var Game = Scene.extend({
             protester02: initSpriteSheet(imgfy(Images.protester02), 30, 30)
         };
 
+        var previousAdd = this.entities.add;
+        this.entities.add = function(list) {
+            previousAdd.apply(this, arguments);
+
+            this._sprites.sort(function(a, b){
+                return b.z-a.z;
+            });
+        };
+        /*
         this.bg = new scrollables.Scrollable({
             image: Images.bg_test,
             height: 128,
@@ -50,24 +59,23 @@ var Game = Scene.extend({
             y: 0,
             z: 0
         });
-
+        */
         // Handles world speed.
         this.velocity = new Vec2d(0, 0);
         this.speed = -10;
         this.accel = 5;
-        this.scrollables = new gamejs.sprite.Group();
 
-        this.scrollables.add(this.bg);
 
         // The front line of the protestors. Let's keep them grouped.
         this.frontLine = this.surface.getSize()[0] - 50;
         this.backLine = 10;
         this.createProtestors(15);
-        this.createScrollable(3);
-        this.createScrollable(5);
-        this.createScrollable(7);
-        this.createScrollable(-10);
-        this.createScrollable(-1);
+        this.scrollGenerator = new scrollables.SceneryGenerator({
+            world: this,
+            images: [
+                Images.tree_01
+            ]
+        });
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
@@ -88,19 +96,6 @@ var Game = Scene.extend({
         });
         this.player = null;
         this.pluckProtestor();
-    },
-
-    createScrollable: function(z) {
-        var s = new scrollables.Scrollable({
-            height: 64,
-            width: 64,
-            x:256,
-            y:50,
-            z:z,
-            image: Images.tree_01,
-            world: this
-        });
-        this.scrollables.add(s);
     },
 
     createProtestors: function(limit) {
@@ -172,13 +167,15 @@ var Game = Scene.extend({
     },
 
     update: function(dt) {
+        this.scrollGenerator.update(dt);
+
         Scene.prototype.update.call(this, dt);
+
 
         dt = (dt / 1000); // Sane velocity mutations.
 
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
-        this.scrollables.update(dt);
 
         if (this.Obstacles && this.Obstacles.alive) {
             this.Obstacles.update(dt);
@@ -198,7 +195,9 @@ var Game = Scene.extend({
         surface.clear();
         this.view.clear();
 
-        this.scrollables.draw(this.view);
+        this.surface.fill('#fff');
+
+            //this.scrollables.draw(this.view);
 
         // Draw the police pressure line as useful debugging.
         gamejs.draw.line(this.view, "#cccccc",
@@ -215,6 +214,7 @@ var Game = Scene.extend({
             [this.frontLine, 0],
             [this.frontLine, surface.getSize()[1]]);
         Scene.prototype.draw.call(this, surface, {clear: false});
+
     },
 
     event: function(ev) {
