@@ -70,12 +70,15 @@ var TerrainLayer = Entity.extend({
         this.rect.height = Math.floor((this.rect.height * this.scale_factor)/3.5);
         this.rect.top += Math.floor(this.scale_factor * 20);
         this.imageFile = gamejs.image.load(options.image);
+        this.image = new gamejs.Surface(this.rect);
         var dims = this.imageFile.getSize();
         var newDims = [Math.floor((dims[0] * this.scale_factor)/3.5), this.rect.height];
         this.imageFile = gamejs.transform.scale(this.imageFile, newDims);
 
-        for(var i; i * newDims[0] < this.rect.width; i++) {
-            
+        for(var i = 0; i * newDims[0] < this.rect.width; i++) {
+            var rect = new gamejs.Rect([i * newDims[0]], newDims);
+            this.image.blit(this.imageFile, rect);
+            //gamejs.draw.rect(this.image, "#000", rect);
         }
     },
 
