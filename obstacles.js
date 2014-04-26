@@ -53,8 +53,6 @@ ObstacleEmitter.prototype = {
             this.count -= 1;
             this.duration = this.randomDuration();
         };
-        
-        //console.log(this.currentDuration);
 
         if (this.count === 0) {
             this.alive = false;
