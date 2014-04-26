@@ -17,11 +17,8 @@ var Obstacle = Entity.extend({
         this.hex = "#000000";
         this.type = options.type;
         console.log(this.type);
-        if(this.type === 1){
-            this.image = Images.fence;
-        } else {
-            this.image = Images.barricade;
-        };
+        this.image = gamejs.image.load(options.image);
+
     },
     
     update: function(dt) {
@@ -29,7 +26,7 @@ var Obstacle = Entity.extend({
     },
     
     draw: function(surface) {
-        gamejs.draw.rect(surface, this.hex, this.rect);
+        Entity.prototype.draw.apply(this, arguments);
     }
 });
 
@@ -40,6 +37,7 @@ var ObstacleEmitter = function(options){
     this.world = options.world;
     this.currentDuration = 0;
     this.duration = 8;
+    this.images = options.images;
 };
 
 ObstacleEmitter.prototype = {
@@ -54,13 +52,15 @@ ObstacleEmitter.prototype = {
     update: function(dt) {        
         this.currentDuration += dt;
         if(this.count > 0 && this.currentDuration >= this.duration) {
+            var type = this.ObstacleType();
             this.world.entities.add(new Obstacle({
                 world: this.world,
                 x: this.world.width(),
-                y: this.world.height() - 30,
-                height: 30,
-                width: 2,
-                type: this.ObstacleType()
+                y: this.world.height() - 130,
+                height: 187,
+                width: 150,
+                type: type,
+                image: this.images[type - 1]
             }));
             this.currentDuration = 0;
             this.count -= 1;

@@ -29,18 +29,39 @@ var Scrollable = Entity.extend({
 
 var SceneryGenerator = function(options) {
     this.world = options.world || null;
+    this.nextScrollable = _.random(100, 1000);
+    this.timer = 0;
     this.initialize(options);
 };
 
 _.extend(SceneryGenerator.prototype, {
     initialize: function(options) {
+        this.images = options.images;
     },
 
-    generateScenery: function(sceneryType, z) {
+    generateScenery: function(image, z) {
+        var s = new Scrollable({
+            height: 64,
+            width: 64,
+            x:256,
+            y:50,
+            z:z,
+            image: image,
+            world: this.world
+        });
+        this.world.entities.add(s);
+    },
 
+    update: function(dt) {
+        this.timer += dt;
+        if (this.timer >= this.nextScrollable) {
+            this.nextScrollable = _.random(100, 1000);
+            this.timer = 0;
+            this.generateScenery(_.sample(this.images), _.random(-9.9,9.9));
+        }
     }
 });
 
 module.exports = {
-    Scrollable: Scrollable
+    SceneryGenerator: SceneryGenerator
 };

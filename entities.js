@@ -29,6 +29,7 @@ var Citizen = Entity.extend({
         this.speed = 0;
         this.onGround = false;
         this.hex = randomHex();
+        this.z = 0;
 
         if (options.spriteSheet) {
             this.spriteSheet = options.spriteSheet;
@@ -241,7 +242,11 @@ var Protestor = Citizen.extend({
     },
 
     restoreMotion: function() {
+        this.isDeking = false;
+        this.isDucking = false;
+        this.isStumbling = false;
         this.accel = 1.5;
+        this.canDeke = true;
     },
 
     deke: function() {
@@ -253,8 +258,6 @@ var Protestor = Citizen.extend({
     },
 
     endDeke: function() {
-        this.isDeking = false;
-        this.canDeke = true;
         this.restoreMotion();
     },
 
@@ -266,8 +269,7 @@ var Protestor = Citizen.extend({
     },
 
     endDuck: function() {
-        this.isDucking = false;
-        this.canDeke = true;
+        this.restoreMotion();
     },
 
     stumble: function() {
@@ -279,8 +281,6 @@ var Protestor = Citizen.extend({
     },
 
     endStumble: function() {
-        this.isStumbling = false;
-        this.canDeke = true;
         this.restoreMotion();
     },
 
