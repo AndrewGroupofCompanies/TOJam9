@@ -20,8 +20,9 @@ var Scrollable = Entity.extend({
     },
 
     update: function(dt) {
+        var scale_factor = 1 / Math.pow(Math.E, (this.z / 5));
         if (this.world) {
-            this.move(this.world.speed + this.z, 0);
+            this.move(this.world.speed * scale_factor / 5, 0);
         }
     }
 });
@@ -33,7 +34,7 @@ var SceneryGenerator = function(options) {
 
 _.extend(SceneryGenerator.prototype, {
     initialize: function(options) {
-        
+
     },
 
     generateScenery: function(sceneryType, z) {

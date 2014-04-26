@@ -61,7 +61,7 @@ var Game = Scene.extend({
         this.createScrollable(5);
         this.createScrollable(7);
         this.createScrollable(-10);
-        this.createScrollable(9);
+        this.createScrollable(-1);
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
         

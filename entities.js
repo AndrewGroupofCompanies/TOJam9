@@ -27,6 +27,9 @@ var blueHex = function() {
   return blueColour;
 };
 
+//Double tap speed in miliseconds
+var doubleTapSpeed = 200;
+
 var Citizen = Entity.extend({
     initialize: function(options) {
         options = (options || {});
@@ -35,16 +38,6 @@ var Citizen = Entity.extend({
         this.velocity = new Vec2d(0, 0);
         this.speed = 0;
         this.onGround = false;
-
-        if (options.spriteSheet) {
-            this.spriteSheet = options.spriteSheet;
-            this.anim = new animate.Animation(this.spriteSheet, "running", {
-                running: {frames: _.range(40), rate: 30}
-            });
-
-            this.image = this.anim.update(0);
-            this.anim.setFrame(_.random(0,23));
-        }   
 
         this.hex = randomHex();
     },
@@ -116,6 +109,10 @@ var Citizen = Entity.extend({
         if (this.image) {
             this.image = this.anim.update(dt);
         }
+
+        if (this.anim.isFinished()) {
+            this.anim.start('running');
+        }
     },
 
     draw: function(surface) {
@@ -125,6 +122,12 @@ var Citizen = Entity.extend({
             Entity.prototype.draw.apply(this, arguments);
         } else {
             gamejs.draw.rect(surface, this.hex, this.rect);
+        }
+    },
+
+    setAnimation: function(animation) {
+        if (this.anim.currentAnimation !== animation) {
+            this.anim.start(animation);
         }
     }
 
@@ -136,10 +139,23 @@ var Protestor = Citizen.extend({
 
         this.isProtestor = true; // Identifier.
 
+        if (options.spriteSheet) {
+            this.spriteSheet = options.spriteSheet;
+            this.anim = new animate.Animation(this.spriteSheet, "running", {
+                running: {frames: _.range(40), rate: 30, loop: true},
+                deke: {frames: _.range(81, 90), rate: 30}
+            });
+
+            this.image = this.anim.update(0);
+            this.anim.setFrame(_.random(0,23));
+        }   
+
         this.runSpeed = 1.5; // Our speed modifier.
         this.speed = this.runSpeed;
         this.accel = 1.5;
         this.maxSpeed = 2;
+        this.canDeke = true;
+        this.isDeking = false;
 
         // Police padding. If we get too near the police and are aware of them,
         // we should
@@ -211,6 +227,31 @@ var Protestor = Citizen.extend({
             return true;
         }
         return false;
+    },
+
+    deke: function() {
+        this.isDeking = true;
+        this.setAnimation("deke");
+        this.dekeCounter = 300;
+        this.accel = 3;
+    },
+
+    endDeke: function() {
+        this.isDeking = false;
+        this.accel = 1.5;
+    },
+
+    update: function(dt) {
+        if (this.dekeCounter > 0) {
+            this.dekeCounter -= dt;
+        }
+
+        if (this.dekeCounter <= 0 && this.isDeking) {
+            console.log("alas, my deke has finished");
+            this.endDeke();
+        }
+
+        Citizen.prototype.update.apply(this, arguments);
     }
 });
 
@@ -225,6 +266,8 @@ var Player = Protestor.extend({
         this.controller = new GameController({
             sprint: gamejs.event.K_SPACE
         });
+
+        this.tapCountdown = 0;
     },
 
     // A player just takes over a protestor.
@@ -251,11 +294,15 @@ var Player = Protestor.extend({
         }
 
         // Adjust speed based on input.
-        if (this.isPushing) {
+        if (this.isDeking) {
+            this.speed = this.runSpeed * 2;
+        } else if (this.isPushing) {
             this.speed = this.runSpeed;
         } else {
             this.speed = -1;
         }
+
+        
 
         // Adjust accel and speed because we may be sprinting forward.
         var accel = new Vec2d(this.accel, 0);
@@ -271,11 +318,19 @@ var Player = Protestor.extend({
         if (!key) return;
         if (key.action === "keyDown") {
             if (key.value === this.controller.controls.sprint) {
+                if (this.tapCountdown > 0) {
+                    //double-tap event!
+                    this.deke();
+                }
                 this.isPushing = true;
             }
 
         } else if (key.action === "keyUp") {
-
+            if (key.value === this.controller.controls.sprint) {
+                if (this.tapCountdown <= 0) {
+                    this.tapCountdown = doubleTapSpeed;
+                }
+            }
         }
     },
 
@@ -286,6 +341,14 @@ var Player = Protestor.extend({
         surface.blit(surf, new gamejs.Rect([this.rect.left + 5, this.rect.bottom - 2, 12, 5]));
 
         Protestor.prototype.draw.apply(this, arguments);
+    },
+
+    update: function(dt) {
+        if (this.tapCountdown > 0) {
+            this.tapCountdown -= dt;
+        }
+
+        Protestor.prototype.update.apply(this, arguments);
     }
 });
 
