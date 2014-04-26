@@ -3,7 +3,9 @@ var _ = require('underscore'),
     gamejs = require('gamejs'),
     gramework = require('gramework'),
     Entity = gramework.Entity,
-    Vec2d = gramework.vectors.Vec2d;
+    animate = gramework.animate,
+    Vec2d = gramework.vectors.Vec2d,
+    GameController = gramework.input.GameController;
 
 var randomHex = function() {
     return '#' + (function co(lor){   return (lor += [0,1,2,3,4,5,6,7,8,9,'a','b','c','d','e','f'][Math.floor(Math.random()*16)]) && (lor.length == 6) ?  lor : co(lor); })('');
@@ -34,6 +36,16 @@ var Citizen = Entity.extend({
         this.velocity = new Vec2d(0, 0);
         this.speed = 0;
         this.onGround = false;
+
+        if (options.spriteSheet) {
+            this.spriteSheet = options.spriteSheet;
+            this.anim = new animate.Animation(this.spriteSheet, "running", {
+                running: {frames: _.range(40), rate: 30}
+            });
+
+            this.image = this.anim.update(0);
+            this.anim.setFrame(_.random(0,23));
+        }
 
         this.hex = randomHex();
     },
@@ -101,10 +113,18 @@ var Citizen = Entity.extend({
         this.rect.x += this.velocity.getX();
         this.rect.y += this.velocity.getY();
         this.decideNextMovement(dt);
+
+        if (this.image) {
+            this.image = this.anim.update(dt);
+        }
     },
 
     draw: function(surface) {
-        gamejs.draw.rect(surface, this.hex, this.rect);
+        if (this.image) {
+            Entity.prototype.draw.apply(this, arguments);
+        } else {
+            gamejs.draw.rect(surface, this.hex, this.rect);
+        }
     }
 
 });
@@ -113,6 +133,8 @@ var Protestor = Citizen.extend({
     initialize: function(options) {
         Citizen.prototype.initialize.call(this, options);
 
+        this.isProtestor = true; // Identifier.
+
         this.runSpeed = 1.5; // Our speed modifier.
         this.speed = this.runSpeed;
         this.accel = 1.5;
@@ -120,7 +142,7 @@ var Protestor = Citizen.extend({
 
         // Police padding. If we get too near the police and are aware of them,
         // we should
-        this.awarenessDistance = 40;
+        this.awarenessDistance = 20;
 
         // Eventually police can advance, and we won't be aware of this. This is
         // where we can get captured.
@@ -191,6 +213,81 @@ var Protestor = Citizen.extend({
     }
 });
 
+var Player = Protestor.extend({
+    initialize: function(options) {
+        Protestor.prototype.initialize.call(this, options);
+
+        if (options.existing) {
+            this.createFromProtestor(options.existing);
+        }
+
+        this.controller = new GameController({
+            sprint: gamejs.event.K_SPACE
+        });
+    },
+
+    // A player just takes over a protestor.
+    createFromProtestor: function(p) {
+        this.speed = p.speed;
+        this.velocity = p.velocity;
+        this.world = p.world;
+        this.rect = p.rect;
+        this.hex = "#000000";
+        this.isProtestor = false;
+        this.spriteSheet = p.spriteSheet;
+        this.anim = p.anim;
+        this.image = this.anim.update(0);
+    },
+
+    adjustVector: function(dt) {
+        dt = (dt / 1000); // Sanity.
+        var vec = new Vec2d().add(this.world.gravity);
+        this.velocity.add(vec.mul(dt));
+
+        // If we're near police we should warn the active Player.
+        if (this.nearPolice()) {
+            // TODO
+        }
+
+        // Adjust speed based on input.
+        if (this.isPushing) {
+            this.speed = this.runSpeed;
+        } else {
+            this.speed = -1;
+        }
+
+        // Adjust accel and speed because we may be sprinting forward.
+        var accel = new Vec2d(this.accel, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.velocity = this.velocity.truncate(this.maxSpeed);
+    },
+
+    event: function(ev) {
+        var key = this.controller.handle(ev);
+
+        this.isPushing = false;
+
+        if (!key) return;
+        if (key.action === "keyDown") {
+            if (key.value === this.controller.controls.sprint) {
+                this.isPushing = true;
+            }
+
+        } else if (key.action === "keyUp") {
+
+        }
+    },
+
+    draw: function(surface) {
+        var surf = new gamejs.Surface(12, 12);
+        gamejs.draw.circle(surf, "rgb(255,0,0)", [6,6], 6, 2);
+
+        surface.blit(surf, new gamejs.Rect([this.rect.left + 5, this.rect.bottom - 2, 12, 5]));
+
+        Protestor.prototype.draw.apply(this, arguments);
+    }
+});
+
 var Police = Citizen.extend({
    initialize: function(options){
     Citizen.prototype.initialize.call(this, options);
@@ -202,7 +299,8 @@ var Police = Citizen.extend({
 
 module.exports = {
     Protestor: Protestor,
-    Police: Police
+    Police: Police,
+    Player: Player
 };
 
 },{"gamejs":2,"gramework":30,"underscore":46}],2:[function(require,module,exports){
@@ -9810,7 +9908,7 @@ var _ = require('underscore'),
     Scene      = gramework.Scene,
     Vec2d      = gramework.vectors.Vec2d,
     entities      = require('./entities'),
-    testAnimationEntities = require('./testAnimationEntities');
+    testEntities = require('./testEntities');
 
 var Game = Scene.extend({
     initialize: function(options) {
@@ -9822,36 +9920,23 @@ var Game = Scene.extend({
         this.accel = 0;
 
         // For now, keep it simple with one protestor. Can adjust from there.
-        this.createAnimation(1);
+        this.createAnimation();
     },
 
-    createAnimation: function(limit) {
-        _.each(_.range(limit), function(i) {
-            var p = new testAnimationEntities.Citizenkane({
-                x: 200 + (i * 15), y: 0,
-                width: 30, height: 30,
-                world: this
-            });
-            // console.log(p);
-            this.entities.add(p);
-        }, this);
-    },
-
-    // Identify if an entity is colliding with our world.
-    collides: function(entity) {
-        // hit ROCK BOTTOM
-        if (Math.round(entity.rect.y) >= Math.round(this.height() - entity.rect.height)) {
-            return true;
-        }
+    createAnimation: function() {
+        var kane = new testEntities.Citizenkane({
+            x: 960 - 30,
+            y: 0,
+            world: this
+        });
+        
+        this.entities.add(kane);
     },
 
     update: function(dt) {
         Scene.prototype.update.call(this, dt);
 
         dt = (dt / 1000); // Sane velocity mutations.
-
-        var accel = new Vec2d(this.accel, 0);
-        this.velocity.add(accel.mul(dt).mul(this.speed));
     },
 
     draw: function(surface) {
@@ -9881,7 +9966,7 @@ gamejs.preload([
 gamejs.ready(main);
 
 
-},{"./entities":1,"./testAnimationEntities":48,"gamejs":2,"gramework":30,"underscore":46}],48:[function(require,module,exports){
+},{"./entities":1,"./testEntities":48,"gamejs":2,"gramework":30,"underscore":46}],48:[function(require,module,exports){
 var _ = require('underscore'),
     gamejs    = require('gamejs'),
     gramework = require('gramework'),
@@ -9897,15 +9982,27 @@ var Citizenkane = Entity.extend({
         this.velocity = new Vec2d(0, 0);
         this.speed    = 0;
         this.onGround = false;
-        this.hex      = '#77ff77';
+        this.width = 30;
+        this.height = 30;
 
-        this.sprite = new animate.SpriteSheet('./assets/spritesheet-test.png', 30, 30);
+        this.sprite = new animate.SpriteSheet('./assets/spritesheet-test.png', this.width, this.height);
 
         this.anim = new animate.Animation(this.sprite, "static", {
-            static: {frames: 4, rate: 10.5}
+            static: {frames: _.range(4), rate: 2}
         });
+
         // TODO: Shouldnt need to do this.
         this.image = this.anim.update(0);
+
+        this.anim.start('static');
+    },
+
+    getWidth: function () {
+        return this.width;
+    },
+
+    getHeight: function () {
+        return this.height;
     },
 
     update: function(dt) {
@@ -9913,12 +10010,24 @@ var Citizenkane = Entity.extend({
     },
 
     draw: function(surface) {
-        gamejs.draw.rect(surface, this.hex, this.rect);
+        if (this.image) {
+            Entity.prototype.draw.apply(this, arguments);
+        } else {
+            gamejs.draw.rect(surface, this.hex, this.rect);
+        }
     }
 
 });
 
 var Citizenkane = Citizenkane.extend({});
+
+Citizenkane.prototype.getWidth = function() {
+    return 30;
+};
+
+Citizenkane.prototype.getHeight = function() {
+    return 30;
+};
 
 module.exports = {
     Citizenkane: Citizenkane
