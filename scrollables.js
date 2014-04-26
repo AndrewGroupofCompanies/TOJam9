@@ -40,7 +40,6 @@ _.extend(SceneryGenerator.prototype, {
     },
 
     generateScenery: function(image, z) {
-        return;
         var s = new Scrollable({
             height: 64,
             width: 64,
@@ -58,7 +57,7 @@ _.extend(SceneryGenerator.prototype, {
         if (this.timer >= this.nextScrollable) {
             this.nextScrollable = _.random(100, 1000);
             this.timer = 0;
-            this.generateScenery(_.sample(this.images), _.random(-9.9,9.9));
+            this.generateScenery(_.sample(this.images), _.random(9.9,9.9));
         }
     }
 });
