@@ -13,10 +13,10 @@ var Citizenkane = Entity.extend({
         this.velocity = new Vec2d(0, 0);
         this.speed    = 0;
         this.onGround = false;
-        this.width = 30;
-        this.height = 30;
+        this.xwidth = 30;
+        this.xheight = 30;
 
-        this.sprite = new animate.SpriteSheet('./assets/spritesheet-test.png', this.width, this.height);
+        this.sprite = new animate.SpriteSheet('./assets/spritesheet-test.png', this.xwidth, this.xheight);
 
         this.anim = new animate.Animation(this.sprite, "static", {
             static: {frames: _.range(4), rate: 2}

@@ -37,6 +37,8 @@ var Citizen = Entity.extend({
 
         this.world = options.world;
         this.velocity = new Vec2d(0, 0);
+        this.accel = 1.5;
+        this.maxSpeed = 2;
         this.speed = 0;
         this.onGround = false;
         this.hex = randomHex();
@@ -110,9 +112,10 @@ var Citizen = Entity.extend({
             this.image = this.anim.update(dt);
         }
 
-        if (this.anim.isFinished()) {
+        if (this.anim && this.anim.isFinished()) {
             this.anim.start('running');
         }
+
     },
 
     draw: function(surface) {
@@ -141,19 +144,19 @@ var Protestor = Citizen.extend({
             this.spriteSheet = options.spriteSheet;
             this.anim = new animate.Animation(this.spriteSheet, "running", {
                 running: {frames: _.range(40), rate: 30, loop: true},
-                deke: {frames: _.range(81, 90), rate: 30}
+                deke: {frames: _.range(81, 90), rate: 30},
+                duck: {frames: _.range(41, 50), rate: 30}
             });
 
             this.image = this.anim.update(0);
             this.anim.setFrame(_.random(0,23));
-        }   
+        }
 
         this.runSpeed = 1.5; // Our speed modifier.
         this.speed = this.runSpeed;
-        this.accel = 1.5;
-        this.maxSpeed = 2;
         this.canDeke = true;
         this.isDeking = false;
+        this.isDucking = false;
 
         // Police padding. If we get too near the police and are aware of them,
         // we should
@@ -229,6 +232,7 @@ var Protestor = Citizen.extend({
 
     deke: function() {
         this.isDeking = true;
+        this.canDeke = false;
         this.setAnimation("deke");
         this.dekeCounter = 300;
         this.accel = 3;
@@ -236,10 +240,31 @@ var Protestor = Citizen.extend({
 
     endDeke: function() {
         this.isDeking = false;
+        this.canDeke = true;
         this.accel = 1.5;
     },
 
+    duck: function() {
+        this.setAnimation("duck");
+        this.isDucking = true;
+        this.duckCounter = 500;
+        this.canDeke = false;
+    },
+
+    endDuck: function() {
+        this.isDucking = false;
+        this.canDeke = true;
+    },
+
     update: function(dt) {
+        if (this.duckCounter > 0) {
+            this.duckCounter -= dt;
+        }
+
+        if (this.duckCounter <= 0 && this.isDucking) {
+            this.endDuck();
+        }
+
         if (this.dekeCounter > 0) {
             this.dekeCounter -= dt;
         }
@@ -250,6 +275,48 @@ var Protestor = Citizen.extend({
         }
 
         Citizen.prototype.update.apply(this, arguments);
+    }
+});
+
+var Police = Citizen.extend({
+    initialize: function(options){
+        Citizen.prototype.initialize.call(this, options);
+
+        this.hex = blueHex();
+        this.speed = 0.5;
+        this.pressurePadding = 20;
+    },
+
+    // Police won't always pass the pressure line, but we also want them to have
+    // some variable movement.
+    nearPoliceLine: function() {
+        if ((this.rect.x + this.rect.width + this.pressurePadding) >= this.world.policePressure) {
+            return true;
+        }
+        return false;
+    },
+
+    nearBack: function() {
+        if (this.rect.x <= this.world.backLine) {
+            return true;
+        }
+        return false;
+    },
+
+    adjustVector: function(dt) {
+        Citizen.prototype.adjustVector.call(this, dt);
+        dt = (dt / 1000);
+
+        // Adjust accel and speed because we may be sprinting forward.
+        var accel = new Vec2d(this.accel, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.velocity = this.velocity.truncate(this.maxSpeed);
+
+        if (this.nearPoliceLine()) {
+            this.speed = -0.5;
+        } else if (this.nearBack()) {
+            this.speed = 0.5;
+        }
     }
 });
 
@@ -300,8 +367,6 @@ var Player = Protestor.extend({
             this.speed = -1;
         }
 
-        
-
         // Adjust accel and speed because we may be sprinting forward.
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
@@ -316,7 +381,7 @@ var Player = Protestor.extend({
         if (!key) return;
         if (key.action === "keyDown") {
             if (key.value === this.controller.controls.sprint) {
-                if (this.tapCountdown > 0) {
+                if (this.tapCountdown > 0 && this.canDeke) {
                     //double-tap event!
                     this.deke();
                 }
@@ -333,11 +398,9 @@ var Player = Protestor.extend({
     },
 
     draw: function(surface) {
-        var surf = new gamejs.Surface(12, 12);
-        gamejs.draw.circle(surf, "rgb(255,0,0)", [6,6], 6, 2);
-
-        surface.blit(surf, new gamejs.Rect([this.rect.left + 5, this.rect.bottom - 2, 12, 5]));
-
+        gamejs.draw.circle(surface, "rgb(255, 0, 0)",
+            [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
+        
         Protestor.prototype.draw.apply(this, arguments);
     },
 
@@ -346,17 +409,22 @@ var Player = Protestor.extend({
             this.tapCountdown -= dt;
         }
 
+        var collisions = gamejs.sprite.spriteCollide(this, this.world.entities, false);
+
+        if (collisions.length > 0) {
+            collisions.forEach(function(collision){
+                if (collision.name === 'obstacle') {
+                    if (this.isPushing) {
+                        //this.stumble();
+                    } else {
+                        this.duck();
+                    }
+                }
+            }, this);
+        }
+
         Protestor.prototype.update.apply(this, arguments);
     }
-});
-
-var Police = Citizen.extend({
-   initialize: function(options){
-    Citizen.prototype.initialize.call(this, options);
-
-    this.hex = blueHex();
-    this.speed = _.random(0, 3);
-   }
 });
 
 module.exports = {
@@ -365,7 +433,7 @@ module.exports = {
     Player: Player
 };
 
-},{"gamejs":2,"gramework":30,"underscore":72}],2:[function(require,module,exports){
+},{"gamejs":2,"gramework":30,"underscore":74}],2:[function(require,module,exports){
 var matrix = require('./gamejs/utils/matrix');
 var objects = require('./gamejs/utils/objects');
 var Callback = require('./gamejs/callback').Callback;
@@ -5619,12 +5687,14 @@ module.exports = {
     Camera: require('./gramework/camera'),
     Scene: require('./gramework/scenes').Scene,
     animate: require('./gramework/animate'),
+    state: require('./gramework/state'),
     image: require('./gramework/image'),
     input: require('./gramework/input'),
     layers: require('./gramework/layers'),
     particles:  require('./gramework/particles'),
     tilemap: require('./gramework/tilemap'),
     vectors: require('./gramework/vectors'),
+    uielements: require('./gramework/uielements'), 
     gamejs: gamejs,
     inherits: inherits,
     init: init
@@ -5633,8 +5703,7 @@ module.exports = {
 //TODO: Kill this in favour of Entity
 //exports.actors = require('./gramework/actors');
 
-
-},{"./gramework/animate":31,"./gramework/camera":32,"./gramework/dispatcher":33,"./gramework/entity":34,"./gramework/image":35,"./gramework/input":36,"./gramework/layers":37,"./gramework/particles":38,"./gramework/scenes":39,"./gramework/tilemap":40,"./gramework/vectors":41,"gamejs":42,"super":70}],31:[function(require,module,exports){
+},{"./gramework/animate":31,"./gramework/camera":32,"./gramework/dispatcher":33,"./gramework/entity":34,"./gramework/image":35,"./gramework/input":36,"./gramework/layers":37,"./gramework/particles":38,"./gramework/scenes":39,"./gramework/state":40,"./gramework/tilemap":41,"./gramework/uielements":42,"./gramework/vectors":43,"gamejs":44,"super":72}],31:[function(require,module,exports){
 var gamejs = require('gamejs'),
     inherits = require('super'),
     _ = require('underscore');
@@ -5646,8 +5715,11 @@ var SpriteSheet = exports.SpriteSheet = function(image, w, h) {
     this.width = w;
     this.height = h;
 
-    this.image = gamejs.image.load(image);
+    this.image = image;
+
+    //this.image._context.imageSmoothingEnabled = false;
     this.surfaceCache = [];
+
 
     var imgSize = new gamejs.Rect([0,0],[this.width,this.height]);
 
@@ -5656,6 +5728,7 @@ var SpriteSheet = exports.SpriteSheet = function(image, w, h) {
         for (var j = 0; j < this.image.rect.width; j += this.width) {
             var surface = new gamejs.Surface([this.width, this.height]);
             var rect = new gamejs.Rect(j, i, this.width, this.height);
+            //surface._context.imageSmoothingEnabled = false;
             surface.blit(this.image, imgSize, rect);
             this.surfaceCache.push(surface);
         }
@@ -5681,6 +5754,8 @@ var Animation = exports.Animation = function(spriteSheet, initial, spec) {
     this.currentFrame = null;
     this.currentFrameDuration = 0;
     this.currentAnimation = null;
+    this.loop = false;
+    this._isFinished = false;
 
     this.spriteSheet = spriteSheet;
 
@@ -5695,8 +5770,12 @@ Animation.extend = inherits.extend;
 // An empty function by default. Override it with your own initialization logic.
 Animation.prototype.initialize = function(options) {};
 
+Animation.prototype.setFrame = function(frame) {
+    this.frameIndex = frame;
+};
 
 Animation.prototype.start = function(name) {
+    this._isFinished = false;
     this.setState(name);
     this.update(0);
     return;
@@ -5712,6 +5791,7 @@ Animation.prototype.setState = function(name) {
     this.frameIndex = 0;
     this.currentFrameDuration = 0;
     this.frameDuration = 1000 / this.spec[name].rate;
+    this.loop = this.spec[name].loop || false;
 };
 
 Animation.prototype.update = function(msDuration) {
@@ -5728,7 +5808,11 @@ Animation.prototype.update = function(msDuration) {
 
         var length = this.spec[this.currentAnimation].frames.length - 1;
         if (this.frameIndex > length) {
-            this.frameIndex = 0;
+            if (this.loop) {
+                this.frameIndex = 0;
+            } else {
+                this._isFinished = true;
+            }
         }
     }
 
@@ -5736,7 +5820,11 @@ Animation.prototype.update = function(msDuration) {
     return this.image;
 };
 
-},{"gamejs":42,"super":70,"underscore":71}],32:[function(require,module,exports){
+Animation.prototype.isFinished = function() {
+    return this._isFinished;
+};
+
+},{"gamejs":44,"super":72,"underscore":73}],32:[function(require,module,exports){
 /*
  * Create a camera around a display.
  *
@@ -5796,7 +5884,7 @@ _.extend(Camera.prototype, {
     initialize: function(sceneExtents, options) {
         this.width = options.width || 400;
         this.height = options.height || 300;
-        this.zoom = options.zoom || 2;
+        this.zoom = options.zoom || 1;
         this.rect = new gamejs.Rect([0,0], [this.width, this.height]);
 
         this.sceneExtents = sceneExtents;
@@ -5909,21 +5997,23 @@ _.extend(Camera.prototype, {
     }
 });
 
-},{"gamejs":42,"underscore":71}],33:[function(require,module,exports){
+},{"gamejs":44,"underscore":73}],33:[function(require,module,exports){
 /*global document*/
 var _ = require('underscore'),
-    inherits = require('super');
+    inherits = require('super'),
+    Transition = require('./state').Transition;
 
 function DispatcherException(message) {
     this.message = message;
     this.name = "DispatcherException";
 }
 
-// TODO: Transitions!
 var Dispatcher = module.exports = function(gamejs, options) {
     options = (options || {});
 
     this.stack = [];
+    this.defaultTransition = (typeof options.defaultTransition === "undefined" ? Transition : options.defaultTransition);
+
     if (options.initial) {
         this.push(options.initial);
     }
@@ -5978,8 +6068,19 @@ _.extend(Dispatcher.prototype, {
     },
 
     push: function(state, transition) {
-        state.dispatcher = this;
-        this.stack.push(state);
+        if (transition !== null) {
+            transition = (transition || this.defaultTransition);
+        }
+
+        if (transition) {
+            var ts = new transition(this.top(), state);
+            ts.dispatcher = this;
+            this.stack.push(ts);
+        } else {
+            state.dispatcher = this;
+            this.stack.push(state);
+        }
+
     },
 
     top: function() {
@@ -6009,7 +6110,7 @@ _.extend(Dispatcher.prototype, {
     }
 });
 
-},{"super":70,"underscore":71}],34:[function(require,module,exports){
+},{"./state":40,"super":72,"underscore":73}],34:[function(require,module,exports){
 // A stripped down, simpler Actors module.
 var gamejs = require('gamejs'),
     inherits = require('super'),
@@ -6029,8 +6130,8 @@ var Entity = module.exports = function(options) {
     this.h = options.height;
 
     this.rect = new gamejs.Rect([
-        options.x + this.w / 2,
-        options.y + this.h / 2
+        options.x,
+        options.y
     ], [this.w, this.h]);
 
     this.initialize.apply(this, arguments);
@@ -6066,14 +6167,14 @@ Entity.prototype.setPos = function(x, y) {
     this.rect.y = y;
 };
 
-},{"gamejs":42,"super":70}],35:[function(require,module,exports){
+},{"gamejs":44,"super":72}],35:[function(require,module,exports){
 var gamejs = require('gamejs');
 
 var imgfy = exports.imgfy = function(path) {
     return gamejs.image.load(path);
 };
 
-},{"gamejs":42}],36:[function(require,module,exports){
+},{"gamejs":44}],36:[function(require,module,exports){
 var gamejs = require('gamejs'),
     inherits = require('super'),
     Vec2d = require('./vectors').Vec2d,
@@ -6098,7 +6199,7 @@ var GameController = exports.GameController = function(options) {
     _.extend(this.controls, options);
     this.reverseControls = {};
 
-    for (key in this.controls) {
+    for (var key in this.controls) {
         this.reverseControls[this.controls[key]] = key;
     }
 
@@ -6112,7 +6213,10 @@ GameController.prototype.initialize = function(options) {};
 
 GameController.prototype.handle = function(event) {
     if (event.type === gamejs.event.MOUSE_MOTION) {
-        return { mousePos: event.pos };
+        return {
+            action: "mouseMotion",
+            value: event.pos
+        };
     }
 
     if (_.indexOf(_.values(this.controls), event.key) == -1) {
@@ -6123,14 +6227,16 @@ GameController.prototype.handle = function(event) {
         this.keyDown = event.key;
         this.keyUp = null;
         return {
-            keyDown: this.keyDown,
+            action: "keyDown",
+            value: this.keyDown,
             label: this.reverseControls[this.keyDown]
         };
     } else if (event.type === gamejs.event.KEY_UP) {
         this.keyUp = event.key;
         this.keyDown = null;
         return {
-            keyUp: this.keyUp,
+            action: "keyUp",
+            value: this.keyUp,
             label: this.reverseControls[this.keyUp]
         };
     }
@@ -6166,7 +6272,7 @@ GameController.prototype.movementVector = function() {
     return vel.normalized();
 };
 
-},{"./vectors":41,"gamejs":42,"super":70,"underscore":71}],37:[function(require,module,exports){
+},{"./vectors":43,"gamejs":44,"super":72,"underscore":73}],37:[function(require,module,exports){
 var imgfy = require('./image').imgfy;
 
 // Use for repeating Backgrounds on a screen, adjust speed
@@ -6291,97 +6397,186 @@ Emitter.prototype.draw = function(surface) {
     }, this);
 };
 
-},{"gamejs":42}],39:[function(require,module,exports){
+},{"gamejs":44}],39:[function(require,module,exports){
 var gamejs = require('gamejs'),
     inherits = require('super'),
-    Camera = require('./camera');
+    Camera = require('./camera'),
+    _ = require('underscore');
 
 var Scene = exports.Scene = function(options) {
+    options = (options || {});
+
     this._elapsed = 0;
     this._width = options.width;
     this._height = options.height;
+    this._pixelScale = options.pixelScale || 1;
+
+    // No options passed, but we can give sensible defaults by getting the games
+    // main surface.
+    if (!this._width || !this._height) {
+        var size = gamejs.display.getSurface().getSize();
+        if (this._pixelScale && this._pixelScale !== 1) {
+            size = [Math.floor(size[0] / this._pixelScale), Math.floor(size[1] / this._pixelScale)];
+        }
+        this._width = (Math.floor(this._width / this._pixelScale) || size[0]);
+        this._height = (Math.floor(this._height / this._pixelScale) || size[1]);
+    }
 
     // Actors will be deprecated in favour of entities.
     this.actors = new gamejs.sprite.Group();
     this.entities = new gamejs.sprite.Group();
 
     this.layers = [];
-    this.elements = [];
+    this.elements = new gamejs.sprite.Group();
     this.view = new gamejs.Surface([this._width, this._height]);
 
     this.camera = new Camera(this.view.rect, {
         width: this._width,
         height: this._height
     });
+
+    this.surface = new gamejs.Surface(this.camera.rect);
+
     this.initialize.apply(this, arguments);
 };
 Scene.extend = inherits.extend;
 
-// An empty function by default. Override it with your own initialization logic.
-Scene.prototype.initialize = function(options) {};
+_.extend(Scene.prototype, {
+    // An empty function by default. Override it with your own initialization logic.
+    initialize: function(options) {},
 
-Scene.prototype.width = function() {
-    return this.camera.rect.width;
+    width: function() {
+        return this._width;
+    },
+
+    height: function() {
+        return this._height;
+    },
+
+    getElapsedTime: function() {
+        return this._elapsed;
+    },
+
+    pushEntity: function(entity) {
+        this.entities.add(entity);
+    },
+
+    pushElement: function(element) {
+        this.elements.add(element);
+    },
+
+    pushLayer: function(layer) {
+        this.layers.push(layer);
+    },
+
+    update: function(dt) {
+        this.layers.forEach(function(layer) {
+            layer.update(dt);
+        }, this);
+
+        this.entities.update(dt);
+        this.actors.update(dt);
+        this.elements.update(dt);
+        this.camera.update(dt);
+        this._elapsed += dt;
+    },
+
+    draw: function(display, options) {
+        // TODO: Offer same interface as Sprite groups. No need to iterate
+        options = (options || {});
+
+        var defaults = {
+            clear: true
+        };
+        _.extend(defaults, options);
+
+        if (defaults.clear === true) {
+            this.view.clear();
+            display.clear();
+        }
+
+        this.layers.forEach(function(layer) {
+            layer.draw(this.view, this.camera);
+        }, this);
+        this.actors.draw(this.view);
+        this.entities.draw(this.view);
+
+        if (this._pixelScale !== 1) {
+            this.camera.draw(this.view, this.surface);
+            this.elements.draw(this.surface);
+            display.blit(this.surface, display.rect);
+        } else {
+            this.camera.draw(this.view, display);
+            this.elements.draw(display);
+        }
+
+    }
+});
+
+},{"./camera":32,"gamejs":44,"super":72,"underscore":73}],40:[function(require,module,exports){
+var gamejs = require('gamejs'),
+    inherits = require('super');
+
+var Transition = function(before, after, options) {
+    options = (options || {});
+
+    this.before = before;
+    this.after = after;
+
+    if (!this.time) {
+        this.time = (options.time || 2.0);
+    }
+
+    if (!this.colour) {
+        this.colour = (options.colour || [255, 0, 255]);
+    }
+
+    this.p = 0;
+    this.initialize.apply(this, arguments);
 };
 
-Scene.prototype.height = function() {
-    return this.camera.rect.height;
+Transition.prototype.initialize = function(before, after, options) {};
+Transition.prototype.draw = function(surface) {};
+Transition.prototype.update = function(dt) { this.dispatcher.push(this.after, null); };
+Transition.extend = inherits.extend;
+
+var FadeTransition = Transition.extend({
+    time: 2.0,
+    colour: [0, 0, 0]
+});
+
+FadeTransition.prototype.draw = function(surface) {
+    var alpha;
+    surface.clear();
+
+    // At the start of the transition, we go from a solid block to 0-alpha, and
+    // then we begin showing the new state going from 1-alpha to 0-alpha again.
+    if (this.p < (this.time / 2) && this.before) {
+        alpha = (this.time - this.p) * this.p;
+        this.before.draw(surface);
+    } else {
+        alpha = (this.time - this.p) / this.p;
+        this.after.draw(surface);
+    }
+
+    var rgbaString = ["rgba(", this.colour.join(",") + ",", alpha, ")"].join('');
+    surface.fill(rgbaString);
+};
+FadeTransition.prototype.update = function(dt) {
+    dt = (dt / 1000);
+
+    this.p += dt;
+    if (this.p >= this.time) {
+        this.dispatcher.push(this.after, null);
+    }
 };
 
-// Deprecate this in favour of simply using this.actors.add
-// If we want side-effects, this.actors can become a special list with the same
-// API as sprite.Group
-Scene.prototype.pushActor = function(actor) {
-    this.actors.add(actor);
+module.exports = {
+    Transition: Transition,
+    FadeTransition: FadeTransition
 };
 
-Scene.prototype.pushEntity = function(entity) {
-    this.entities.add(entity);
-};
-
-Scene.prototype.pushElement = function(element) {
-    this.elements.push(element);
-};
-
-Scene.prototype.getElapsedTime = function() {
-    return this._elapsed;
-};
-
-Scene.prototype.pushLayer = function(layer) {
-    this.layers.push(layer);
-};
-
-Scene.prototype.update = function(dt) {
-    this.layers.forEach(function(layer) {
-        layer.update(dt);
-    }, this);
-
-    this.entities.update(dt);
-    this.actors.update(dt);
-    this.elements.forEach(function(element){
-        element.update(dt);
-    }, this);
-    this.camera.update(dt);
-    this._elapsed += dt;
-};
-
-Scene.prototype.draw = function(display) {
-    // TODO: Offer same interface as Sprite groups. No need to iterate
-    this.view.clear();
-    display.clear();
-    this.layers.forEach(function(layer) {
-        layer.draw(this.view, this.camera);
-    }, this);
-    this.actors.draw(this.view);
-    this.entities.draw(this.view);
-
-    this.elements.forEach(function(element) {
-        element.draw(this.view);
-    }, this);
-    this.camera.draw(this.view, display);
-};
-
-},{"./camera":32,"gamejs":42,"super":70}],40:[function(require,module,exports){
+},{"gamejs":44,"super":72}],41:[function(require,module,exports){
 /*jshint es5:true */
 /*
  * Tilemap module.
@@ -6531,7 +6726,423 @@ var LayerView = function(map, layer, opts) {
     return this;
 };
 
-},{"gamejs":42,"super":70}],41:[function(require,module,exports){
+},{"gamejs":44,"super":72}],42:[function(require,module,exports){
+/*jshint es5:true */
+/*
+ * Interface Entity module.
+ *
+ */
+var gamejs = require('gamejs');
+var Entity = require('./entity'),
+    inherits = require('super'),
+    _ = require('underscore');
+
+var Element = exports.Element = function(options) {
+    Entity.apply(this, arguments);
+};
+
+_.extend(Element.prototype, Entity.prototype, {
+    initialize: function(options) {
+        // TODO: Allow borderWidth to accept array to differentiate between vertical width and horizontal width
+        this.borderWidth = options.borderWidth || 0;
+
+        if (options.color) {
+            if (options.color.length === 3) {
+                this.color = 'rgb(' + options.color.join(',') + ')';
+            } else if (options.color.length === 4) {
+                this.color = 'rgba(' + options.color.join(',') + ')';
+            }
+        } else {
+            this.color = '#000';
+        }
+
+        if (options.borderColor) {
+            if (options.borderColor.length === 3) {
+                this.borderColor = 'rgb(' + options.borderColor.join(',') + ')';
+            } else if (options.borderColor.length === 4) {
+                this.borderColor = 'rgba(' + options.borderColor.join(',') + ')';
+            }
+        } else {
+            this.borderColor = '#000';
+        }
+
+        if (options.borderImage) {
+            this.borderImage = new BorderImage({
+                slice: options.borderImageSlice,
+                imgPath: options.borderImage,
+                repeat: options.borderImageRepeat,
+                width: this.w + this.borderWidth,
+                height: this.h + this.borderWidth,
+                x: this.rect.left - (this.borderWidth / 2),
+                y: this.rect.top - (this.borderWidth / 2),
+                //size: [width + 2 * this.borderWidth, height + 2 * this.borderWidth],
+                //position: [this.position[0] - this.borderWidth, this.position[1] - this.borderWidth],
+                borderWidth: this.borderWidth
+            });
+        }
+
+        if (options.image) {
+            this.image = gamejs.image.load(options.image);
+        }
+    },
+
+    update: function(dt) {
+
+    },
+
+    draw: function(surface) {
+        if (this.image) {
+
+        } else {
+            gamejs.draw.rect(surface, this.color, this.rect);
+        }
+
+        if (this.borderImage) {
+            this.borderImage.draw(surface);
+        } else if (this.borderWidth > 0){
+            gamejs.draw.rect(
+                surface,
+                this.borderColor,
+                this.rect,
+                this.borderWidth
+            );
+        }
+
+    }
+});
+
+var BorderImage = function(options) {
+    Entity.apply(this, arguments);
+};
+
+_.extend(BorderImage.prototype, Entity.prototype, {
+    initialize: function(options) {
+        this.imgPath = options.imgPath;
+        this.ninePatch = gamejs.image.load(this.imgPath);
+
+        if (Array.isArray(options.slice) && options.slice.length === 2) {
+            this.vSlice = options.slice[1];
+            this.hSlice = options.slice[0];
+        } else if (typeof options.slice === 'number') {
+            this.vSlice = this.hSlice = options.slice
+        }
+        this.repeat = options.repeat || 'repeat';
+        this.position = options.position || [0,0];
+        this.borderWidth = options.borderWidth || 0;
+
+        /*
+        This is where the BorderImage object breaks apart the image file into nine sections and creates
+        the respective surfaces for the corners and sides. These will be drawn around the parent element
+        object at the time of rendering
+        */
+
+        var imgSize = this.ninePatch.getSize();
+        if (this.vSlice > imgSize[1]) throw new Error("vert slice greater than image height");
+        if (this.hSlice > imgSize[0]) throw new Error("horz slice greater than image width");
+
+        var columnHeight = imgSize[1] - (2 * this.vSlice);
+        var rowWidth = imgSize[0] - (2 * this.hSlice);
+        var cornerRect = new gamejs.Rect(0,0,this.borderWidth,this.borderWidth);
+        var columnRect = new gamejs.Rect(0,0,this.borderWidth,columnHeight);
+        var rowRect = new gamejs.Rect(0,0,rowWidth,this.borderWidth);
+
+        this.leftBorderFull = new gamejs.Surface(this.borderWidth, this.h - 2 * this.borderWidth);
+        this.rightBorderFull = new gamejs.Surface(this.borderWidth, this.h - 2 * this.borderWidth);
+        this.topBorderFull = new gamejs.Surface(this.w - 2 * this.borderWidth, this.borderWidth);
+        this.bottomBorderFull = new gamejs.Surface(this.w - 2 * this.borderWidth, this.borderWidth);
+
+        this.topLeft = new gamejs.Surface(this.borderWidth, this.borderWidth);
+        this.topRight = new gamejs.Surface(this.borderWidth, this.borderWidth);
+        this.bottomLeft = new gamejs.Surface(this.borderWidth, this.borderWidth);
+        this.bottomRight = new gamejs.Surface(this.borderWidth, this.borderWidth);
+
+        this.leftBorder = new gamejs.Surface(this.borderWidth, columnHeight);
+        this.rightBorder = new gamejs.Surface(this.borderWidth, columnHeight);
+        this.topBorder = new gamejs.Surface(rowWidth, this.borderWidth);
+        this.bottomBorder = new gamejs.Surface(rowWidth, this.borderWidth);
+
+        var topLeftRect = new gamejs.Rect(0,0,this.hSlice,this.vSlice);
+        var topRightRect = new gamejs.Rect(imgSize[0]-this.hSlice,0,this.hSlice,this.vSlice);
+        var bottomLeftRect = new gamejs.Rect(0, imgSize[1]-this.vSlice,this.hSlice,this.vSlice);
+        var bottomRightRect = new gamejs.Rect(imgSize[0]-this.hSlice,imgSize[1]-this.vSlice,this.hSlice,this.vSlice);
+
+        this.topLeft.blit(this.ninePatch, cornerRect, topLeftRect);
+        this.topRight.blit(this.ninePatch, cornerRect, topRightRect);
+        this.bottomLeft.blit(this.ninePatch, cornerRect, bottomLeftRect);
+        this.bottomRight.blit(this.ninePatch, cornerRect, bottomRightRect);
+        
+        var leftRect = new gamejs.Rect(0,this.vSlice,this.hSlice,columnHeight);
+        var rightRect = new gamejs.Rect(imgSize[0]-this.hSlice,this.vSlice,this.hSlice,columnHeight);
+        var topRect = new gamejs.Rect(this.hSlice,0,rowWidth,this.vSlice);
+        var bottomRect = new gamejs.Rect(this.hSlice,imgSize[1]-this.vSlice,rowWidth,this.vSlice);
+
+        this.leftBorder.blit(this.ninePatch, columnRect, leftRect);
+        this.rightBorder.blit(this.ninePatch, columnRect, rightRect);
+        this.topBorder.blit(this.ninePatch, rowRect, topRect);
+        this.bottomBorder.blit(this.ninePatch, rowRect, bottomRect);
+
+        this.image = new gamejs.Surface(this.rect);
+
+        console.log(this.x + ' ' + this.y);
+        
+        for (var i=0;i*this.leftBorder.getSize()[1] < this.h;i++) {
+            this.leftBorderFull.blit(this.leftBorder, [0,(i*this.leftBorder.getSize()[1])]);
+            this.rightBorderFull.blit(this.rightBorder, [0,(i*this.leftBorder.getSize()[1])]);
+        }
+
+        this.image.blit(this.leftBorderFull, [0, this.borderWidth]);
+        this.image.blit(this.rightBorderFull, [this.w-this.borderWidth, this.borderWidth]);
+
+        for (var i=0;i*this.topBorder.getSize()[0] < this.w;i++) {
+            this.topBorderFull.blit(this.topBorder, [(i*this.topBorder.getSize()[0]),0]);
+            this.bottomBorderFull.blit(this.bottomBorder, [(i*this.topBorder.getSize()[0]),0]);
+        }
+
+        this.image.blit(this.topBorderFull, [this.borderWidth, 0]);
+        this.image.blit(this.bottomBorderFull, [this.borderWidth, this.h-this.borderWidth]);
+
+        this.image.blit(this.topLeft);
+        this.image.blit(this.topRight, [this.w-this.borderWidth,0]);
+        this.image.blit(this.bottomLeft, [0,this.h - this.borderWidth]);
+        this.image.blit(this.bottomRight, [this.w-this.borderWidth,this.h - this.borderWidth]);
+
+        console.log(this.image);
+    },
+
+    update: function() {
+
+    }
+});
+
+var gradientSurface = function(surface, options) {
+    var gradSurface = surface.clone();
+
+    var colors = options.colors || [[255, 255, 255]];
+    var steps = options.steps || 1;
+
+    var segHeight = gradSurface.height / this.steps;
+
+    if (colors.length === 1){
+        gradSurface.fill(colors[0]);
+        return gradSurface;
+    }
+    var subSteps = steps / (colors.length - 1);
+    colors.forEach(function(color, i) {
+        if (colors[i+1] === undefined){}
+        var nextColor = colors[i+1];
+        var rStep = (color[0] - nextColor[0]) / subSteps;
+        var gStep = (color[1] - nextColor[1]) / subSteps;
+        var bStep = (color[2] - nextColor[2]) / subSteps;
+
+        for (var i=0; i < subSteps; i++) {
+            var subRect = new gamejs.Rect(
+                [0, Math.floor(segHeight * i)],
+                [gradSurface.width, Math.ceil(segHeight)]);
+            var thisColor = [
+                Math.floor(Math.abs(color[0] - (i * rStep))),
+                Math.floor(Math.abs(color[1] - (i * gStep))),
+                Math.floor(Math.abs(color[2] - (i * bStep)))
+            ];
+
+            var thisColor = 'rgb(' + thisColor.join(',') + ')';
+            gamejs.draw.rect(gradSurface, thisColor, subRect, 0);
+        }
+    });
+
+    return gradSurface;
+};
+
+/*
+var font = new gamejs.font.Font('8px Ebit');
+
+var TextBlock = exports.TextBlock = function(pos, dims, options) {
+    this.rect = new gamejs.Rect(pos, dims);
+    this.surface = new gamejs.Surface(this.rect);
+    this.init(options);
+};
+
+TextBlock.prototype.init = function(options) {
+    var fontName = options.fontName || '8px Ebit';
+    this.font = new gamejs.font.Font(fontName);
+    this.text = options.text || '';
+    this.fontColor = options.fontColor || '#000';
+    this.scrolling = options.scrolling || false;
+    this.currentText = '';
+    this.fontSurface = [];
+    this.lines = [];
+
+    if (this.scrolling === false) this.currentText = this.text;
+    this.lineSetup();
+};
+
+TextBlock.prototype.lineSetup = function() {
+    this.words = this.currentText.split(" ");
+    var done = false;
+    var i = 0;
+    this.lines[i] = '';
+    //Text line wrapping
+    this.words.forEach(function(word) {
+        this.fontSurface[i] = this.font.render(
+            this.lines[i] + word + ' ',
+            this.fontColor);
+        fontSurfaceWidth = this.fontSurface[i].getSize();
+        if (fontSurfaceWidth[0] > this.width) {
+            //Too wide. Time to wrap
+            this.fontSurface[i] = this.font.render(
+                this.lines[i],
+                this.fontColor);
+            i++;
+            this.lines[i] = '';
+        }
+        this.lines[i] +=  word + ' ';
+    }, this);
+};
+
+TextBlock.prototype.update = function(msDuration) {
+};
+
+TextBlock.prototype.draw = function(surface) {
+    var lineHeight;
+    if (this.fontSurface[0]) {
+        lineHeight = this.fontSurface[0].getSize()[1] || 0;
+    } else {
+        lineHeight = 0;
+    }
+    this.fontSurface.forEach(function(line, idx) {
+        this.surface.blit(line, [0, idx * lineHeight]);
+    }, this);
+
+    surface.blit(this.surface, this.rect);
+
+    return;
+};
+
+
+
+
+var Menu = exports.Menu = function(options){
+    this.items = [];
+    this.init(options);
+};
+
+Menu.prototype.init = function(options){
+    this.title = options.title || undefined;
+    if (options.width && options.height) {
+        if (options.color.length === 4)
+            var colorString = "rgba("+options.color.join(',')+")";
+        else if (options.color.length === 3)
+            var colorString = "rgb("+options.color.join(',')+")";
+        else var colorString = "rgb(0,0,0)";
+        this.surface = new Element(options.height, options.width, {
+            color: colorString,
+            position: options.position || [0,0],
+            borderWidth: options.borderWidth || 0,
+            borderImage: {
+                vSlice: options.borderImage.vSlice || 0,
+                hSlice: options.borderImage.hSlice || 0
+            }
+        });
+    } else {
+        this.surface = undefined;
+    }
+    if (options.items){
+        options.items.forEach(function(item){
+            var newItem = new MenuItem(item);
+            this.items.push(newItem);
+        }, this);
+    }
+
+    this._isActive = false;
+    this.padding = options.padding || 0;
+    if (options.border){
+
+    }
+};
+
+Menu.prototype.isActive = function(){
+    return this._isActive;
+};
+
+Menu.prototype.activate = function(){
+    return this._isActive = true; 
+};
+
+Menu.prototype.deactivate = function(){
+    return this._isActive = false;
+};
+
+Menu.prototype.update = function(dt){
+    this.surface.update(dt);
+};
+
+Menu.prototype.draw = function(surface) {
+    this.surface.draw(surface);
+    this.items.forEach(function(item) {
+        item.draw(this.surface.background);
+    }, this);
+};
+
+var MenuItem = exports.MenuItem = function(options){
+    this.init(options);
+};
+
+MenuItem.prototype.init = function(options){
+    this.widget = options.widget;
+    this.linkedValue = options.linkedValue || undefined;
+    this.activate = options.onSelect || undefined;
+    this._selected = false;
+    this.height;
+    this.width;
+};
+
+MenuItem.prototype.activate = function(){ 
+    this.activate;
+};
+
+MenuItem.prototype.isSelected = function(){
+    return this._selected;
+};
+
+MenuItem.prototype.select = function(){
+    this._selected = true;
+};
+
+MenuItem.prototype.deselect = function(){
+    this._selected = false;
+};
+
+MenuItem.prototype.draw = function(){
+    this.widget.draw();
+};
+
+var MenuWidget = function(options){
+    this.init(options);
+};
+
+MenuWidget.prototype.init = function(options){
+
+};
+
+var TextWidget = function(options){
+    TextWidget.superConstructor.apply(this, arguments);
+};
+objects.extend(TextWidget, MenuWidget);
+
+TextWidget.prototype.init = function(options){
+    this.text = options.text;
+};
+
+var SliderWidget = function(options){
+    SliderWidget.superConstructor.apply(this, arguments);
+};
+objects.extend(SliderWidget, MenuWidget);
+
+SliderWidget.prototype.init = function(options){
+
+};
+
+*/
+},{"./entity":34,"gamejs":44,"super":72,"underscore":73}],43:[function(require,module,exports){
 /*jslint es5: true*/
 /*
  * Vector Utilities
@@ -6708,63 +7319,63 @@ Vec2d.prototype = {
 };
 
 
-},{"gamejs":42,"underscore":71}],42:[function(require,module,exports){
+},{"gamejs":44,"underscore":73}],44:[function(require,module,exports){
 module.exports=require(2)
-},{"./gamejs/callback":43,"./gamejs/display":44,"./gamejs/draw":45,"./gamejs/event":46,"./gamejs/font":47,"./gamejs/http":48,"./gamejs/image":49,"./gamejs/mask":50,"./gamejs/mixer":51,"./gamejs/noise":52,"./gamejs/pathfinding/astar":53,"./gamejs/sprite":54,"./gamejs/surfacearray":55,"./gamejs/time":56,"./gamejs/tmx":57,"./gamejs/transform":58,"./gamejs/utils/arrays":59,"./gamejs/utils/base64":60,"./gamejs/utils/math":62,"./gamejs/utils/matrix":63,"./gamejs/utils/objects":64,"./gamejs/utils/prng":65,"./gamejs/utils/uri":66,"./gamejs/utils/vectors":67,"./gamejs/worker":68,"./gamejs/xml":69}],43:[function(require,module,exports){
+},{"./gamejs/callback":45,"./gamejs/display":46,"./gamejs/draw":47,"./gamejs/event":48,"./gamejs/font":49,"./gamejs/http":50,"./gamejs/image":51,"./gamejs/mask":52,"./gamejs/mixer":53,"./gamejs/noise":54,"./gamejs/pathfinding/astar":55,"./gamejs/sprite":56,"./gamejs/surfacearray":57,"./gamejs/time":58,"./gamejs/tmx":59,"./gamejs/transform":60,"./gamejs/utils/arrays":61,"./gamejs/utils/base64":62,"./gamejs/utils/math":64,"./gamejs/utils/matrix":65,"./gamejs/utils/objects":66,"./gamejs/utils/prng":67,"./gamejs/utils/uri":68,"./gamejs/utils/vectors":69,"./gamejs/worker":70,"./gamejs/xml":71}],45:[function(require,module,exports){
 module.exports=require(3)
-},{}],44:[function(require,module,exports){
-module.exports=require(4)
-},{"../gamejs":42,"./event":46}],45:[function(require,module,exports){
-module.exports=require(5)
 },{}],46:[function(require,module,exports){
+module.exports=require(4)
+},{"../gamejs":44,"./event":48}],47:[function(require,module,exports){
+module.exports=require(5)
+},{}],48:[function(require,module,exports){
 module.exports=require(6)
-},{"./callback":43,"./display":44}],47:[function(require,module,exports){
+},{"./callback":45,"./display":46}],49:[function(require,module,exports){
 module.exports=require(7)
-},{"../gamejs":42,"./utils/objects":64}],48:[function(require,module,exports){
+},{"../gamejs":44,"./utils/objects":66}],50:[function(require,module,exports){
 module.exports=require(8)
-},{}],49:[function(require,module,exports){
+},{}],51:[function(require,module,exports){
 module.exports=require(9)
-},{"../gamejs":42}],50:[function(require,module,exports){
+},{"../gamejs":44}],52:[function(require,module,exports){
 module.exports=require(10)
-},{"../gamejs":42,"./utils/objects":64}],51:[function(require,module,exports){
+},{"../gamejs":44,"./utils/objects":66}],53:[function(require,module,exports){
 module.exports=require(11)
-},{"../gamejs":42}],52:[function(require,module,exports){
+},{"../gamejs":44}],54:[function(require,module,exports){
 module.exports=require(12)
-},{}],53:[function(require,module,exports){
+},{}],55:[function(require,module,exports){
 module.exports=require(13)
-},{"../utils/binaryheap":61}],54:[function(require,module,exports){
+},{"../utils/binaryheap":63}],56:[function(require,module,exports){
 module.exports=require(14)
-},{"../gamejs":42,"./utils/arrays":59,"./utils/objects":64,"./utils/vectors":67}],55:[function(require,module,exports){
+},{"../gamejs":44,"./utils/arrays":61,"./utils/objects":66,"./utils/vectors":69}],57:[function(require,module,exports){
 module.exports=require(15)
-},{"../gamejs":42,"./utils/objects":64}],56:[function(require,module,exports){
+},{"../gamejs":44,"./utils/objects":66}],58:[function(require,module,exports){
 module.exports=require(16)
-},{"./callback":43}],57:[function(require,module,exports){
+},{"./callback":45}],59:[function(require,module,exports){
 module.exports=require(17)
-},{"../gamejs":42,"./utils/base64":60,"./utils/objects":64,"./utils/uri":66,"./xml":69}],58:[function(require,module,exports){
+},{"../gamejs":44,"./utils/base64":62,"./utils/objects":66,"./utils/uri":68,"./xml":71}],60:[function(require,module,exports){
 module.exports=require(18)
-},{"../gamejs":42,"./utils/math":62,"./utils/matrix":63,"./utils/vectors":67}],59:[function(require,module,exports){
+},{"../gamejs":44,"./utils/math":64,"./utils/matrix":65,"./utils/vectors":69}],61:[function(require,module,exports){
 module.exports=require(19)
-},{}],60:[function(require,module,exports){
-module.exports=require(20)
-},{}],61:[function(require,module,exports){
-module.exports=require(21)
 },{}],62:[function(require,module,exports){
-module.exports=require(22)
+module.exports=require(20)
 },{}],63:[function(require,module,exports){
-module.exports=require(23)
+module.exports=require(21)
 },{}],64:[function(require,module,exports){
-module.exports=require(24)
+module.exports=require(22)
 },{}],65:[function(require,module,exports){
-module.exports=require(25)
+module.exports=require(23)
 },{}],66:[function(require,module,exports){
-module.exports=require(26)
+module.exports=require(24)
 },{}],67:[function(require,module,exports){
+module.exports=require(25)
+},{}],68:[function(require,module,exports){
+module.exports=require(26)
+},{}],69:[function(require,module,exports){
 module.exports=require(27)
-},{"./math":62}],68:[function(require,module,exports){
+},{"./math":64}],70:[function(require,module,exports){
 module.exports=require(28)
-},{"../gamejs":42,"./callback":43,"./utils/uri":66}],69:[function(require,module,exports){
+},{"../gamejs":44,"./callback":45,"./utils/uri":68}],71:[function(require,module,exports){
 module.exports=require(29)
-},{}],70:[function(require,module,exports){
+},{}],72:[function(require,module,exports){
 /**
  * slice
  */
@@ -6890,7 +7501,7 @@ exports.merge = function (arr) {
   return main;
 };
 
-},{}],71:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 //     Underscore.js 1.5.2
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -8168,7 +8779,7 @@ exports.merge = function (arr) {
 
 }).call(this);
 
-},{}],72:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 //     Underscore.js 1.6.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -9513,7 +10124,7 @@ exports.merge = function (arr) {
   }
 }).call(this);
 
-},{}],73:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 var _ = require('underscore'),
     gamejs     = require('gamejs'),
     gramework  = require('gramework'),
@@ -9574,12 +10185,12 @@ var main = function() {
 };
 
 gamejs.preload([
-    './assets/spritesheet-test.png'
+    './assets/images/spritesheet-test.png'
 ]);
 gamejs.ready(main);
 
 
-},{"./entities":1,"./testEntities":74,"gamejs":2,"gramework":30,"underscore":72}],74:[function(require,module,exports){
+},{"./entities":1,"./testEntities":76,"gamejs":2,"gramework":30,"underscore":74}],76:[function(require,module,exports){
 var _ = require('underscore'),
     gamejs    = require('gamejs'),
     gramework = require('gramework'),
@@ -9595,10 +10206,10 @@ var Citizenkane = Entity.extend({
         this.velocity = new Vec2d(0, 0);
         this.speed    = 0;
         this.onGround = false;
-        this.width = 30;
-        this.height = 30;
+        this.xwidth = 30;
+        this.xheight = 30;
 
-        this.sprite = new animate.SpriteSheet('./assets/spritesheet-test.png', this.width, this.height);
+        this.sprite = new animate.SpriteSheet('./assets/spritesheet-test.png', this.xwidth, this.xheight);
 
         this.anim = new animate.Animation(this.sprite, "static", {
             static: {frames: _.range(4), rate: 2}
@@ -9608,14 +10219,6 @@ var Citizenkane = Entity.extend({
         this.image = this.anim.update(0);
 
         this.anim.start('static');
-    },
-
-    getWidth: function () {
-        return this.width;
-    },
-
-    getHeight: function () {
-        return this.height;
     },
 
     update: function(dt) {
@@ -9634,16 +10237,8 @@ var Citizenkane = Entity.extend({
 
 var Citizenkane = Citizenkane.extend({});
 
-Citizenkane.prototype.getWidth = function() {
-    return 30;
-};
-
-Citizenkane.prototype.getHeight = function() {
-    return 30;
-};
-
 module.exports = {
     Citizenkane: Citizenkane
 };
 
-},{"gamejs":2,"gramework":30,"underscore":72}]},{},[73])
+},{"gamejs":2,"gramework":30,"underscore":74}]},{},[75])
