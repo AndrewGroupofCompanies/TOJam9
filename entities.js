@@ -130,7 +130,7 @@ var Protestor = Citizen.extend({
     },
 
     makeDecision: function() {
-        return _.random(0, 10) > 3;
+        return _.random(0, 10) > 7;
     },
 
     resetDecision: function() {
@@ -161,6 +161,8 @@ var Protestor = Citizen.extend({
                 this.speed += _.first(_.sample(
                     [-(this.runSpeed), this.runSpeed]
                 , 1));
+            } else {
+                this.speed = 0;
             }
             this.decideCounter = this.resetDecision();
         }
