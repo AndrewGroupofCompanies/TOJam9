@@ -185,13 +185,17 @@ var Protestor = Citizen.extend({
 
     adjustVector: function(dt) {
         Citizen.prototype.adjustVector.call(this, dt);
+        dt = (dt / 1000);
+
+        // Adjust accel and speed because we may be sprinting forward.
+        var accel = new Vec2d(this.accel, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.velocity = this.velocity.truncate(this.maxSpeed);
 
         // No movement exept for normal speed adjustment.
         if (this.isCaptured) {
             return;
         }
-
-        dt = (dt / 1000);
 
         // If we're near police we should ensure that the movement is positive.
         if (this.nearPolice()) {
@@ -217,11 +221,6 @@ var Protestor = Citizen.extend({
             }
             this.decideCounter = this.resetDecision();
         }
-
-        // Adjust accel and speed because we may be sprinting forward.
-        var accel = new Vec2d(this.accel, 0);
-        this.velocity.add(accel.mul(dt).mul(this.speed));
-        this.velocity = this.velocity.truncate(this.maxSpeed);
     },
 
     // Protestor is getting awfully close to the police!
@@ -550,17 +549,19 @@ var Player = Protestor.extend({
             this.kill();
         }
 
-        var collisions = gamejs.sprite.spriteCollide(this, this.world.entities, false);
-        if (collisions.length > 0) {
-            collisions.forEach(function(collision){
-                if (collision.name === 'obstacle') {
-                    if (this.isPushing) {
-                        this.stumble();
-                    } else {
-                        this.duck();
+        if (this.isCaptured) {
+            var collisions = gamejs.sprite.spriteCollide(this, this.world.entities, false);
+            if (collisions.length > 0) {
+                collisions.forEach(function(collision){
+                    if (collision.name === 'obstacle') {
+                        if (this.isPushing) {
+                            this.stumble();
+                        } else {
+                            this.duck();
+                        }
                     }
-                }
-            }, this);
+                }, this);
+            }
         }
 
         // If we're near police we should warn the active Player.
