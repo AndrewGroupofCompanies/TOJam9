@@ -185,10 +185,10 @@ var Game = Scene.extend({
             this.Obstacles.update(dt);
         } else if (this.Obstacles === null) {
             /*
-             * TODO: Dont spawn these for now.*/
             this.Obstacles = new obstacles.ObstacleEmitter({
                 world: this
             });
+            */
         } else if (!this.Obstacles.alive) {
             this.Obstacles = null;
         }
