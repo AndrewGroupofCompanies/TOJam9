@@ -28,14 +28,6 @@ var Citizenkane = Entity.extend({
         this.anim.start('static');
     },
 
-    getWidth: function () {
-        return this.width;
-    },
-
-    getHeight: function () {
-        return this.height;
-    },
-
     update: function(dt) {
         this.image = this.anim.update(dt);
     },
@@ -51,14 +43,6 @@ var Citizenkane = Entity.extend({
 });
 
 var Citizenkane = Citizenkane.extend({});
-
-Citizenkane.prototype.getWidth = function() {
-    return 30;
-};
-
-Citizenkane.prototype.getHeight = function() {
-    return 30;
-};
 
 module.exports = {
     Citizenkane: Citizenkane

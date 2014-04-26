@@ -58,7 +58,7 @@ var main = function() {
 };
 
 gamejs.preload([
-    './assets/spritesheet-test.png'
+    './assets/images/spritesheet-test.png'
 ]);
 gamejs.ready(main);
 
