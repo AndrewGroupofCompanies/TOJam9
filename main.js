@@ -3,13 +3,15 @@ var _ = require('underscore'),
     gramework = require('gramework'),
     Dispatcher = gramework.Dispatcher,
     Scene = gramework.Scene,
-    entities = require('./entities'),
     scrollables = require('./scrollables'),
-    Vec2d = gramework.vectors.Vec2d;
+    Vec2d = gramework.vectors.Vec2d,
+    GameController = gramework.input.GameController,
+    entities = require('./entities');
 
 var Images = {
     bg_test: './assets/images/bg_test.jpg',
-    sprite_test: './assets/images/spritesheet-enemy.png'
+    sprite_test: './assets/images/spritesheet-enemy.png',
+    sprite_test_2: './assets/images/spritesheet-player.png'
 };
 
 var GROUND_HEIGHT = 20;
@@ -36,24 +38,27 @@ var Game = Scene.extend({
 
         // The front line of the protestors. Let's keep them grouped.
         this.frontLine = this.surface.getSize()[0] - 50;
-        this.createProtestors(1);
+        this.createProtestors(15);
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
         //this.createPolice(10);
+        this.controller = new GameController({
+            pressure: gamejs.event.K_p
+        });
     },
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
             var p = new entities.Protestor({
                 x: 200 + (i * 15), y: 0,
-                width: 32, height: 32,
+                width: 21, height: 30,
                 world: this,
                 
                 spriteSheet: {
-                    path: Images.sprite_test,
+                    path: Images.sprite_test_2,
                     height: 30,
-                    width: 26
+                    width: 21
                 }  
             });
             this.entities.add(p);
@@ -108,6 +113,11 @@ var Game = Scene.extend({
 
     event: function(ev) {
         // Placeholder. Need to send event and identify active protestor.
+        var handled = this.controller.handle(ev);
+        if (!handled) return;
+        if (handled.value === this.controller.controls.pressure) {
+            this.policePressure += 10;
+        }
     }
 });
 
