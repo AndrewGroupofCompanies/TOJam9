@@ -129,7 +129,7 @@ var Game = Scene.extend({
     createPolice: function(limit) {
         _.each(_.range(limit), function(i) {
             var p = new entities.Police({
-                x: (i * 2), y: 0,
+                x: (i * 5), y: 0,
                 width: 60, height: 30,
                 spriteSheet: this.spriteSheets.police,
                 world: this
