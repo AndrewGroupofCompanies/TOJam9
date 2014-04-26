@@ -68,9 +68,7 @@ var Citizen = Entity.extend({
 
     // Velocity handling.
     adjustVector: function(dt) {
-        dt = (dt / 1000); // Sanity.
-        var vec = new Vec2d().add(this.world.gravity);
-        this.velocity.add(vec.mul(dt));
+        return;
     },
 
     // Collision code!
@@ -484,8 +482,6 @@ var Player = Protestor.extend({
 
     adjustVector: function(dt) {
         dt = (dt / 1000); // Sanity.
-        var vec = new Vec2d().add(this.world.gravity);
-        this.velocity.add(vec.mul(dt));
 
         // Adjust speed based on input.
         if (this.isDeking) {

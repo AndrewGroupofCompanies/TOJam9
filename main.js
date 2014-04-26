@@ -40,7 +40,6 @@ var GROUND_HEIGHT = 20;
 
 var Game = Scene.extend({
     initialize: function(options) {
-        this.gravity = new Vec2d(0, 50);
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
@@ -75,7 +74,7 @@ var Game = Scene.extend({
         this.velocity = new Vec2d(0, 0);
         this.speed = -10;
         this.accel = 5;
-
+        this.runningPlane = this.surface.getSize()[1] - 50;
 
         // The front line of the protestors. Let's keep them grouped.
         this.frontLine = this.surface.getSize()[0] - 50;
@@ -111,14 +110,12 @@ var Game = Scene.extend({
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
-            
             var randomNum= _.random(1,6);
             var spriteId  = 'protester0' + randomNum;
             console.log(spriteId);
-            tmpSpriteSheet = this.spriteSheets[spriteId];
-            
+            var tmpSpriteSheet = this.spriteSheets[spriteId];
             var p = new entities.Protestor({
-                x: 80 + (i * 15), y: 0,
+                x: 80 + (i * 15), y: this.runningPlane,
                 width: 30, height: 30,
                 world: this,
                 spriteSheet: tmpSpriteSheet
@@ -136,7 +133,7 @@ var Game = Scene.extend({
     createPolice: function(limit) {
         _.each(_.range(limit), function(i) {
             var p = new entities.Police({
-                x: (i * 5), y: 0,
+                x: (i * 5), y: this.runningPlane,
                 width: 60, height: 30,
                 spriteSheet: this.spriteSheets.police,
                 world: this
