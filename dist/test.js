@@ -3,11 +3,33 @@ var _ = require('underscore'),
     gamejs = require('gamejs'),
     gramework = require('gramework'),
     Entity = gramework.Entity,
-    Vec2d = gramework.vectors.Vec2d;
+    animate = gramework.animate,
+    Vec2d = gramework.vectors.Vec2d,
+    GameController = gramework.input.GameController;
 
 var randomHex = function() {
     return '#' + (function co(lor){   return (lor += [0,1,2,3,4,5,6,7,8,9,'a','b','c','d','e','f'][Math.floor(Math.random()*16)]) && (lor.length == 6) ?  lor : co(lor); })('');
 };
+
+var blueHex = function() {
+  var blues = Math.floor(Math.random()*3);
+  var blueColour;
+  switch (blues){
+    case 1:
+      blueColour="#0033CC";
+      break;
+    case 2:
+      blueColour="#002EB8";
+      break;
+    case 3:
+      blueColour="#0029A3";
+      break;
+  }
+  return blueColour;
+};
+
+//Double tap speed in miliseconds
+var doubleTapSpeed = 200;
 
 var Citizen = Entity.extend({
     initialize: function(options) {
@@ -15,9 +37,10 @@ var Citizen = Entity.extend({
 
         this.world = options.world;
         this.velocity = new Vec2d(0, 0);
-        this.speed = _.random(-3, 3);
+        this.accel = 1.5;
+        this.maxSpeed = 2;
+        this.speed = 0;
         this.onGround = false;
-
         this.hex = randomHex();
     },
 
@@ -47,23 +70,16 @@ var Citizen = Entity.extend({
         return [collidedX, collidedY];
     },
 
-    update: function(dt) {
+    // Velocity handling.
+    adjustVector: function(dt) {
         dt = (dt / 1000); // Sanity.
-
         var vec = new Vec2d().add(this.world.gravity);
         this.velocity.add(vec.mul(dt));
+    },
 
-        // Adjust X vector based on the world speed. Some protestors will be
-        // slower than others, eventually getting caught.
-        if (this.speed !== 0) {
-            var setTo = (this.world.velocity.magnitude() * 0.0025 * this.speed);
-            this.velocity.setX(setTo);
-        } else {
-            this.velocity.setX(-(this.world.velocity.magnitude() * 0.0025));
-        }
-
-        this.rect.x += this.velocity.getX();
-        this.rect.y += this.velocity.getY();
+    // Collision code!
+    decideNextMovement: function(dt) {
+        dt = (dt / 1000);
 
         // Decide next movement.
         var delta = new Vec2d(0, 0);
@@ -86,19 +102,338 @@ var Citizen = Entity.extend({
         }
     },
 
+    update: function(dt) {
+        this.adjustVector(dt);
+        this.rect.x += this.velocity.getX();
+        this.rect.y += this.velocity.getY();
+        this.decideNextMovement(dt);
+
+        if (this.image) {
+            this.image = this.anim.update(dt);
+        }
+
+        if (this.anim && this.anim.isFinished()) {
+            this.anim.start('running');
+        }
+
+    },
+
     draw: function(surface) {
-        gamejs.draw.rect(surface, this.hex, this.rect);
+        if (this.image) {
+            Entity.prototype.draw.apply(this, arguments);
+        } else {
+            gamejs.draw.rect(surface, this.hex, this.rect);
+        }
+    },
+
+    setAnimation: function(animation) {
+        if (this.anim.currentAnimation !== animation) {
+            this.anim.start(animation);
+        }
     }
 
 });
 
-var Protestor = Citizen.extend({});
+var Protestor = Citizen.extend({
+    initialize: function(options) {
+        Citizen.prototype.initialize.call(this, options);
+
+        this.isProtestor = true; // Identifier.
+
+        if (options.spriteSheet) {
+            this.spriteSheet = options.spriteSheet;
+            this.anim = new animate.Animation(this.spriteSheet, "running", {
+                running: {frames: _.range(40), rate: 30, loop: true},
+                deke: {frames: _.range(81, 90), rate: 30},
+                duck: {frames: _.range(41, 50), rate: 30}
+            });
+
+            this.image = this.anim.update(0);
+            this.anim.setFrame(_.random(0,23));
+        }
+
+        this.runSpeed = 1.5; // Our speed modifier.
+        this.speed = this.runSpeed;
+        this.canDeke = true;
+        this.isDeking = false;
+        this.isDucking = false;
+
+        // Police padding. If we get too near the police and are aware of them,
+        // we should
+        this.awarenessDistance = 20;
+
+        // Eventually police can advance, and we won't be aware of this. This is
+        // where we can get captured.
+        this.aware = true;
+
+        this.decideCounterStart = 3;
+        this.decideCounter = this.resetDecision();
+    },
+
+    makeDecision: function() {
+        return _.random(0, 10) > 7;
+    },
+
+    resetDecision: function() {
+        return this.decideCounterStart;
+    },
+
+    adjustVector: function(dt) {
+        Citizen.prototype.adjustVector.call(this, dt);
+
+        dt = (dt / 1000);
+
+        // If we're near police we should ensure that the movement is positive.
+        if (this.nearPolice()) {
+            //console.log(this.hex, " is near the police!");
+            this.speed = this.runSpeed;
+        } else if (this.nearFront()) {
+            //console.log(this.hex, " is near the front!");
+            this.speed = -(this.runSpeed);
+        }
+
+        // Every now and then, let's decide what to do. Stay at our speed,
+        // or adjust it slightly.
+        this.decideCounter -= dt;
+        if (this.decideCounter <= 0) {
+            //console.log(this.hex, " is deciding what to do");
+            // Generally, we'll stay where we are.
+            if (this.makeDecision()) {
+                this.speed += _.first(_.sample(
+                    [-(this.runSpeed), this.runSpeed]
+                , 1));
+            } else {
+                this.speed = 0;
+            }
+            this.decideCounter = this.resetDecision();
+        }
+
+        // Adjust accel and speed because we may be sprinting forward.
+        var accel = new Vec2d(this.accel, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.velocity = this.velocity.truncate(this.maxSpeed);
+    },
+
+    // Protestor is getting awfully close to the police!
+    nearPolice: function() {
+        if ((this.rect.x - this.awarenessDistance) <= this.world.policePressure) {
+            return true;
+        }
+        return false;
+    },
+
+    // We're near the front of the pack, just hold back.
+    nearFront: function() {
+        if ((this.rect.x + this.rect.width) >= this.world.frontLine) {
+            return true;
+        }
+        return false;
+    },
+
+    deke: function() {
+        this.isDeking = true;
+        this.canDeke = false;
+        this.setAnimation("deke");
+        this.dekeCounter = 300;
+        this.accel = 3;
+    },
+
+    endDeke: function() {
+        this.isDeking = false;
+        this.canDeke = true;
+        this.accel = 1.5;
+    },
+
+    duck: function() {
+        this.setAnimation("duck");
+        this.isDucking = true;
+        this.duckCounter = 500;
+        this.canDeke = false;
+    },
+
+    endDuck: function() {
+        this.isDucking = false;
+        this.canDeke = true;
+    },
+
+    update: function(dt) {
+        if (this.duckCounter > 0) {
+            this.duckCounter -= dt;
+        }
+
+        if (this.duckCounter <= 0 && this.isDucking) {
+            this.endDuck();
+        }
+
+        if (this.dekeCounter > 0) {
+            this.dekeCounter -= dt;
+        }
+
+        if (this.dekeCounter <= 0 && this.isDeking) {
+            console.log("alas, my deke has finished");
+            this.endDeke();
+        }
+
+        Citizen.prototype.update.apply(this, arguments);
+    }
+});
+
+var Police = Citizen.extend({
+    initialize: function(options){
+        Citizen.prototype.initialize.call(this, options);
+
+        this.hex = blueHex();
+        this.speed = 0.5;
+        this.pressurePadding = 20;
+    },
+
+    // Police won't always pass the pressure line, but we also want them to have
+    // some variable movement.
+    nearPoliceLine: function() {
+        if ((this.rect.x + this.rect.width + this.pressurePadding) >= this.world.policePressure) {
+            return true;
+        }
+        return false;
+    },
+
+    nearBack: function() {
+        if (this.rect.x <= this.world.backLine) {
+            return true;
+        }
+        return false;
+    },
+
+    adjustVector: function(dt) {
+        Citizen.prototype.adjustVector.call(this, dt);
+        dt = (dt / 1000);
+
+        // Adjust accel and speed because we may be sprinting forward.
+        var accel = new Vec2d(this.accel, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.velocity = this.velocity.truncate(this.maxSpeed);
+
+        if (this.nearPoliceLine()) {
+            this.speed = -0.5;
+        } else if (this.nearBack()) {
+            this.speed = 0.5;
+        }
+    }
+});
+
+var Player = Protestor.extend({
+    initialize: function(options) {
+        Protestor.prototype.initialize.call(this, options);
+
+        if (options.existing) {
+            this.createFromProtestor(options.existing);
+        }
+
+        this.controller = new GameController({
+            sprint: gamejs.event.K_SPACE
+        });
+
+        this.tapCountdown = 0;
+    },
+
+    // A player just takes over a protestor.
+    createFromProtestor: function(p) {
+        this.speed = p.speed;
+        this.velocity = p.velocity;
+        this.world = p.world;
+        this.rect = p.rect;
+        this.hex = "#000000";
+        this.isProtestor = false;
+        this.spriteSheet = p.spriteSheet;
+        this.anim = p.anim;
+        this.image = this.anim.update(0);
+    },
+
+    adjustVector: function(dt) {
+        dt = (dt / 1000); // Sanity.
+        var vec = new Vec2d().add(this.world.gravity);
+        this.velocity.add(vec.mul(dt));
+
+        // If we're near police we should warn the active Player.
+        if (this.nearPolice()) {
+            // TODO
+        }
+
+        // Adjust speed based on input.
+        if (this.isDeking) {
+            this.speed = this.runSpeed * 2;
+        } else if (this.isPushing) {
+            this.speed = this.runSpeed;
+        } else {
+            this.speed = -1;
+        }
+
+        // Adjust accel and speed because we may be sprinting forward.
+        var accel = new Vec2d(this.accel, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.velocity = this.velocity.truncate(this.maxSpeed);
+    },
+
+    event: function(ev) {
+        var key = this.controller.handle(ev);
+
+        this.isPushing = false;
+
+        if (!key) return;
+        if (key.action === "keyDown") {
+            if (key.value === this.controller.controls.sprint) {
+                if (this.tapCountdown > 0 && this.canDeke) {
+                    //double-tap event!
+                    this.deke();
+                }
+                this.isPushing = true;
+            }
+
+        } else if (key.action === "keyUp") {
+            if (key.value === this.controller.controls.sprint) {
+                if (this.tapCountdown <= 0) {
+                    this.tapCountdown = doubleTapSpeed;
+                }
+            }
+        }
+    },
+
+    draw: function(surface) {
+        gamejs.draw.circle(surface, "rgb(255, 0, 0)",
+            [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
+        
+        Protestor.prototype.draw.apply(this, arguments);
+    },
+
+    update: function(dt) {
+        if (this.tapCountdown > 0) {
+            this.tapCountdown -= dt;
+        }
+
+        var collisions = gamejs.sprite.spriteCollide(this, this.world.entities, false);
+
+        if (collisions.length > 0) {
+            collisions.forEach(function(collision){
+                if (collision.name === 'obstacle') {
+                    if (this.isPushing) {
+                        //this.stumble();
+                    } else {
+                        this.duck();
+                    }
+                }
+            }, this);
+        }
+
+        Protestor.prototype.update.apply(this, arguments);
+    }
+});
 
 module.exports = {
-    Protestor: Protestor
+    Protestor: Protestor,
+    Police: Police,
+    Player: Player
 };
 
-},{"gamejs":2,"gramework":30,"underscore":46}],2:[function(require,module,exports){
+},{"gamejs":2,"gramework":30,"underscore":74}],2:[function(require,module,exports){
 var matrix = require('./gamejs/utils/matrix');
 var objects = require('./gamejs/utils/objects');
 var Callback = require('./gamejs/callback').Callback;
@@ -5368,7 +5703,7 @@ module.exports = {
 //TODO: Kill this in favour of Entity
 //exports.actors = require('./gramework/actors');
 
-},{"./gramework/animate":31,"./gramework/camera":32,"./gramework/dispatcher":33,"./gramework/entity":34,"./gramework/image":35,"./gramework/input":36,"./gramework/layers":37,"./gramework/particles":38,"./gramework/scenes":39,"./gramework/state":40,"./gramework/tilemap":41,"./gramework/uielements":42,"./gramework/vectors":43,"gamejs":2,"super":44}],31:[function(require,module,exports){
+},{"./gramework/animate":31,"./gramework/camera":32,"./gramework/dispatcher":33,"./gramework/entity":34,"./gramework/image":35,"./gramework/input":36,"./gramework/layers":37,"./gramework/particles":38,"./gramework/scenes":39,"./gramework/state":40,"./gramework/tilemap":41,"./gramework/uielements":42,"./gramework/vectors":43,"gamejs":44,"super":72}],31:[function(require,module,exports){
 var gamejs = require('gamejs'),
     inherits = require('super'),
     _ = require('underscore');
@@ -5380,8 +5715,11 @@ var SpriteSheet = exports.SpriteSheet = function(image, w, h) {
     this.width = w;
     this.height = h;
 
-    this.image = gamejs.image.load(image);
+    this.image = image;
+
+    //this.image._context.imageSmoothingEnabled = false;
     this.surfaceCache = [];
+
 
     var imgSize = new gamejs.Rect([0,0],[this.width,this.height]);
 
@@ -5390,6 +5728,7 @@ var SpriteSheet = exports.SpriteSheet = function(image, w, h) {
         for (var j = 0; j < this.image.rect.width; j += this.width) {
             var surface = new gamejs.Surface([this.width, this.height]);
             var rect = new gamejs.Rect(j, i, this.width, this.height);
+            //surface._context.imageSmoothingEnabled = false;
             surface.blit(this.image, imgSize, rect);
             this.surfaceCache.push(surface);
         }
@@ -5415,6 +5754,8 @@ var Animation = exports.Animation = function(spriteSheet, initial, spec) {
     this.currentFrame = null;
     this.currentFrameDuration = 0;
     this.currentAnimation = null;
+    this.loop = false;
+    this._isFinished = false;
 
     this.spriteSheet = spriteSheet;
 
@@ -5429,8 +5770,12 @@ Animation.extend = inherits.extend;
 // An empty function by default. Override it with your own initialization logic.
 Animation.prototype.initialize = function(options) {};
 
+Animation.prototype.setFrame = function(frame) {
+    this.frameIndex = frame;
+};
 
 Animation.prototype.start = function(name) {
+    this._isFinished = false;
     this.setState(name);
     this.update(0);
     return;
@@ -5446,6 +5791,7 @@ Animation.prototype.setState = function(name) {
     this.frameIndex = 0;
     this.currentFrameDuration = 0;
     this.frameDuration = 1000 / this.spec[name].rate;
+    this.loop = this.spec[name].loop || false;
 };
 
 Animation.prototype.update = function(msDuration) {
@@ -5462,7 +5808,11 @@ Animation.prototype.update = function(msDuration) {
 
         var length = this.spec[this.currentAnimation].frames.length - 1;
         if (this.frameIndex > length) {
-            this.frameIndex = 0;
+            if (this.loop) {
+                this.frameIndex = 0;
+            } else {
+                this._isFinished = true;
+            }
         }
     }
 
@@ -5470,7 +5820,11 @@ Animation.prototype.update = function(msDuration) {
     return this.image;
 };
 
-},{"gamejs":2,"super":44,"underscore":45}],32:[function(require,module,exports){
+Animation.prototype.isFinished = function() {
+    return this._isFinished;
+};
+
+},{"gamejs":44,"super":72,"underscore":73}],32:[function(require,module,exports){
 /*
  * Create a camera around a display.
  *
@@ -5643,7 +5997,7 @@ _.extend(Camera.prototype, {
     }
 });
 
-},{"gamejs":2,"underscore":45}],33:[function(require,module,exports){
+},{"gamejs":44,"underscore":73}],33:[function(require,module,exports){
 /*global document*/
 var _ = require('underscore'),
     inherits = require('super'),
@@ -5756,7 +6110,7 @@ _.extend(Dispatcher.prototype, {
     }
 });
 
-},{"./state":40,"super":44,"underscore":45}],34:[function(require,module,exports){
+},{"./state":40,"super":72,"underscore":73}],34:[function(require,module,exports){
 // A stripped down, simpler Actors module.
 var gamejs = require('gamejs'),
     inherits = require('super'),
@@ -5813,14 +6167,14 @@ Entity.prototype.setPos = function(x, y) {
     this.rect.y = y;
 };
 
-},{"gamejs":2,"super":44}],35:[function(require,module,exports){
+},{"gamejs":44,"super":72}],35:[function(require,module,exports){
 var gamejs = require('gamejs');
 
 var imgfy = exports.imgfy = function(path) {
     return gamejs.image.load(path);
 };
 
-},{"gamejs":2}],36:[function(require,module,exports){
+},{"gamejs":44}],36:[function(require,module,exports){
 var gamejs = require('gamejs'),
     inherits = require('super'),
     Vec2d = require('./vectors').Vec2d,
@@ -5845,7 +6199,7 @@ var GameController = exports.GameController = function(options) {
     _.extend(this.controls, options);
     this.reverseControls = {};
 
-    for (key in this.controls) {
+    for (var key in this.controls) {
         this.reverseControls[this.controls[key]] = key;
     }
 
@@ -5859,7 +6213,10 @@ GameController.prototype.initialize = function(options) {};
 
 GameController.prototype.handle = function(event) {
     if (event.type === gamejs.event.MOUSE_MOTION) {
-        return { mousePos: event.pos };
+        return {
+            action: "mouseMotion",
+            value: event.pos
+        };
     }
 
     if (_.indexOf(_.values(this.controls), event.key) == -1) {
@@ -5870,14 +6227,16 @@ GameController.prototype.handle = function(event) {
         this.keyDown = event.key;
         this.keyUp = null;
         return {
-            keyDown: this.keyDown,
+            action: "keyDown",
+            value: this.keyDown,
             label: this.reverseControls[this.keyDown]
         };
     } else if (event.type === gamejs.event.KEY_UP) {
         this.keyUp = event.key;
         this.keyDown = null;
         return {
-            keyUp: this.keyUp,
+            action: "keyUp",
+            value: this.keyUp,
             label: this.reverseControls[this.keyUp]
         };
     }
@@ -5913,7 +6272,7 @@ GameController.prototype.movementVector = function() {
     return vel.normalized();
 };
 
-},{"./vectors":43,"gamejs":2,"super":44,"underscore":45}],37:[function(require,module,exports){
+},{"./vectors":43,"gamejs":44,"super":72,"underscore":73}],37:[function(require,module,exports){
 var imgfy = require('./image').imgfy;
 
 // Use for repeating Backgrounds on a screen, adjust speed
@@ -6038,7 +6397,7 @@ Emitter.prototype.draw = function(surface) {
     }, this);
 };
 
-},{"gamejs":2}],39:[function(require,module,exports){
+},{"gamejs":44}],39:[function(require,module,exports){
 var gamejs = require('gamejs'),
     inherits = require('super'),
     Camera = require('./camera'),
@@ -6050,13 +6409,17 @@ var Scene = exports.Scene = function(options) {
     this._elapsed = 0;
     this._width = options.width;
     this._height = options.height;
+    this._pixelScale = options.pixelScale || 1;
 
     // No options passed, but we can give sensible defaults by getting the games
     // main surface.
     if (!this._width || !this._height) {
         var size = gamejs.display.getSurface().getSize();
-        this._width = (this._width || size[0]);
-        this._height = (this._height || size[1]);
+        if (this._pixelScale && this._pixelScale !== 1) {
+            size = [Math.floor(size[0] / this._pixelScale), Math.floor(size[1] / this._pixelScale)];
+        }
+        this._width = (Math.floor(this._width / this._pixelScale) || size[0]);
+        this._height = (Math.floor(this._height / this._pixelScale) || size[1]);
     }
 
     // Actors will be deprecated in favour of entities.
@@ -6071,6 +6434,9 @@ var Scene = exports.Scene = function(options) {
         width: this._width,
         height: this._height
     });
+
+    this.surface = new gamejs.Surface(this.camera.rect);
+
     this.initialize.apply(this, arguments);
 };
 Scene.extend = inherits.extend;
@@ -6080,11 +6446,11 @@ _.extend(Scene.prototype, {
     initialize: function(options) {},
 
     width: function() {
-        return this.camera.rect.width;
+        return this._width;
     },
 
     height: function() {
-        return this.camera.rect.height;
+        return this._height;
     },
 
     getElapsedTime: function() {
@@ -6135,12 +6501,19 @@ _.extend(Scene.prototype, {
         this.actors.draw(this.view);
         this.entities.draw(this.view);
 
-        this.camera.draw(this.view, display);
-        this.elements.draw(display);
+        if (this._pixelScale !== 1) {
+            this.camera.draw(this.view, this.surface);
+            this.elements.draw(this.surface);
+            display.blit(this.surface, display.rect);
+        } else {
+            this.camera.draw(this.view, display);
+            this.elements.draw(display);
+        }
+
     }
 });
 
-},{"./camera":32,"gamejs":2,"super":44,"underscore":45}],40:[function(require,module,exports){
+},{"./camera":32,"gamejs":44,"super":72,"underscore":73}],40:[function(require,module,exports){
 var gamejs = require('gamejs'),
     inherits = require('super');
 
@@ -6203,7 +6576,7 @@ module.exports = {
     FadeTransition: FadeTransition
 };
 
-},{"gamejs":2,"super":44}],41:[function(require,module,exports){
+},{"gamejs":44,"super":72}],41:[function(require,module,exports){
 /*jshint es5:true */
 /*
  * Tilemap module.
@@ -6353,7 +6726,7 @@ var LayerView = function(map, layer, opts) {
     return this;
 };
 
-},{"gamejs":2,"super":44}],42:[function(require,module,exports){
+},{"gamejs":44,"super":72}],42:[function(require,module,exports){
 /*jshint es5:true */
 /*
  * Interface Entity module.
@@ -6769,7 +7142,7 @@ SliderWidget.prototype.init = function(options){
 };
 
 */
-},{"./entity":34,"gamejs":2,"super":44,"underscore":45}],43:[function(require,module,exports){
+},{"./entity":34,"gamejs":44,"super":72,"underscore":73}],43:[function(require,module,exports){
 /*jslint es5: true*/
 /*
  * Vector Utilities
@@ -6946,7 +7319,63 @@ Vec2d.prototype = {
 };
 
 
-},{"gamejs":2,"underscore":45}],44:[function(require,module,exports){
+},{"gamejs":44,"underscore":73}],44:[function(require,module,exports){
+module.exports=require(2)
+},{"./gamejs/callback":45,"./gamejs/display":46,"./gamejs/draw":47,"./gamejs/event":48,"./gamejs/font":49,"./gamejs/http":50,"./gamejs/image":51,"./gamejs/mask":52,"./gamejs/mixer":53,"./gamejs/noise":54,"./gamejs/pathfinding/astar":55,"./gamejs/sprite":56,"./gamejs/surfacearray":57,"./gamejs/time":58,"./gamejs/tmx":59,"./gamejs/transform":60,"./gamejs/utils/arrays":61,"./gamejs/utils/base64":62,"./gamejs/utils/math":64,"./gamejs/utils/matrix":65,"./gamejs/utils/objects":66,"./gamejs/utils/prng":67,"./gamejs/utils/uri":68,"./gamejs/utils/vectors":69,"./gamejs/worker":70,"./gamejs/xml":71}],45:[function(require,module,exports){
+module.exports=require(3)
+},{}],46:[function(require,module,exports){
+module.exports=require(4)
+},{"../gamejs":44,"./event":48}],47:[function(require,module,exports){
+module.exports=require(5)
+},{}],48:[function(require,module,exports){
+module.exports=require(6)
+},{"./callback":45,"./display":46}],49:[function(require,module,exports){
+module.exports=require(7)
+},{"../gamejs":44,"./utils/objects":66}],50:[function(require,module,exports){
+module.exports=require(8)
+},{}],51:[function(require,module,exports){
+module.exports=require(9)
+},{"../gamejs":44}],52:[function(require,module,exports){
+module.exports=require(10)
+},{"../gamejs":44,"./utils/objects":66}],53:[function(require,module,exports){
+module.exports=require(11)
+},{"../gamejs":44}],54:[function(require,module,exports){
+module.exports=require(12)
+},{}],55:[function(require,module,exports){
+module.exports=require(13)
+},{"../utils/binaryheap":63}],56:[function(require,module,exports){
+module.exports=require(14)
+},{"../gamejs":44,"./utils/arrays":61,"./utils/objects":66,"./utils/vectors":69}],57:[function(require,module,exports){
+module.exports=require(15)
+},{"../gamejs":44,"./utils/objects":66}],58:[function(require,module,exports){
+module.exports=require(16)
+},{"./callback":45}],59:[function(require,module,exports){
+module.exports=require(17)
+},{"../gamejs":44,"./utils/base64":62,"./utils/objects":66,"./utils/uri":68,"./xml":71}],60:[function(require,module,exports){
+module.exports=require(18)
+},{"../gamejs":44,"./utils/math":64,"./utils/matrix":65,"./utils/vectors":69}],61:[function(require,module,exports){
+module.exports=require(19)
+},{}],62:[function(require,module,exports){
+module.exports=require(20)
+},{}],63:[function(require,module,exports){
+module.exports=require(21)
+},{}],64:[function(require,module,exports){
+module.exports=require(22)
+},{}],65:[function(require,module,exports){
+module.exports=require(23)
+},{}],66:[function(require,module,exports){
+module.exports=require(24)
+},{}],67:[function(require,module,exports){
+module.exports=require(25)
+},{}],68:[function(require,module,exports){
+module.exports=require(26)
+},{}],69:[function(require,module,exports){
+module.exports=require(27)
+},{"./math":64}],70:[function(require,module,exports){
+module.exports=require(28)
+},{"../gamejs":44,"./callback":45,"./utils/uri":68}],71:[function(require,module,exports){
+module.exports=require(29)
+},{}],72:[function(require,module,exports){
 /**
  * slice
  */
@@ -7072,7 +7501,7 @@ exports.merge = function (arr) {
   return main;
 };
 
-},{}],45:[function(require,module,exports){
+},{}],73:[function(require,module,exports){
 //     Underscore.js 1.5.2
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -8350,7 +8779,7 @@ exports.merge = function (arr) {
 
 }).call(this);
 
-},{}],46:[function(require,module,exports){
+},{}],74:[function(require,module,exports){
 //     Underscore.js 1.6.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -9695,7 +10124,7 @@ exports.merge = function (arr) {
   }
 }).call(this);
 
-},{}],47:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 var _ = require('underscore'),
     gamejs     = require('gamejs'),
     gramework  = require('gramework'),
@@ -9703,7 +10132,7 @@ var _ = require('underscore'),
     Scene      = gramework.Scene,
     Vec2d      = gramework.vectors.Vec2d,
     entities      = require('./entities'),
-    testAnimationEntities = require('./testAnimationEntities');
+    testEntities = require('./testEntities');
 
 var Game = Scene.extend({
     initialize: function(options) {
@@ -9715,36 +10144,23 @@ var Game = Scene.extend({
         this.accel = 0;
 
         // For now, keep it simple with one protestor. Can adjust from there.
-        this.createAnimation(1);
+        this.createAnimation();
     },
 
-    createAnimation: function(limit) {
-        _.each(_.range(limit), function(i) {
-            var p = new testAnimationEntities.Citizenkane({
-                x: 200 + (i * 15), y: 0,
-                width: 30, height: 30,
-                world: this
-            });
-            // console.log(p);
-            this.entities.add(p);
-        }, this);
-    },
-
-    // Identify if an entity is colliding with our world.
-    collides: function(entity) {
-        // hit ROCK BOTTOM
-        if (Math.round(entity.rect.y) >= Math.round(this.height() - entity.rect.height)) {
-            return true;
-        }
+    createAnimation: function() {
+        var kane = new testEntities.Citizenkane({
+            x: 960 - 30,
+            y: 0,
+            world: this
+        });
+        
+        this.entities.add(kane);
     },
 
     update: function(dt) {
         Scene.prototype.update.call(this, dt);
 
         dt = (dt / 1000); // Sane velocity mutations.
-
-        var accel = new Vec2d(this.accel, 0);
-        this.velocity.add(accel.mul(dt).mul(this.speed));
     },
 
     draw: function(surface) {
@@ -9769,12 +10185,12 @@ var main = function() {
 };
 
 gamejs.preload([
-    './assets/spritesheet-test.png'
+    './assets/images/spritesheet-test.png'
 ]);
 gamejs.ready(main);
 
 
-},{"./entities":1,"./testAnimationEntities":48,"gamejs":2,"gramework":30,"underscore":46}],48:[function(require,module,exports){
+},{"./entities":1,"./testEntities":76,"gamejs":2,"gramework":30,"underscore":74}],76:[function(require,module,exports){
 var _ = require('underscore'),
     gamejs    = require('gamejs'),
     gramework = require('gramework'),
@@ -9790,15 +10206,19 @@ var Citizenkane = Entity.extend({
         this.velocity = new Vec2d(0, 0);
         this.speed    = 0;
         this.onGround = false;
-        this.hex      = '#77ff77';
+        this.xwidth = 30;
+        this.xheight = 30;
 
-        this.sprite = new animate.SpriteSheet('./assets/spritesheet-test.png', 30, 30);
+        this.sprite = new animate.SpriteSheet('./assets/spritesheet-test.png', this.xwidth, this.xheight);
 
         this.anim = new animate.Animation(this.sprite, "static", {
-            static: {frames: 4, rate: 10.5}
+            static: {frames: _.range(4), rate: 2}
         });
+
         // TODO: Shouldnt need to do this.
         this.image = this.anim.update(0);
+
+        this.anim.start('static');
     },
 
     update: function(dt) {
@@ -9806,7 +10226,11 @@ var Citizenkane = Entity.extend({
     },
 
     draw: function(surface) {
-        gamejs.draw.rect(surface, this.hex, this.rect);
+        if (this.image) {
+            Entity.prototype.draw.apply(this, arguments);
+        } else {
+            gamejs.draw.rect(surface, this.hex, this.rect);
+        }
     }
 
 });
@@ -9817,4 +10241,4 @@ module.exports = {
     Citizenkane: Citizenkane
 };
 
-},{"gamejs":2,"gramework":30,"underscore":46}]},{},[47])
+},{"gamejs":2,"gramework":30,"underscore":74}]},{},[75])

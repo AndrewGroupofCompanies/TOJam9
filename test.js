@@ -5,7 +5,7 @@ var _ = require('underscore'),
     Scene      = gramework.Scene,
     Vec2d      = gramework.vectors.Vec2d,
     entities      = require('./entities'),
-    testAnimationEntities = require('./testAnimationEntities');
+    testEntities = require('./testEntities');
 
 var Game = Scene.extend({
     initialize: function(options) {
@@ -17,36 +17,23 @@ var Game = Scene.extend({
         this.accel = 0;
 
         // For now, keep it simple with one protestor. Can adjust from there.
-        this.createAnimation(1);
+        this.createAnimation();
     },
 
-    createAnimation: function(limit) {
-        _.each(_.range(limit), function(i) {
-            var p = new testAnimationEntities.Citizenkane({
-                x: 200 + (i * 15), y: 0,
-                width: 30, height: 30,
-                world: this
-            });
-            // console.log(p);
-            this.entities.add(p);
-        }, this);
-    },
-
-    // Identify if an entity is colliding with our world.
-    collides: function(entity) {
-        // hit ROCK BOTTOM
-        if (Math.round(entity.rect.y) >= Math.round(this.height() - entity.rect.height)) {
-            return true;
-        }
+    createAnimation: function() {
+        var kane = new testEntities.Citizenkane({
+            x: 960 - 30,
+            y: 0,
+            world: this
+        });
+        
+        this.entities.add(kane);
     },
 
     update: function(dt) {
         Scene.prototype.update.call(this, dt);
 
         dt = (dt / 1000); // Sane velocity mutations.
-
-        var accel = new Vec2d(this.accel, 0);
-        this.velocity.add(accel.mul(dt).mul(this.speed));
     },
 
     draw: function(surface) {
@@ -71,7 +58,7 @@ var main = function() {
 };
 
 gamejs.preload([
-    './assets/spritesheet-test.png'
+    './assets/images/spritesheet-test.png'
 ]);
 gamejs.ready(main);
 

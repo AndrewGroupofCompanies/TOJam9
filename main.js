@@ -15,7 +15,8 @@ var Images = {
     sprite_test: './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
     tree_01: './assets/images/tree_01.png',
-    protester01: './assets/images/protester01.png'
+    protester01: './assets/images/protester01.png',
+    protester02: './assets/images/protester02.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -37,7 +38,8 @@ var Game = Scene.extend({
         //Gotta init them spriteSheets
         this.spriteSheets = {
             police: initSpriteSheet(imgfy(Images.sprite_test), 26, 30),
-            protester01: initSpriteSheet(imgfy(Images.protester01), 30, 30)
+            protester01: initSpriteSheet(imgfy(Images.protester01), 30, 30),
+            protester02: initSpriteSheet(imgfy(Images.protester02), 30, 30)
         };
 
         this.bg = new scrollables.Scrollable({
@@ -69,6 +71,11 @@ var Game = Scene.extend({
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
+
+        // Police distraction is a "safe" zone in which while the active player
+        // is in it, the police pressure does not increase. We keep track
+        // of this so that when we're ahead of it, pressure increases!
+        this.policeDistraction = this.policePressure + 50;
         this.createPolice(10);
 
         // Obstacles
@@ -98,12 +105,21 @@ var Game = Scene.extend({
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
+            
+            var tmpSpriteSheet = "";
+            if (_.random(1,2) === 1) {
+                tmpSpriteSheet = this.spriteSheets.protester01;
+            } else {
+                tmpSpriteSheet = this.spriteSheets.protester02;
+            }
+            
+
+
             var p = new entities.Protestor({
                 x: 200 + (i * 15), y: 0,
                 width: 30, height: 30,
                 world: this,
-
-                spriteSheet: this.spriteSheets.protester01
+                spriteSheet: tmpSpriteSheet
             });
             this.entities.add(p);
         }, this);
@@ -148,6 +164,13 @@ var Game = Scene.extend({
         }
     },
 
+    // Police are getting madder!
+    increasePolicePressure: function(step) {
+        step = (step || 1);
+        this.policePressure += step;
+        this.policeDistraction += step;
+    },
+
     update: function(dt) {
         Scene.prototype.update.call(this, dt);
 
@@ -181,6 +204,11 @@ var Game = Scene.extend({
         gamejs.draw.line(this.view, "#cccccc",
             [this.policePressure, 0],
             [this.policePressure, surface.getSize()[1]]);
+
+        // Police distraction zone.
+        gamejs.draw.line(this.view, "#cccccc",
+            [this.policeDistraction, 0],
+            [this.policeDistraction, surface.getSize()[1]]);
 
         // Front line.
         gamejs.draw.line(this.view, "#cccccc",

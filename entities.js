@@ -10,26 +10,6 @@ var randomHex = function() {
     return '#' + (function co(lor){   return (lor += [0,1,2,3,4,5,6,7,8,9,'a','b','c','d','e','f'][Math.floor(Math.random()*16)]) && (lor.length == 6) ?  lor : co(lor); })('');
 };
 
-var blueHex = function() {
-  var blues = Math.floor(Math.random()*3);
-  var blueColour;
-  switch (blues){
-    case 1:
-      blueColour="#0033CC";
-      break;
-    case 2:
-      blueColour="#002EB8";
-      break;
-    case 3:
-      blueColour="#0029A3";
-      break;
-  }
-  return blueColour;
-};
-
-//Double tap speed in miliseconds
-var doubleTapSpeed = 200;
-
 var Citizen = Entity.extend({
     initialize: function(options) {
         options = (options || {});
@@ -333,9 +313,10 @@ var Police = Citizen.extend({
     initialize: function(options){
         Citizen.prototype.initialize.call(this, options);
 
-        this.hex = blueHex();
+        this.hex = "#0033CC";
         this.speed = 0.5;
-        this.pressurePadding = 20;
+
+        this.pressurePadding = 15;
     },
 
     // Police won't always pass the pressure line, but we also want them to have
@@ -384,6 +365,10 @@ var Player = Protestor.extend({
         });
 
         this.tapCountdown = 0;
+        this.pressureCount = 0;
+        this.pressureDelay = 1000; // in milliseconds.
+
+        this.doubleTapSpeed = 200; // in milliseconds
     },
 
     // A player just takes over a protestor.
@@ -403,11 +388,6 @@ var Player = Protestor.extend({
         dt = (dt / 1000); // Sanity.
         var vec = new Vec2d().add(this.world.gravity);
         this.velocity.add(vec.mul(dt));
-
-        // If we're near police we should warn the active Player.
-        if (this.nearPolice()) {
-            // TODO
-        }
 
         // Adjust speed based on input.
         if (this.isDeking) {
@@ -442,7 +422,7 @@ var Player = Protestor.extend({
         } else if (key.action === "keyUp") {
             if (key.value === this.controller.controls.sprint) {
                 if (this.tapCountdown <= 0) {
-                    this.tapCountdown = doubleTapSpeed;
+                    this.tapCountdown = this.doubleTapSpeed;
                 }
             }
         }
@@ -451,8 +431,16 @@ var Player = Protestor.extend({
     draw: function(surface) {
         gamejs.draw.circle(surface, "rgb(255, 0, 0)",
             [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
-        
         Protestor.prototype.draw.apply(this, arguments);
+    },
+
+    // In policeDistraction zone.
+    isDistractingPolice: function() {
+        //console.log(this.rect.x, this.world.policeDistraction);
+        if (this.rect.x <= this.world.policeDistraction) {
+            return true;
+        }
+        return false;
     },
 
     update: function(dt) {
@@ -461,7 +449,6 @@ var Player = Protestor.extend({
         }
 
         var collisions = gamejs.sprite.spriteCollide(this, this.world.entities, false);
-
         if (collisions.length > 0) {
             collisions.forEach(function(collision){
                 if (collision.name === 'obstacle') {
@@ -472,6 +459,24 @@ var Player = Protestor.extend({
                     }
                 }
             }, this);
+        }
+
+        // If we're near police we should warn the active Player.
+        if (this.nearPolice()) {
+            // TODO
+        }
+
+        // Check if we are inside the police distraction zone. If we are, we're
+        // doing a good job. We only check this every second, as to not go
+        // insane on increasing pressure.
+        this.pressureCount += dt;
+        if (this.pressureCount >= this.pressureDelay) {
+            this.pressureCount = 0;
+            if (this.isDistractingPolice()) {
+                console.log("Good job!");
+            } else {
+                this.world.increasePolicePressure();
+            }
         }
 
         Protestor.prototype.update.apply(this, arguments);
