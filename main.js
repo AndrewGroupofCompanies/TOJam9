@@ -4,16 +4,32 @@ var _ = require('underscore'),
     Dispatcher = gramework.Dispatcher,
     Scene = gramework.Scene,
     entities = require('./entities'),
+    scrollables = require('./scrollables'),
     Vec2d = gramework.vectors.Vec2d;
+
+var assets = [
+    './assets/images/bg_test.jpg'
+];
 
 var Game = Scene.extend({
     initialize: function(options) {
         this.gravity = new Vec2d(0, 50);
 
+        this.bg = new scrollables.Scrollable({
+            image: './assets/images/bg_test.jpg',
+            height: 256,
+            width: 512,
+            x: 0,
+            y: 0
+        });
+
         // Handles world speed.
         this.velocity = new Vec2d(0, 0);
         this.speed = -10;
         this.accel = 5;
+        this.scrollables = new gamejs.sprite.Group();
+
+        this.scrollables.add(this.bg);
 
         // For now, keep it simple with one protestor. Can adjust from there.
         this.createProtestors(40);
@@ -51,8 +67,14 @@ var Game = Scene.extend({
         surface.clear();
         this.view.clear();
 
-        this.view.fill("#ff22cc");
-        surface.fill("#ff22cc");
+        //this.view.fill("#ff22cc");
+        //surface.fill("#ff22cc");
+
+        this.scrollables.draw(this.view);
+
+        //console.log(this.scrollables);
+        //debugger
+
         Scene.prototype.draw.call(this, surface, {clear: false});
     },
     
@@ -71,5 +93,6 @@ var main = function() {
     });
 };
 
+gamejs.preload(assets);
 gamejs.ready(main);
 
