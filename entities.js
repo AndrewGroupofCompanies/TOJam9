@@ -337,11 +337,6 @@ var Player = Protestor.extend({
         var vec = new Vec2d().add(this.world.gravity);
         this.velocity.add(vec.mul(dt));
 
-        // If we're near police we should warn the active Player.
-        if (this.nearPolice()) {
-            // TODO
-        }
-
         // Adjust speed based on input.
         if (this.isDeking) {
             this.speed = this.runSpeed * 2;
@@ -412,6 +407,11 @@ var Player = Protestor.extend({
                     }
                 }
             }, this);
+        }
+
+        // If we're near police we should warn the active Player.
+        if (this.nearPolice()) {
+            // TODO
         }
 
         // Check if we are inside the police distraction zone. If we are, we're
