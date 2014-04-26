@@ -38,7 +38,6 @@ var imgfy = function(image) {
 
 var GROUND_HEIGHT = 20;
 
-
 var Game = Scene.extend({
     initialize: function(options) {
 
@@ -74,7 +73,7 @@ var Game = Scene.extend({
         this.runningPlane = this.surface.getSize()[1] - 50;
 
         // The front line of the protestors. Let's keep them grouped.
-        this.frontLine = this.surface.getSize()[0] - 50;
+        this.frontLine = this.surface.getSize()[0] - 10;
         this.backLine = 10;
         this.createProtestors(15);
         this.scrollGenerator = new scrollables.SceneryGenerator({
@@ -102,7 +101,7 @@ var Game = Scene.extend({
             takeover: gamejs.event.K_t
         });
         this.player = null;
-        this.spawnPlayer();
+        //this.spawnPlayer();
     },
 
     createProtestors: function(limit) {
@@ -118,6 +117,12 @@ var Game = Scene.extend({
             });
             this.entities.add(p);
         }, this);
+    },
+
+    getObstacles: function() {
+        return _.filter(this.entities._sprites, function(entity) {
+            return entity.isObstacle === true;
+        });
     },
 
     getPolice: function() {
@@ -177,7 +182,6 @@ var Game = Scene.extend({
         this.scrollGenerator.update(dt);
 
         Scene.prototype.update.call(this, dt);
-
 
         dt = (dt / 1000); // Sane velocity mutations.
 
