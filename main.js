@@ -25,6 +25,7 @@ var initSpriteSheet = function(image, width, height) {
 
 var GROUND_HEIGHT = 20;
 
+
 var Game = Scene.extend({
     initialize: function(options) {
         this.gravity = new Vec2d(0, 50);

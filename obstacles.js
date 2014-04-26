@@ -10,7 +10,7 @@ var Obstacle = Entity.extend({
 
         this.world = options.world;
         this.velocity = new Vec2d(0, 0);
-        this.speed = -10;
+        this.speed = -2;
         this.onGround = false;
 
         this.hex = "#000000";
@@ -28,15 +28,15 @@ var Obstacle = Entity.extend({
 var ObstacleEmitter = function(options){
     this.alive = true;
     // Spawn obstacles, much like coins! Randomness
-    this.count = _.random(2, 4);
+    this.count = _.random(1, 5);
     this.world = options.world;
     this.currentDuration = 0;
-    this.duration = 5;
+    this.duration = 8;
 };
 
 ObstacleEmitter.prototype = {
     randomDuration: function() {
-        return ( _.random(2, 5));
+        return ( _.random(2, 10));
     },
     
     update: function(dt) {        
@@ -45,7 +45,7 @@ ObstacleEmitter.prototype = {
             this.world.entities.add(new Obstacle({
                 world: this.world,
                 x: this.world.width(),
-                y: 100,
+                y: this.world.height() - 30,
                 height: 30,
                 width: 30
             }));
