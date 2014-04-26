@@ -2,6 +2,8 @@
 
 ## Protestor
 
+totalframes for animation (example: 40) 30x30 pixels
+
 40 player run
 10 player duck
 10 player hop
@@ -12,7 +14,22 @@
 15 player fall clothesline
 20 player fail trip
 
-see ![/dist/assets/images/protestor04.png](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protestor04.png?raw=true)
+#### see `"dist/assets/images/protester_04_xyz.png"`
+
+### peterstevens
+![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protester_01_pete.png?raw=true)
+
+### Andxyz
+![dist/assets/images/protester_04_xyz.png](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protester_04_xyz.png?raw=true)
+
+### Gradner
+![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protester_07_devok.png?raw=true)
+
+### Plorry
+![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protester_10_plorry.png?raw=true)
+
+### Bartek
+![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protester_13_bartek.png?raw=true)
 
 
 protester01: initSpriteSheet(imgfy(Images.protester01), 30, 30),
