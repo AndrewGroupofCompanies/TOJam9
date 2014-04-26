@@ -12,6 +12,7 @@ var Obstacle = Entity.extend({
         this.velocity = new Vec2d(0, 0);
         this.speed = -2;
         this.onGround = false;
+        this.name = 'obstacle';
 
         this.hex = "#000000";
     },

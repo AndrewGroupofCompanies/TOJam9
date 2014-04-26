@@ -140,7 +140,8 @@ var Protestor = Citizen.extend({
             this.spriteSheet = options.spriteSheet;
             this.anim = new animate.Animation(this.spriteSheet, "running", {
                 running: {frames: _.range(40), rate: 30, loop: true},
-                deke: {frames: _.range(81, 90), rate: 30}
+                deke: {frames: _.range(81, 90), rate: 30},
+                duck: {frames: _.range(41, 50), rate: 30}
             });
 
             this.image = this.anim.update(0);
@@ -153,6 +154,7 @@ var Protestor = Citizen.extend({
         this.maxSpeed = 2;
         this.canDeke = true;
         this.isDeking = false;
+        this.isDucking = false;
 
         // Police padding. If we get too near the police and are aware of them,
         // we should
@@ -228,6 +230,7 @@ var Protestor = Citizen.extend({
 
     deke: function() {
         this.isDeking = true;
+        this.canDeke = false;
         this.setAnimation("deke");
         this.dekeCounter = 300;
         this.accel = 3;
@@ -235,10 +238,31 @@ var Protestor = Citizen.extend({
 
     endDeke: function() {
         this.isDeking = false;
+        this.canDeke = true;
         this.accel = 1.5;
     },
 
+    duck: function() {
+        this.setAnimation("duck");
+        this.isDucking = true;
+        this.duckCounter = 500;
+        this.canDeke = false;
+    },
+
+    endDuck: function() {
+        this.isDucking = false;
+        this.canDeke = true;
+    },
+
     update: function(dt) {
+        if (this.duckCounter > 0) {
+            this.duckCounter -= dt;
+        }
+
+        if (this.duckCounter <= 0 && this.isDucking) {
+            this.endDuck();
+        }
+
         if (this.dekeCounter > 0) {
             this.dekeCounter -= dt;
         }
@@ -315,7 +339,7 @@ var Player = Protestor.extend({
         if (!key) return;
         if (key.action === "keyDown") {
             if (key.value === this.controller.controls.sprint) {
-                if (this.tapCountdown > 0) {
+                if (this.tapCountdown > 0 && this.canDeke) {
                     //double-tap event!
                     this.deke();
                 }
@@ -343,6 +367,20 @@ var Player = Protestor.extend({
     update: function(dt) {
         if (this.tapCountdown > 0) {
             this.tapCountdown -= dt;
+        }
+
+        var collisions = gamejs.sprite.spriteCollide(this, this.world.entities, false);
+
+        if (collisions.length > 0) {
+            collisions.forEach(function(collision){
+                if (collision.name === 'obstacle') {
+                    if (this.isPushing) {
+                        //this.stumble();
+                    } else {
+                        this.duck();
+                    }
+                }
+            }, this);
         }
 
         Protestor.prototype.update.apply(this, arguments);
