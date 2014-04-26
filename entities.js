@@ -145,7 +145,7 @@ var Protestor = Citizen.extend({
 
             this.image = this.anim.update(0);
             this.anim.setFrame(_.random(0,23));
-        }   
+        }
 
         this.runSpeed = 1.5; // Our speed modifier.
         this.speed = this.runSpeed;
@@ -298,8 +298,6 @@ var Player = Protestor.extend({
         } else {
             this.speed = -1;
         }
-
-        
 
         // Adjust accel and speed because we may be sprinting forward.
         var accel = new Vec2d(this.accel, 0);

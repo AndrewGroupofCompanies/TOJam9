@@ -23,6 +23,9 @@ var initSpriteSheet = function(image, width, height) {
     return ss;
 };
 
+var imgfy = function(image) {
+    return gamejs.image.load(image);
+};
 
 var GROUND_HEIGHT = 20;
 
@@ -33,8 +36,8 @@ var Game = Scene.extend({
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
-            police: initSpriteSheet(Images.sprite_test, 26, 30),
-            protester01: initSpriteSheet(Images.protester01, 30, 30)
+            police: initSpriteSheet(imgfy(Images.sprite_test), 26, 30),
+            protester01: initSpriteSheet(imgfy(Images.protester01), 30, 30)
         };
 
         this.bg = new scrollables.Scrollable({
