@@ -12,7 +12,7 @@ var Images = {
     sprite_test: './assets/images/spritesheet-enemy.png'
 };
 
-var GROUND_HEIGHT = 40;
+var GROUND_HEIGHT = 20;
 
 var Game = Scene.extend({
     initialize: function(options) {
@@ -20,8 +20,8 @@ var Game = Scene.extend({
 
         this.bg = new scrollables.Scrollable({
             image: Images.bg_test,
-            height: 256,
-            width: 512,
+            height: 128,
+            width: 256,
             x: 0,
             y: 0
         });
@@ -34,12 +34,13 @@ var Game = Scene.extend({
 
         this.scrollables.add(this.bg);
 
-        // For now, keep it simple with one protestor. Can adjust from there.
-        this.createProtestors(25);
+        // The front line of the protestors. Let's keep them grouped.
+        this.frontLine = this.surface.getSize()[0] - 50;
+        this.createProtestors(1);
 
         // Track the police pressure by using an imaginery line on the x-axis.
-        this.policePressure = 150;
-        this.createPolice(10);
+        this.policePressure = 50;
+        //this.createPolice(10);
     },
 
     createProtestors: function(limit) {
@@ -48,6 +49,7 @@ var Game = Scene.extend({
                 x: 200 + (i * 15), y: 0,
                 width: 32, height: 32,
                 world: this,
+                
                 spriteSheet: {
                     path: Images.sprite_test,
                     height: 30,
@@ -60,7 +62,6 @@ var Game = Scene.extend({
 
     createPolice: function(limit) {
         _.each(_.range(limit), function(i) {
-            console.log("cop");
             var p = new entities.Police({
                 x: 50 + (i * 15), y: 0,
                 width: 32, height: 32,
@@ -97,6 +98,11 @@ var Game = Scene.extend({
         gamejs.draw.line(this.view, "#cccccc",
             [this.policePressure, 0],
             [this.policePressure, surface.getSize()[1]]);
+
+        // Front line.
+        gamejs.draw.line(this.view, "#cccccc",
+            [this.frontLine, 0],
+            [this.frontLine, surface.getSize()[1]]);
         Scene.prototype.draw.call(this, surface, {clear: false});
     },
 
@@ -107,7 +113,7 @@ var Game = Scene.extend({
 
 var main = function() {
     var game = new Game({
-        pixelScale: 2
+        pixelScale: 4
     });
     var d = new Dispatcher(gamejs, {
         initial: game,
