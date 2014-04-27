@@ -199,6 +199,12 @@ var Game = Scene.extend({
     eventBindings: function() {
         var self = this;
         this.eventable.once("protestorsReady", this.joinProtestorGroup.bind(this));
+
+        this.eventable.on("gameover", this.triggerGameOver.bind(this));
+    },
+
+    triggerGameOver: function() {
+        this.dispatcher.push(new GameOver({}));
     },
 
     pickProtestorSprite: function() {
@@ -311,7 +317,7 @@ var Game = Scene.extend({
 
         if (!protestor) {
             // Game over man!
-            this.dispatcher.push(new GameOver({}));
+            this.eventable.emit("gameover");
             return;
         }
 
@@ -354,6 +360,10 @@ var Game = Scene.extend({
             step -= (step * 0.3);
         }
         this.policeDistraction += step;
+
+        if (this.policeDistraction >= (this.frontLine - 10)) {
+            this.eventable.emit("gameover");
+        }
     },
 
     policeGenerator: function(dt) {
