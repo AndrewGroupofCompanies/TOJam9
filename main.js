@@ -172,6 +172,9 @@ var Game = Scene.extend({
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
+        this.policeRect = new gamejs.Rect(0,0,this.policePressure, 300);
+        this.sirenColor = [255,0,0];
+        this.reddening = false;
 
         this.startingPolice = 1;
         this.policeAdditionDelay = 5; // seconds.
@@ -419,6 +422,39 @@ var Game = Scene.extend({
             }
         }
 
+        this.policeRect.width = this.policePressure;
+        if (this.reddening) {
+            var r = this.sirenColor[0] + 10;
+            if (r > 255) {
+                r = 255;
+                this.reddening = false;
+            }
+            var b = this.sirenColor[2] - 20;
+            if (b < 0) {
+                b = 0;
+            }
+            this.sirenColor = [
+                r,
+                0,
+                b
+            ]
+        } else {
+            var r = this.sirenColor[0] - 20;
+            if (r < 0) {
+                r = 0;
+            }
+            var b = this.sirenColor[2] + 10;
+            if (b > 255) {
+                b = 255;
+                this.reddening = true;
+            }
+            this.sirenColor = [
+                r,
+                0,
+                b
+            ]
+        }
+
         //Event firings
 
         if (this.timer > 2 && this.eventCounter === 0) {
@@ -486,6 +522,14 @@ var Game = Scene.extend({
         gamejs.draw.line(this.view, "#cccccc",
             [this.frontLine, 0],
             [this.frontLine, surface.getSize()[1]]);
+        
+        _.range(0,this.policeRect.width,10).forEach(function(width){
+            var tempRect = this.policeRect.clone();
+            tempRect.width -= width;
+            gamejs.draw.rect(this.view, "rgba(" + this.sirenColor.join(',') + ',0.1)', tempRect);
+        }, this);        
+        
+
         Scene.prototype.draw.call(this, surface, {clear: false});
 
     },

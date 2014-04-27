@@ -38,6 +38,10 @@ var Citizen = Entity.extend({
         // Default collision rect is nothing different.
         this.collisionRect = this.rect.clone();
 
+        if (options.image) {
+            this.image = gamejs.image.load(options.image);
+        }
+
         if (options.spriteSheet) {
             this.spriteSheet = options.spriteSheet;
             this.anim = new animate.Animation(this.spriteSheet, "running", this.animSpec);
