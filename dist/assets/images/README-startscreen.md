@@ -30,7 +30,6 @@ ALF (animal liberation front)
 - 03
 zoom of beagle
 
-
 - 04
 a crowd of raised hands receive a beagle
 
@@ -48,7 +47,6 @@ everyone with a bundle
 - lone riot cop
 
 ## Images
-
 
 - ![](http://www.spfence.net/Images/warehouse_fence.jpg)
 - ![](http://www.freesharing.org/wp-content/uploads/2014/03/Stunning-Aviles-Ramos-Residence-Outside-View-from-the-Street-Covered-by-Concrete-Fence-and-Wooden-Gate-Door-Beautiful-Evening-View.jpg)
