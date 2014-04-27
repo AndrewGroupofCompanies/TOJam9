@@ -47,7 +47,14 @@ var Images = {
     goat: './assets/images/goat.png',
     indicator: './assets/images/active_player_icon.png',
     beagle: './assets/images/beagle_icon.png',
-    portraitAndrew: './assets/images/portrait-andrewgardner.png',
+    portrait1: './assets/images/portrait-andrewgardner.png',
+    portrait2: './assets/images/portrait-protestor01.png',
+    portrait3: './assets/images/portrait-protestor02.png',
+    portrait4: './assets/images/portrait-protestor03.png',
+    portrait5: './assets/images/portrait-protestor04.png',
+    portrait6: './assets/images/portrait-protestor05.png',
+    portrait7: './assets/images/portrait-protestor06.png',
+    portrait8: './assets/images/portrait-protestor07.png',
     opening01: './assets/images/opening01.png',
     opening02: './assets/images/opening02.png',
     opening03: './assets/images/opening03.png',
@@ -111,26 +118,32 @@ var Game = Scene.extend({
         this._musicPlaying = false;
 
         this.portraits = {
-            andrew: imgfy(Images.portraitAndrew)
+            andrew: imgfy(Images.portrait1),
+            2: imgfy(Images.portrait2),
+            3: imgfy(Images.portrait3),
+            4: imgfy(Images.portrait4),
+            5: imgfy(Images.portrait5),
+            6: imgfy(Images.portrait6),
+            7: imgfy(Images.portrait7)
         };
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
             police: [initSpriteSheet(imgfy(Images.cop01), 30, 30), 'andrew'],
             protester01: [initSpriteSheet(imgfy(Images.protester01), 30, 30), 'andrew'],
-            protester02: [initSpriteSheet(imgfy(Images.protester02), 30, 30), 'andrew'],
-            protester03: [initSpriteSheet(imgfy(Images.protester03), 30, 30), 'andrew'],
-            protester04: [initSpriteSheet(imgfy(Images.protester04), 30, 30), 'andrew'],
-            protester05: [initSpriteSheet(imgfy(Images.protester05), 30, 30), 'andrew'],
-            protester06: [initSpriteSheet(imgfy(Images.protester06), 30, 30), 'andrew'],
-            protester07: [initSpriteSheet(imgfy(Images.protester07), 30, 30), 'andrew'],
+            protester02: [initSpriteSheet(imgfy(Images.protester02), 30, 30), 2],
+            protester03: [initSpriteSheet(imgfy(Images.protester03), 30, 30), 3],
+            protester04: [initSpriteSheet(imgfy(Images.protester04), 30, 30), 4],
+            protester05: [initSpriteSheet(imgfy(Images.protester05), 30, 30), 5],
+            protester06: [initSpriteSheet(imgfy(Images.protester06), 30, 30), 6],
+            protester07: [initSpriteSheet(imgfy(Images.protester07), 30, 30), 7],
             protester08: [initSpriteSheet(imgfy(Images.protester08), 30, 30), 'andrew'],
-            protester09: [initSpriteSheet(imgfy(Images.protester09), 30, 30), 'andrew'],
-            protester10: [initSpriteSheet(imgfy(Images.protester10), 30, 30), 'andrew'],
-            protester11: [initSpriteSheet(imgfy(Images.protester11), 30, 30), 'andrew'],
-            protester12: [initSpriteSheet(imgfy(Images.protester12), 30, 30), 'andrew'],
-            protester13: [initSpriteSheet(imgfy(Images.protester13), 30, 30), 'andrew'],
-            protester14: [initSpriteSheet(imgfy(Images.protester14), 30, 30), 'andrew'],
+            protester09: [initSpriteSheet(imgfy(Images.protester09), 30, 30), 2],
+            protester10: [initSpriteSheet(imgfy(Images.protester10), 30, 30), 3],
+            protester11: [initSpriteSheet(imgfy(Images.protester11), 30, 30), 4],
+            protester12: [initSpriteSheet(imgfy(Images.protester12), 30, 30), 5],
+            protester13: [initSpriteSheet(imgfy(Images.protester13), 30, 30), 6],
+            protester14: [initSpriteSheet(imgfy(Images.protester14), 30, 30), 7],
             protester15: [initSpriteSheet(imgfy(Images.protester15), 30, 30), 'andrew']
             //gascloud: initSpriteSheet(imgfy(Images.gascloud), 60, 60)
         };
