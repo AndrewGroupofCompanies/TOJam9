@@ -28,6 +28,9 @@ var TopBar = uielements.Element.extend({
             lineHeight: 12
         });
 
+        this.textQueue = [];
+        this.showingQueuedText = false;
+
         this.subelements.add(
             this.textBlock
         );
@@ -35,8 +38,16 @@ var TopBar = uielements.Element.extend({
 
     update: function(dt) {
         this.subelements.update(dt);
+        if (this.textQueue.length > 0 && !this.showingQueuedText) {
+            this.textBlock.show();
+            this.textBlock.setText(this.textQueue.shift());
+            this.showingQueuedText = true;
+        }
         if (this.textBlock.doneDuration >= 600) {
             this.textBlock.hide();
+            if (this.showingQueuedText) {
+                this.showingQueuedText = false;
+            }
         }
     },
 
@@ -46,9 +57,19 @@ var TopBar = uielements.Element.extend({
     },
 
     displayText: function(text) {
-        this.textBlock.show();
-        this.textBlock.setText(text);
-    }
+        // For displaying low-priority, "flavour" text
+        // For important text, use queueText
+        if (!this.showingQueuedText) {
+            this.textBlock.show();
+            this.textBlock.setText(text);
+        }
+    },
+
+    queueText: function(text) {
+        this.textQueue.push(text);
+    },
+
+
 });
 
 module.exports = {
