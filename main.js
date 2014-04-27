@@ -62,6 +62,7 @@ var Game = Scene.extend({
 
         this.startingProtestors = 1;
         this.maxProtestors = 25;
+        this.obstaclesOff = 0;
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
@@ -200,10 +201,13 @@ var Game = Scene.extend({
         if (this.protestorGroupActive === true) return;
         _.each(_.range(this.maxProtestors - 1), function(i) {
             this.createProtestors(1, {
-                x: (this.frontLine + 50 + (i * 5))
+                x: (this.frontLine + 5 + (i * 5))
             });
         }, this);
         this.protestorGroupActive = true;
+
+        // Don't show any obstacles while the group enters.
+        this.obstaclesOff = 5; // in seconds.
     },
 
     resetPoliceDelay: function() {
@@ -272,9 +276,7 @@ var Game = Scene.extend({
 
     update: function(dt) {
         this.scrollGenerator.update(dt);
-        //this.animscrollGenerator.update(dt);
         this.terrain.update(dt);
-
         this.policeGenerator(dt);
 
         Scene.prototype.update.call(this, dt);
@@ -290,15 +292,18 @@ var Game = Scene.extend({
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
 
-        if (this.Obstacles && this.Obstacles.alive) {
-            this.Obstacles.update(dt);
-        } else if (this.Obstacles === null) {
-            this.Obstacles = new obstacles.ObstacleEmitter({
-                world: this,
-                images: [Images.fence, Images.barricade]
-            });
-        } else if (!this.Obstacles.alive) {
-            this.Obstacles = null;
+        this.obstaclesOff -= dt;
+        if (this.obstaclesOff <= 0) {
+            if (this.Obstacles && this.Obstacles.alive) {
+                this.Obstacles.update(dt);
+            } else if (this.Obstacles === null) {
+                this.Obstacles = new obstacles.ObstacleEmitter({
+                    world: this,
+                    images: [Images.fence, Images.barricade]
+                });
+            } else if (!this.Obstacles.alive) {
+                this.Obstacles = null;
+            }
         }
     },
 
