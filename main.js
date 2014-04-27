@@ -19,19 +19,19 @@ var Images = {
     terrain: './assets/images/terrain01.png',
     protester01:   './assets/images/protester01.png',
     protester02:   './assets/images/protester02.png',
-    protester03:   './assets/images/protester03.png',
-    protester04:   './assets/images/protester04a.png',
-    protester05:   './assets/images/protester04a.png',
-    protester06:   './assets/images/protester04a.png',
-    protester07:   './assets/images/protester04a.png',
-    protester08:   './assets/images/protester04a.png',
-    protester09:   './assets/images/protester04a.png',
-    protester10:   './assets/images/protester04a.png',
-    protester11:   './assets/images/protester04a.png',
-    protester12:   './assets/images/protester04a.png',
-    protester13:   './assets/images/protester04a.png',
-    protester14:   './assets/images/protester04a.png',
-    protester15:   './assets/images/protester04a.png',
+    protester03:   './assets/images/protester07.png',
+    protester04:   './assets/images/protester04.png',
+    protester05:   './assets/images/protester07.png',
+    protester06:   './assets/images/protester04.png',
+    protester07:   './assets/images/protester04.png',
+    protester08:   './assets/images/protester04.png',
+    protester09:   './assets/images/protester04.png',
+    protester10:   './assets/images/protester04.png',
+    protester11:   './assets/images/protester04.png',
+    protester12:   './assets/images/protester04.png',
+    protester13:   './assets/images/protester04.png',
+    protester14:   './assets/images/protester04.png',
+    protester15:   './assets/images/protester04.png',
     tree_01:       './assets/images/tree_01.png',
     fence:         './assets/images/fencebroken.png',
     barricade:     './assets/images/barricade.png',
@@ -138,7 +138,7 @@ var Game = Scene.extend({
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
-            var randomNum= _.random(1,4);
+            var randomNum= _.random(1,5);
             var zeroPadded = _s.pad(randomNum.toString(), 2, '0', 'left');
             var spriteId  = 'protester' + zeroPadded;
             console.log(spriteId);
