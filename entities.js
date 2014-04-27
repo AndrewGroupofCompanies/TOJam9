@@ -57,6 +57,7 @@ var Citizen = Entity.extend({
         if (dy > 0) {
             start = this.rect.y;
             this.rect.y += dy;
+            this.rect.y = Math.floor(this.rect.y);
             if (this.world.collides(this)) {
                 this.rect.y = Math.floor(this.rect.y);
                 while (this.world.collides(this)) {
@@ -357,7 +358,8 @@ var Protestor = Citizen.extend({
 var Police = Citizen.extend({
     animSpec: {
         running: {frames: _.range(8), rate: 30, loop: true},
-        capturing: {frames: _.range(40, 55), rate: 30, loop: false}
+        diving: {frames: _.range(21, 40), rate: 30, loop: false},
+        capturing: {frames: _.range(41, 55), rate: 30, loop: false}
     },
 
     initialize: function(options) {
@@ -412,7 +414,7 @@ var Police = Citizen.extend({
         this.isCapturing = true;
         entity.isBeingCaptured();
 
-        this.setAnimation("capturing");
+        this.setAnimation("diving");
 
         // Set speed to negative, so the two go off the screen.
         this.speed = -10;

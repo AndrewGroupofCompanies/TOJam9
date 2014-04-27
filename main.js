@@ -11,20 +11,29 @@ var _ = require('underscore'),
     GameController = gramework.input.GameController;
 
 var Images = {
-    cop01: './assets/images/cop01.png',
-    bg_test: './assets/images/bg_test.jpg',
-    sprite_test: './assets/images/spritesheet-enemy.png',
+    cop01:         './assets/images/cop01.png',
+    bg_test:       './assets/images/bg_test.jpg',
+    sprite_test:   './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
-    protester01: './assets/images/protester_01_pete.png',
-    protester02: './assets/images/protester_02_pete.png',
-    protester03: './assets/images/protester_03_pete.png',
-    protester04: './assets/images/protester_04_xyz.png',
-    protester05: './assets/images/protester_05_xyz.png',
-    protester06: './assets/images/protester_06_xyz.png',
-    tree_01: './assets/images/tree_01.png',
-    fence: './assets/images/fencebroken.png',
-    barricade: './assets/images/barricade.png',
-    terrain: './assets/images/terrain01.png'
+    terrain: './assets/images/terrain01.png',
+    protester01:   './assets/images/protester_01_pete.png',
+    protester02:   './assets/images/protester_02_pete.png',
+    protester03:   './assets/images/protester_03_pete.png',
+    protester04:   './assets/images/protester_04_xyz.png',
+    protester05:   './assets/images/protester_05_xyz.png',
+    protester06:   './assets/images/protester_06_xyz.png',
+    protester07:   './assets/images/protester_04_xyz.png',
+    protester08:   './assets/images/protester_05_xyz.png',
+    protester09:   './assets/images/protester_06_xyz.png',
+    protester10:   './assets/images/protester_10_plorry.png',
+    protester11:   './assets/images/protester_11_plorry.png',
+    protester12:   './assets/images/protester_12_plorry.png',
+    protester13:   './assets/images/protester_10_plorry.png',
+    protester14:   './assets/images/protester_11_plorry.png',
+    protester15:   './assets/images/protester_12_plorry.png',
+    tree_01:       './assets/images/tree_01.png',
+    fence:         './assets/images/fencebroken.png',
+    barricade:     './assets/images/barricade.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -50,6 +59,9 @@ var Game = Scene.extend({
             protester04: initSpriteSheet(imgfy(Images.protester04), 30, 30),
             protester05: initSpriteSheet(imgfy(Images.protester05), 30, 30),
             protester06: initSpriteSheet(imgfy(Images.protester06), 30, 30),
+            protester07: initSpriteSheet(imgfy(Images.protester10), 30, 30),
+            protester08: initSpriteSheet(imgfy(Images.protester11), 30, 30),
+            protester09: initSpriteSheet(imgfy(Images.protester12), 30, 30),
         };
 
         this.terrain = new scrollables.AllTerrain({
@@ -106,7 +118,7 @@ var Game = Scene.extend({
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
-            var randomNum= _.random(1,6);
+            var randomNum= _.random(1,9);
             var spriteId  = 'protester0' + randomNum;
             var tmpSpriteSheet = this.spriteSheets[spriteId];
             var p = new entities.Protestor({
@@ -256,7 +268,7 @@ var main = function() {
     });
     var d = new Dispatcher(gamejs, {
         initial: game,
-        canvas: {flag: gamejs.display.DISABLE_SMOOTHING}
+        canvas: {flag: gamejs.display.DISABLE_SMOOTHING | gamejs.display.FULLSCREEN}
     });
 };
 

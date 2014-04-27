@@ -22,7 +22,7 @@ var Scrollable = Entity.extend({
     update: function(dt) {
         var scale_factor = 1 / Math.pow(Math.E, (this.z / 5));
         if (this.world) {
-            this.move(this.world.speed * scale_factor / 5, 0);
+            this.move(-scale_factor, 0);
         }
     }
 });
@@ -57,7 +57,7 @@ _.extend(SceneryGenerator.prototype, {
         if (this.timer >= this.nextScrollable) {
             this.nextScrollable = _.random(100, 1000);
             this.timer = 0;
-            this.generateScenery(_.sample(this.images), _.random(9.9,9.9));
+            this.generateScenery(_.sample(this.images), _.random(1,9.9));
         }
     }
 });
@@ -73,6 +73,7 @@ var TerrainLayer = Entity.extend({
         this.image = new gamejs.Surface(this.rect);
         this.baseImage = this.image.clone();
         this.rect01 = this.rect.clone();
+        this.rect01.top = 0;
         this.rect02 = this.rect01.move(this.w, 0);
         var dims = this.imageFile.getSize();
         var newDims = [Math.floor((dims[0] * this.scale_factor)/3.5), this.rect.height];
@@ -85,7 +86,11 @@ var TerrainLayer = Entity.extend({
     },
 
     update: function(dt) {
-        this.rect01.move(-this.scale_factor, 0);
+        if (this.rect01.left < -1024) {
+            this.rect01.left = 0;
+        }
+
+        this.rect01.moveIp(-this.scale_factor, 0);
         this.rect02 = this.rect01.move(this.w, 0);
 
         this.image.blit(this.baseImage, this.rect01);
