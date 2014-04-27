@@ -84,9 +84,10 @@ var Cutscene = Scene.extend({
             }
         }
         if (this.isDone()){
-            this.dispatcher.push(this.next);
+            if (this.next) {
+                this.dispatcher.push(this.next);
+            }
         }
-        //this.
     },
 
     draw: function(surface) {

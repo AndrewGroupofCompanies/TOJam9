@@ -23,6 +23,8 @@ var Citizen = Entity.extend({
         captured: {frames: _.range(240, 260), rate: 30}
     },
 
+    defaultAnim: "running",
+
     initialize: function(options) {
         options = (options || {});
 
@@ -42,9 +44,10 @@ var Citizen = Entity.extend({
             this.image = gamejs.image.load(options.image);
         }
 
+
         if (options.spriteSheet) {
             this.spriteSheet = options.spriteSheet;
-            this.anim = new animate.Animation(this.spriteSheet, "running", this.animSpec);
+            this.anim = new animate.Animation(this.spriteSheet, this.defaultAnim, this.animSpec);
             this.image = this.anim.update(0);
             this.anim.setFrame(0);
         }
@@ -124,7 +127,7 @@ var Citizen = Entity.extend({
         this.collisionRect.x = this.rect.x;
         this.collisionRect.y = this.rect.y;
 
-        if (this.image && !this.anim.isFinished()) {
+        if (this.image && this.anim && !this.anim.isFinished()) {
             this.image = this.anim.update(dt);
         }
 
@@ -165,7 +168,7 @@ var Citizen = Entity.extend({
         }, this);
 
         if (this.anim && this.anim.isFinished()) {
-            this.anim.start('running');
+            this.anim.start(this.defaultAnim);
         }
     },
 
@@ -575,6 +578,23 @@ var Police = Citizen.extend({
     }
 });
 
+// Static guard that shows up at the end of the game.
+var PoliceLineGuard = Protestor.extend({
+    isLineGuard: true,
+
+    nearFront: function() {
+        return true;
+    },
+
+    // Guards don't move, game is over.
+    adjustVector: function(dt) {
+        Citizen.prototype.adjustVector.call(this, dt);
+        if (this.rect.x <= (this.world.frontLine - 32)) {
+            this.velocity.setX(0);
+        }
+    },
+});
+
 // Doesn't do much different, but we need to identify the beagle carrier
 // and keep them up front.
 var BeagleCarrier = Protestor.extend({
@@ -802,6 +822,7 @@ var PlayerIndicator = Entity.extend({
 });
 
 module.exports = {
+    PoliceLineGuard: PoliceLineGuard,
     Protestor: Protestor,
     Police: Police,
     Player: Player,
