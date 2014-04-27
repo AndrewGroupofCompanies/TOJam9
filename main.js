@@ -24,6 +24,7 @@ var Images = {
     sprite_test_2: './assets/images/spritesheet-player.png',
     terrain: './assets/images/terrain01.png',
     titlescreen: './assets/images/titlescreen.png',
+    ending01: './assets/images/ending01.png',
     ending02: './assets/images/ending02.png',
     ending03: './assets/images/ending03.png',
     ending04: './assets/images/ending04.png',
@@ -66,10 +67,7 @@ var Images = {
     opening05: './assets/images/opening05.png',
     lose: './assets/images/lose.png',
     music: './assets/music/jam.ogg',
-    intromusic: './assets/music/intro.ogg',
-    posisound: './assets/music/positive.ogg',
-    negisound: './assets/music/negative.ogg',
-    caughtsound: './assets/music/copcaught.ogg'
+    intromusic: './assets/music/intro.ogg'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -545,6 +543,7 @@ var Game = Scene.extend({
         }
 
         if (this.timer > 30 && this.goat === false) {
+            this.goat = true;
             this.entities.add(
                 new scrollables.Scrollable({
                     image: Images.goat,
@@ -646,6 +645,7 @@ var main = function() {
     var gamewinScreen = new Cutscene({
         borderImage: Images.border,
         images: [
+            imgfy(Images.ending01),
             imgfy(Images.ending02),
             imgfy(Images.ending03),
             imgfy(Images.ending04),

@@ -1,4 +1,306 @@
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module '"+o+"'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+// Copyright Joyent, Inc. and other Node contributors.
+//
+// Permission is hereby granted, free of charge, to any person obtaining a
+// copy of this software and associated documentation files (the
+// "Software"), to deal in the Software without restriction, including
+// without limitation the rights to use, copy, modify, merge, publish,
+// distribute, sublicense, and/or sell copies of the Software, and to permit
+// persons to whom the Software is furnished to do so, subject to the
+// following conditions:
+//
+// The above copyright notice and this permission notice shall be included
+// in all copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+// OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+// MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+// NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM,
+// DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR
+// OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+// USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+function EventEmitter() {
+  this._events = this._events || {};
+  this._maxListeners = this._maxListeners || undefined;
+}
+module.exports = EventEmitter;
+
+// Backwards-compat with node 0.10.x
+EventEmitter.EventEmitter = EventEmitter;
+
+EventEmitter.prototype._events = undefined;
+EventEmitter.prototype._maxListeners = undefined;
+
+// By default EventEmitters will print a warning if more than 10 listeners are
+// added to it. This is a useful default which helps finding memory leaks.
+EventEmitter.defaultMaxListeners = 10;
+
+// Obviously not all Emitters should be limited to 10. This function allows
+// that to be increased. Set to zero for unlimited.
+EventEmitter.prototype.setMaxListeners = function(n) {
+  if (!isNumber(n) || n < 0 || isNaN(n))
+    throw TypeError('n must be a positive number');
+  this._maxListeners = n;
+  return this;
+};
+
+EventEmitter.prototype.emit = function(type) {
+  var er, handler, len, args, i, listeners;
+
+  if (!this._events)
+    this._events = {};
+
+  // If there is no 'error' event listener then throw.
+  if (type === 'error') {
+    if (!this._events.error ||
+        (isObject(this._events.error) && !this._events.error.length)) {
+      er = arguments[1];
+      if (er instanceof Error) {
+        throw er; // Unhandled 'error' event
+      } else {
+        throw TypeError('Uncaught, unspecified "error" event.');
+      }
+      return false;
+    }
+  }
+
+  handler = this._events[type];
+
+  if (isUndefined(handler))
+    return false;
+
+  if (isFunction(handler)) {
+    switch (arguments.length) {
+      // fast cases
+      case 1:
+        handler.call(this);
+        break;
+      case 2:
+        handler.call(this, arguments[1]);
+        break;
+      case 3:
+        handler.call(this, arguments[1], arguments[2]);
+        break;
+      // slower
+      default:
+        len = arguments.length;
+        args = new Array(len - 1);
+        for (i = 1; i < len; i++)
+          args[i - 1] = arguments[i];
+        handler.apply(this, args);
+    }
+  } else if (isObject(handler)) {
+    len = arguments.length;
+    args = new Array(len - 1);
+    for (i = 1; i < len; i++)
+      args[i - 1] = arguments[i];
+
+    listeners = handler.slice();
+    len = listeners.length;
+    for (i = 0; i < len; i++)
+      listeners[i].apply(this, args);
+  }
+
+  return true;
+};
+
+EventEmitter.prototype.addListener = function(type, listener) {
+  var m;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events)
+    this._events = {};
+
+  // To avoid recursion in the case that type === "newListener"! Before
+  // adding it to the listeners, first emit "newListener".
+  if (this._events.newListener)
+    this.emit('newListener', type,
+              isFunction(listener.listener) ?
+              listener.listener : listener);
+
+  if (!this._events[type])
+    // Optimize the case of one listener. Don't need the extra array object.
+    this._events[type] = listener;
+  else if (isObject(this._events[type]))
+    // If we've already got an array, just append.
+    this._events[type].push(listener);
+  else
+    // Adding the second element, need to change to array.
+    this._events[type] = [this._events[type], listener];
+
+  // Check for listener leak
+  if (isObject(this._events[type]) && !this._events[type].warned) {
+    var m;
+    if (!isUndefined(this._maxListeners)) {
+      m = this._maxListeners;
+    } else {
+      m = EventEmitter.defaultMaxListeners;
+    }
+
+    if (m && m > 0 && this._events[type].length > m) {
+      this._events[type].warned = true;
+      console.error('(node) warning: possible EventEmitter memory ' +
+                    'leak detected. %d listeners added. ' +
+                    'Use emitter.setMaxListeners() to increase limit.',
+                    this._events[type].length);
+      console.trace();
+    }
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.on = EventEmitter.prototype.addListener;
+
+EventEmitter.prototype.once = function(type, listener) {
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  var fired = false;
+
+  function g() {
+    this.removeListener(type, g);
+
+    if (!fired) {
+      fired = true;
+      listener.apply(this, arguments);
+    }
+  }
+
+  g.listener = listener;
+  this.on(type, g);
+
+  return this;
+};
+
+// emits a 'removeListener' event iff the listener was removed
+EventEmitter.prototype.removeListener = function(type, listener) {
+  var list, position, length, i;
+
+  if (!isFunction(listener))
+    throw TypeError('listener must be a function');
+
+  if (!this._events || !this._events[type])
+    return this;
+
+  list = this._events[type];
+  length = list.length;
+  position = -1;
+
+  if (list === listener ||
+      (isFunction(list.listener) && list.listener === listener)) {
+    delete this._events[type];
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+
+  } else if (isObject(list)) {
+    for (i = length; i-- > 0;) {
+      if (list[i] === listener ||
+          (list[i].listener && list[i].listener === listener)) {
+        position = i;
+        break;
+      }
+    }
+
+    if (position < 0)
+      return this;
+
+    if (list.length === 1) {
+      list.length = 0;
+      delete this._events[type];
+    } else {
+      list.splice(position, 1);
+    }
+
+    if (this._events.removeListener)
+      this.emit('removeListener', type, listener);
+  }
+
+  return this;
+};
+
+EventEmitter.prototype.removeAllListeners = function(type) {
+  var key, listeners;
+
+  if (!this._events)
+    return this;
+
+  // not listening for removeListener, no need to emit
+  if (!this._events.removeListener) {
+    if (arguments.length === 0)
+      this._events = {};
+    else if (this._events[type])
+      delete this._events[type];
+    return this;
+  }
+
+  // emit removeListener for all listeners on all events
+  if (arguments.length === 0) {
+    for (key in this._events) {
+      if (key === 'removeListener') continue;
+      this.removeAllListeners(key);
+    }
+    this.removeAllListeners('removeListener');
+    this._events = {};
+    return this;
+  }
+
+  listeners = this._events[type];
+
+  if (isFunction(listeners)) {
+    this.removeListener(type, listeners);
+  } else {
+    // LIFO order
+    while (listeners.length)
+      this.removeListener(type, listeners[listeners.length - 1]);
+  }
+  delete this._events[type];
+
+  return this;
+};
+
+EventEmitter.prototype.listeners = function(type) {
+  var ret;
+  if (!this._events || !this._events[type])
+    ret = [];
+  else if (isFunction(this._events[type]))
+    ret = [this._events[type]];
+  else
+    ret = this._events[type].slice();
+  return ret;
+};
+
+EventEmitter.listenerCount = function(emitter, type) {
+  var ret;
+  if (!emitter._events || !emitter._events[type])
+    ret = 0;
+  else if (isFunction(emitter._events[type]))
+    ret = 1;
+  else
+    ret = emitter._events[type].length;
+  return ret;
+};
+
+function isFunction(arg) {
+  return typeof arg === 'function';
+}
+
+function isNumber(arg) {
+  return typeof arg === 'number';
+}
+
+function isObject(arg) {
+  return typeof arg === 'object' && arg !== null;
+}
+
+function isUndefined(arg) {
+  return arg === void 0;
+}
+
+},{}],2:[function(require,module,exports){
 var _ = require('underscore'),
     gamejs = require('gamejs'),
     gramework = require('gramework'),
@@ -17,12 +319,16 @@ var font = new gamejs.font.Font('6px monospace');
 
 var Citizen = Entity.extend({
     animSpec: {
-        running: {frames: _.range(40), rate: 30, loop: true},
-        deke: {frames: _.range(81, 90), rate: 30},
-        duck: {frames: _.range(41, 50), rate: 30},
-        stumble: {frames: _.range(121, 145), rate: 30},
-        captured: {frames: _.range(240, 260), rate: 30}
+        running:    {frames: _.range(0,  40),   rate: 30, loop: true},
+        duck:       {frames: _.range(41, 50),   rate: 30, loop: true},
+        deke:       {frames: _.range(81, 90),   rate: 30, loop: true},
+        stumble:    {frames: _.range(121, 145), rate: 30, loop: true},
+        stumblebig: {frames: _.range(161, 180), rate: 30, loop: true},
+        clothesline:{frames: _.range(201, 215), rate: 30, loop: true},
+        captured:   {frames: _.range(240, 260), rate: 30, loop: true}
     },
+
+    defaultAnim: "running",
 
     initialize: function(options) {
         options = (options || {});
@@ -39,9 +345,14 @@ var Citizen = Entity.extend({
         // Default collision rect is nothing different.
         this.collisionRect = this.rect.clone();
 
+        if (options.image) {
+            this.image = gamejs.image.load(options.image);
+        }
+
+
         if (options.spriteSheet) {
             this.spriteSheet = options.spriteSheet;
-            this.anim = new animate.Animation(this.spriteSheet, "running", this.animSpec);
+            this.anim = new animate.Animation(this.spriteSheet, this.defaultAnim, this.animSpec);
             this.image = this.anim.update(0);
             this.anim.setFrame(0);
         }
@@ -121,7 +432,7 @@ var Citizen = Entity.extend({
         this.collisionRect.x = this.rect.x;
         this.collisionRect.y = this.rect.y;
 
-        if (this.image && !this.anim.isFinished()) {
+        if (this.image && this.anim && !this.anim.isFinished()) {
             this.image = this.anim.update(dt);
         }
 
@@ -162,7 +473,7 @@ var Citizen = Entity.extend({
         }, this);
 
         if (this.anim && this.anim.isFinished()) {
-            this.anim.start('running');
+            this.anim.start(this.defaultAnim);
         }
     },
 
@@ -368,13 +679,15 @@ var Protestor = Citizen.extend({
 
 var Police = Citizen.extend({
     animSpec: {
-        running: {frames: _.range(40), rate: 30, loop: true},
-        diving: {frames: _.range(21, 40), rate: 30, loop: false},
-        deke: {frames: _.range(81, 91), rate: 30, loop: false},
-        duck: {frames: _.range(41, 50), rate: 30, loop: false},
-        reaching: {frames: _.range(281, 305), rate: 30, loop: false},
-        falling: {frames: _.range(321, 340), rate: 30, loop: false},
-        capturing: {frames: _.range(361, 400), rate: 30, loop: false}
+        running:     {frames: _.range(0,   40),  rate: 30, loop: true},
+        duck:        {frames: _.range(41,  50),  rate: 30, loop: false},
+        deke:        {frames: _.range(81,  90),  rate: 30, loop: false},
+        clothesline: {frames: _.range(201, 215), rate: 30, loop: false},
+        falling:     {frames: _.range(241, 261), rate: 30, loop: false},
+        reaching:    {frames: _.range(281, 295), rate: 30, loop: false},
+        reaching2:   {frames: _.range(320, 336), rate: 30, loop: false},
+        capturing:   {frames: _.range(361, 400), rate: 30, loop: false},
+        capturing2:  {frames: _.range(401, 440), rate: 30, loop: false},
     },
 
     initialize: function(options) {
@@ -473,8 +786,8 @@ var Police = Citizen.extend({
         this.captureCountdown = this.resetCaptureCountdown();
 
         this.setAnimation("reaching");
-        this.accel = new Vec2d(0.5, 0);
-        this.speed = 1;
+        //this.accel = new Vec2d(0.5, 0);
+        //this.speed = 1;
 
         // We now give the user a split second to react to the police.
         _.delay(this.executeCapture.bind(this), 500, entity);
@@ -504,7 +817,6 @@ var Police = Citizen.extend({
             this.accel = new Vec2d(0.25, 0);
             this.speed = -1;
         } else if (this.nearBack()) {
-            this.accel = new Vec2d(0.25, 0);
             this.speed = 1;
             this.velocity.setX(0.25);
         } else {
@@ -559,8 +871,10 @@ var Police = Citizen.extend({
 
     draw: function(surface) {
         if (this.isCapturing) {
+            /*
             gamejs.draw.circle(surface, "rgb(100, 0, 100)",
                 [this.rect.left + 30, this.rect.bottom - 2], 4, 2);
+            */
         }
 
         if (this.world.debug) {
@@ -569,6 +883,23 @@ var Police = Citizen.extend({
 
         Citizen.prototype.draw.apply(this, arguments);
     }
+});
+
+// Static guard that shows up at the end of the game.
+var PoliceLineGuard = Protestor.extend({
+    isLineGuard: true,
+
+    nearFront: function() {
+        return true;
+    },
+
+    // Guards don't move, game is over.
+    adjustVector: function(dt) {
+        Citizen.prototype.adjustVector.call(this, dt);
+        if (this.rect.x <= (this.world.frontLine - 32)) {
+            this.velocity.setX(0);
+        }
+    },
 });
 
 // Doesn't do much different, but we need to identify the beagle carrier
@@ -760,8 +1091,10 @@ var Player = Protestor.extend({
         Protestor.prototype.draw.apply(this, arguments);
 
         if (this.isCaptured === false) {
+            /*
             gamejs.draw.circle(surface, "rgb(255, 0, 0)",
                 [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
+            */
         }
         if (this.world.debug) {
             //gamejs.draw.rect(surface, "#ffcccc", this.collisionRect);
@@ -796,6 +1129,7 @@ var PlayerIndicator = Entity.extend({
 });
 
 module.exports = {
+    PoliceLineGuard: PoliceLineGuard,
     Protestor: Protestor,
     Police: Police,
     Player: Player,
@@ -804,7 +1138,432 @@ module.exports = {
     PlayerIndicator: PlayerIndicator
 };
 
-},{"gamejs":2,"gramework":30,"underscore":74}],2:[function(require,module,exports){
+},{"gamejs":4,"gramework":32,"underscore":77}],3:[function(require,module,exports){
+var _ = require('underscore'),
+    _s = require('underscore.string'),
+    EventEmitter = require('events').EventEmitter,
+    gamejs = require('gamejs'),
+    gramework = require('gramework'),
+    Dispatcher = gramework.Dispatcher,
+    Scene = gramework.Scene,
+    animate = gramework.animate,
+    Entity = gramework.Entity,
+    entities = require('./entities'),
+    Vec2d = gramework.vectors.Vec2d,
+    FadeTransition = gramework.state.FadeTransition,
+    GameController = gramework.input.GameController;
+
+
+var ImagesC = {
+    // cop01:         './assets/images/cop01.png',
+    // cop02:         './assets/images/cop02.png',
+    protester01:   './assets/images/protester01.png',
+    protester02:   './assets/images/protester02.png',
+    protester03:   './assets/images/protester03.png',
+    protester04:   './assets/images/protester04.png',
+    protester05:   './assets/images/protester05.png',
+    protester06:   './assets/images/protester07.png',
+    protester07:   './assets/images/protester01.png',
+};
+var ImagesP = {
+    cop01:         './assets/images/cop01.png',
+    cop02:         './assets/images/cop02.png',
+};
+var Images = {};
+Images = _.extend(Images, ImagesC);
+Images = _.extend(Images, ImagesP);
+
+var FunCitizen = Entity.extend({
+    animSpec: {
+        running:    {frames: _.range(0,  40),   rate: 30, loop: true},
+        duck:       {frames: _.range(41, 50),   rate: 30, loop: true},
+        deke:       {frames: _.range(81, 90),   rate: 30, loop: true},
+        stumble:    {frames: _.range(121, 145), rate: 30, loop: true},
+        stumblebig: {frames: _.range(161, 180), rate: 30, loop: true},
+        clothesline:{frames: _.range(201, 215), rate: 30, loop: true},
+        captured:   {frames: _.range(240, 260), rate: 30, loop: true}
+    },
+
+    initialize: function(options) {
+        options = (options || {});
+
+        this.world = options.world;
+
+        if (options.spriteSheet) {
+            this.spriteSheet = options.spriteSheet;
+            this.anim = new animate.Animation(this.spriteSheet, "running", this.animSpec);
+            this.image = this.anim.update(0);
+            this.anim.setFrame(0);
+        }
+
+    },
+
+    update: function(dt) {
+        if (this.world.paused) return;
+
+        this.image = this.anim.update(dt);
+    },
+
+
+    draw: function(surface) {
+        if (this.image) {
+            Entity.prototype.draw.apply(this, arguments);
+        } else {
+            gamejs.draw.rect(surface, this.hex, this.rect);
+        }
+
+    },
+
+    setAnimation: function(animation) {
+        if (this.anim.currentAnimation !== animation) {
+            this.anim.start(animation);
+        }
+    },
+
+});
+var FunCitizen = FunCitizen.extend({});
+
+// animSpec: {
+//     running:    {frames: _.range(0,  40),   rate: 30, loop: true},
+//     duck:       {frames: _.range(41, 50),   rate: 30, loop: true},
+//     deke:       {frames: _.range(81, 90),   rate: 30, loop: true},
+//     stumble:    {frames: _.range(121, 145), rate: 30, loop: true},
+//     stumblebig: {frames: _.range(161, 180), rate: 30, loop: true},
+//     clothesline:{frames: _.range(201, 215), rate: 30, loop: true},
+//     captured:   {frames: _.range(240, 260), rate: 30, loop: true}
+// },
+var FunPolice = Entity.extend({
+    animSpec: {
+        running:     {frames: _.range(0,   40),  rate: 30, loop: true},
+        duck:        {frames: _.range(41,  50),  rate: 30, loop: true},
+        deke:        {frames: _.range(81,  90),  rate: 30, loop: true},
+        clothesline: {frames: _.range(201, 215), rate: 30, loop: true},
+        falling:     {frames: _.range(241, 261), rate: 30, loop: true},
+        reaching:    {frames: _.range(281, 295), rate: 30, loop: true},
+        reaching2:   {frames: _.range(320, 336), rate: 30, loop: true},
+        capturing:   {frames: _.range(361, 400), rate: 30, loop: true},
+        capturing2:  {frames: _.range(401, 440), rate: 30, loop: true},
+    },
+
+    initialize: function(options) {
+        options = (options || {});
+
+        this.world = options.world;
+
+        if (options.spriteSheet) {
+            this.spriteSheet = options.spriteSheet;
+            this.anim = new animate.Animation(this.spriteSheet, "running", this.animSpec);
+            this.image = this.anim.update(0);
+            this.anim.setFrame(0);
+        }
+
+    },
+
+    update: function(dt) {
+        if (this.world.paused) return;
+
+        this.image = this.anim.update(dt);
+    },
+
+
+    draw: function(surface) {
+        if (this.image) {
+            Entity.prototype.draw.apply(this, arguments);
+        } else {
+            gamejs.draw.rect(surface, this.hex, this.rect);
+        }
+
+    },
+
+    setAnimation: function(animation) {
+        if (this.anim.currentAnimation !== animation) {
+            this.anim.start(animation);
+        }
+    },
+
+});
+var FunCitizen = FunCitizen.extend({});
+
+var initSpriteSheet = function(image, width, height) {
+    var ss = new animate.SpriteSheet(image, width, height);
+    return ss;
+};
+
+var imgfy = function(image) {
+    return gamejs.image.load(image);
+};
+
+var GROUND_HEIGHT = 20;
+
+var Game = Scene.extend({
+    initialize: function(options) {
+        this.paused = false;
+        this.debug = true;
+        this.timer = 0;
+        this.indicator = null;
+
+        this.startingProtestors = 1;
+        this.maxProtestors = 25;
+        this.obstaclesOff = 0;
+
+        //Gotta init them spriteSheets
+        this.spriteSheetsC = {
+            protester01: [initSpriteSheet(imgfy(ImagesC.protester01), 30, 30)],
+            protester02: [initSpriteSheet(imgfy(ImagesC.protester02), 30, 30)],
+            protester03: [initSpriteSheet(imgfy(ImagesC.protester03), 30, 30)],
+            protester04: [initSpriteSheet(imgfy(ImagesC.protester04), 30, 30)],
+            protester05: [initSpriteSheet(imgfy(ImagesC.protester05), 30, 30)],
+            protester06: [initSpriteSheet(imgfy(ImagesC.protester06), 30, 30)],
+            protester07: [initSpriteSheet(imgfy(ImagesC.protester07), 30, 30)],
+        };
+        this.spriteSheetsP = {
+            cop01: [initSpriteSheet(imgfy(ImagesP.cop01), 30, 30)],
+            cop02: [initSpriteSheet(imgfy(ImagesP.cop02), 30, 30)],
+        };
+
+        var saved_ypos_start; // used for the next run
+        var xpos_multiplier;
+        saved_ypos_start = 0;
+        xpos_multiplier = 0;
+
+        _.each(this.spriteSheetsC, function(ss) {
+            var ypos_multiplier = 0;
+            var x, y;
+
+            x =  30 + (30 * (xpos_multiplier));
+            y =  30 + (30 * (ypos_multiplier));
+            var p1 = new FunCitizen({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p1.setAnimation("running");
+            this.entities.add(p1);
+
+            ypos_multiplier++;
+            y =  30 + (30 * (ypos_multiplier));
+            var p2 = new FunCitizen({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p2.setAnimation("duck");
+            this.entities.add(p2);
+
+            ypos_multiplier++;
+            y =  30 + (30 * (ypos_multiplier));
+            var p3 = new FunCitizen({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p3.setAnimation("deke");
+            this.entities.add(p3);
+
+            ypos_multiplier++;
+            y =  30 + (30 * (ypos_multiplier));
+            var p4 = new FunCitizen({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p4.setAnimation("stumble");
+            this.entities.add(p4);
+
+            ypos_multiplier++;
+            y =  30 + (30 * (ypos_multiplier));
+            var p5 = new FunCitizen({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p5.setAnimation("stumblebig");
+            this.entities.add(p5);
+
+            ypos_multiplier++;
+            y =  30 + (30 * (ypos_multiplier));
+            var p6 = new FunCitizen({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p6.setAnimation("clothesline");
+            this.entities.add(p6);
+
+            ypos_multiplier++;
+            y =  30 + (30 * (ypos_multiplier));
+            var p7 = new FunCitizen({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p7.setAnimation("captured");
+            this.entities.add(p7);
+
+            saved_ypos_start = y;
+            xpos_multiplier++;
+        }, this);
+
+        xpos_multiplier = 0;
+        _.each(this.spriteSheetsP, function(ss) {
+            var ypos_multiplier = 0;
+            var x, y, y_simple;
+
+            x =  30 + (30 * (xpos_multiplier));
+            y_simple =  30 + (30 * (ypos_multiplier));
+            y = saved_ypos_start + y_simple;
+            // console.log(x);
+            // console.log(y);
+
+            var p1 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p1.setAnimation("running");
+            this.entities.add(p1);
+
+            ypos_multiplier++;
+            y_simple =  30 + (30 * (ypos_multiplier));
+            y = saved_ypos_start + y_simple;
+            var p2 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p2.setAnimation("duck");
+            this.entities.add(p2);
+
+            ypos_multiplier++;
+            y_simple =  30 + (30 * (ypos_multiplier));
+            y = saved_ypos_start + y_simple;
+            var p3 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p3.setAnimation("deke");
+            this.entities.add(p3);
+
+            ypos_multiplier++;
+            y_simple =  30 + (30 * (ypos_multiplier));
+            y = saved_ypos_start + y_simple;
+            var p4 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p4.setAnimation("clothesline");
+            this.entities.add(p4);
+
+            ypos_multiplier++;
+            y_simple =  30 + (30 * (ypos_multiplier));
+            y = saved_ypos_start + y_simple;
+            var p5 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p5.setAnimation("falling");
+            this.entities.add(p5);
+
+            ypos_multiplier++;
+            y_simple =  30 + (30 * (ypos_multiplier));
+            y = saved_ypos_start + y_simple;
+            var p6 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p6.setAnimation("reaching");
+            this.entities.add(p6);
+
+            ypos_multiplier++;
+            y_simple =  30 + (30 * (ypos_multiplier));
+            y = saved_ypos_start + y_simple;
+            var p7 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p7.setAnimation("reaching2");
+            this.entities.add(p7);
+
+            ypos_multiplier++;
+            y_simple =  30 + (30 * (ypos_multiplier));
+            y = saved_ypos_start + y_simple;
+            var p8 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p8.setAnimation("capturing");
+            this.entities.add(p8);
+
+            ypos_multiplier++;
+            y_simple =  30 + (30 * (ypos_multiplier));
+            y = saved_ypos_start + y_simple;
+            var p9 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p9.setAnimation("capturing2");
+            this.entities.add(p9);
+
+            xpos_multiplier++;
+        }, this);
+
+    },
+
+    update: function(dt) {
+        Scene.prototype.update.call(this, dt);
+        dt = (dt / 1000); // Sane velocity mutations.
+        this.timer += dt;
+    },
+
+    draw: function(surface) {
+        surface.clear();
+        this.view.clear();
+
+        this.surface.fill('#fff');
+
+        Scene.prototype.draw.call(this, surface, {clear: false});
+
+    },
+
+    event: function(ev) {
+    }
+});
+
+var main = function() {
+    var game = new Game({});
+    var d = new Dispatcher(gamejs, {
+        initial: game
+    });
+};
+
+gamejs.preload(_.values(Images));
+gamejs.ready(main);
+
+
+},{"./entities":2,"events":1,"gamejs":4,"gramework":32,"underscore":77,"underscore.string":76}],4:[function(require,module,exports){
 var matrix = require('./gamejs/utils/matrix');
 var objects = require('./gamejs/utils/objects');
 var Callback = require('./gamejs/callback').Callback;
@@ -1790,7 +2549,7 @@ exports.onEvent = function(fn, scope) {
 exports.onTick = function(fn, scope) {
   exports.time._CALLBACK = new Callback(fn, scope);
 };
-},{"./gamejs/callback":3,"./gamejs/display":4,"./gamejs/draw":5,"./gamejs/event":6,"./gamejs/font":7,"./gamejs/http":8,"./gamejs/image":9,"./gamejs/mask":10,"./gamejs/mixer":11,"./gamejs/noise":12,"./gamejs/pathfinding/astar":13,"./gamejs/sprite":14,"./gamejs/surfacearray":15,"./gamejs/time":16,"./gamejs/tmx":17,"./gamejs/transform":18,"./gamejs/utils/arrays":19,"./gamejs/utils/base64":20,"./gamejs/utils/math":22,"./gamejs/utils/matrix":23,"./gamejs/utils/objects":24,"./gamejs/utils/prng":25,"./gamejs/utils/uri":26,"./gamejs/utils/vectors":27,"./gamejs/worker":28,"./gamejs/xml":29}],3:[function(require,module,exports){
+},{"./gamejs/callback":5,"./gamejs/display":6,"./gamejs/draw":7,"./gamejs/event":8,"./gamejs/font":9,"./gamejs/http":10,"./gamejs/image":11,"./gamejs/mask":12,"./gamejs/mixer":13,"./gamejs/noise":14,"./gamejs/pathfinding/astar":15,"./gamejs/sprite":16,"./gamejs/surfacearray":17,"./gamejs/time":18,"./gamejs/tmx":19,"./gamejs/transform":20,"./gamejs/utils/arrays":21,"./gamejs/utils/base64":22,"./gamejs/utils/math":24,"./gamejs/utils/matrix":25,"./gamejs/utils/objects":26,"./gamejs/utils/prng":27,"./gamejs/utils/uri":28,"./gamejs/utils/vectors":29,"./gamejs/worker":30,"./gamejs/xml":31}],5:[function(require,module,exports){
 /**
  * Manage a callback with scope
  */
@@ -1804,7 +2563,7 @@ var Callback = exports.Callback = function(fn, scope) {
 Callback.prototype.trigger = function() {
 	this.fn.apply(this.fnScope, arguments);
 };
-},{}],4:[function(require,module,exports){
+},{}],6:[function(require,module,exports){
 var Surface = require('../gamejs').Surface;
 
 /**
@@ -2061,7 +2820,7 @@ var getSurface = exports.getSurface = function() {
    return SURFACE;
 };
 
-},{"../gamejs":2,"./event":6}],5:[function(require,module,exports){
+},{"../gamejs":4,"./event":8}],7:[function(require,module,exports){
 /**
  * @fileoverview Utilities for drawing geometrical objects to Surfaces. If you want to put images on
  * the screen see gamejs/image.
@@ -2313,7 +3072,7 @@ exports.bezierCurve = function(surface, color, startPos, endPos, ct1Pos, ct2Pos,
 
    ctx.restore();
 };
-},{}],6:[function(require,module,exports){
+},{}],8:[function(require,module,exports){
 var display = require('./display');
 var Callback = require('./callback').Callback;
 
@@ -2582,7 +3341,7 @@ exports.init = function() {
 
 };
 
-},{"./callback":3,"./display":4}],7:[function(require,module,exports){
+},{"./callback":5,"./display":6}],9:[function(require,module,exports){
 var Surface = require('../gamejs').Surface;
 var objects = require('./utils/objects');
 
@@ -2673,7 +3432,7 @@ objects.accessors(Font.prototype, {
 
 });
 
-},{"../gamejs":2,"./utils/objects":24}],8:[function(require,module,exports){
+},{"../gamejs":4,"./utils/objects":26}],10:[function(require,module,exports){
 /**
  * @fileoverview Make synchronous http requests to your game's serverside component.
  *
@@ -2791,7 +3550,7 @@ exports.save = function(url, data, type) {
    return stringify(post(ajaxBaseHref() + url, {payload: data}, type));
 };
 
-},{}],9:[function(require,module,exports){
+},{}],11:[function(require,module,exports){
 var gamejs = require('../gamejs');
 
 /**
@@ -2924,7 +3683,7 @@ var addToCache = function(img) {
    return;
 };
 
-},{"../gamejs":2}],10:[function(require,module,exports){
+},{"../gamejs":4}],12:[function(require,module,exports){
 var gamejs = require('../gamejs');
 var objects = require('./utils/objects');
 
@@ -3176,7 +3935,7 @@ objects.accessors(Mask.prototype, {
    }
 });
 
-},{"../gamejs":2,"./utils/objects":24}],11:[function(require,module,exports){
+},{"../gamejs":4,"./utils/objects":26}],13:[function(require,module,exports){
 var gamejs = require('../gamejs');
 
 /**
@@ -3371,7 +4130,7 @@ exports.Sound = function Sound(uriOrAudio) {
    return this;
 };
 
-},{"../gamejs":2}],12:[function(require,module,exports){
+},{"../gamejs":4}],14:[function(require,module,exports){
 /**
  * @fileoverview
  * A noise generator comparable to Perlin noise, which is useful
@@ -3597,7 +4356,7 @@ Simplex.prototype.get3d = function(xin, yin, zin) {
   return 32.0*(n0 + n1 + n2 + n3);
 };
 
-},{}],13:[function(require,module,exports){
+},{}],15:[function(require,module,exports){
 /**
  * @fileoverview
  * AStar Path finding algorithm
@@ -3755,7 +4514,7 @@ Map.prototype.actualDistance = function(pointA, pointB) {
    return 1;
 };
 
-},{"../utils/binaryheap":21}],14:[function(require,module,exports){
+},{"../utils/binaryheap":23}],16:[function(require,module,exports){
 var gamejs = require('../gamejs');
 var arrays = require('./utils/arrays');
 var $o = require('./utils/objects');
@@ -4182,7 +4941,7 @@ exports.collideCircle = function(spriteA, spriteB) {
    return $v.distance(spriteA.rect.center, spriteB.rect.center) <= rA + rB;
 };
 
-},{"../gamejs":2,"./utils/arrays":19,"./utils/objects":24,"./utils/vectors":27}],15:[function(require,module,exports){
+},{"../gamejs":4,"./utils/arrays":21,"./utils/objects":26,"./utils/vectors":29}],17:[function(require,module,exports){
 var gamejs = require('../gamejs');
 var accessors = require('./utils/objects').accessors;
 /**
@@ -4314,7 +5073,7 @@ var SurfaceArray = exports.SurfaceArray = function(surfaceOrDimensions) {
    return this;
 };
 
-},{"../gamejs":2,"./utils/objects":24}],16:[function(require,module,exports){
+},{"../gamejs":4,"./utils/objects":26}],18:[function(require,module,exports){
 /**
  * @fileoverview
  * Only used by GameJs internally to provide a game loop.
@@ -4364,7 +5123,7 @@ var perInterval = function() {
    return;
 };
 
-},{"./callback":3}],17:[function(require,module,exports){
+},{"./callback":5}],19:[function(require,module,exports){
 var gamejs = require('../gamejs');
 var objects = require('./utils/objects');
 var xml = require('./xml');
@@ -4664,7 +5423,7 @@ var setProperties = function(object, node) {
    return object;
 };
 
-},{"../gamejs":2,"./utils/base64":20,"./utils/objects":24,"./utils/uri":26,"./xml":29}],18:[function(require,module,exports){
+},{"../gamejs":4,"./utils/base64":22,"./utils/objects":26,"./utils/uri":28,"./xml":31}],20:[function(require,module,exports){
 var Surface = require('../gamejs').Surface;
 var matrix = require('./utils/matrix');
 var math = require('./utils/math');
@@ -4769,7 +5528,7 @@ exports.flip = function(surface, flipHorizontal, flipVertical) {
    return newSurface;
 };
 
-},{"../gamejs":2,"./utils/math":22,"./utils/matrix":23,"./utils/vectors":27}],19:[function(require,module,exports){
+},{"../gamejs":4,"./utils/math":24,"./utils/matrix":25,"./utils/vectors":29}],21:[function(require,module,exports){
 /**
  * @fileoverview Utility functions for working with Obiects
  * @param {Object} item
@@ -4800,7 +5559,7 @@ exports.shuffle = function(array) {
     return array;
 };
 
-},{}],20:[function(require,module,exports){
+},{}],22:[function(require,module,exports){
 /**
  * @fileoverview
  * Base64 encode / decode
@@ -4861,7 +5620,7 @@ exports.decodeAsArray = function(input, bytes) {
    return array;
 }
 ;
-},{}],21:[function(require,module,exports){
+},{}],23:[function(require,module,exports){
 /**
  * Binary Heap
  *
@@ -5017,7 +5776,7 @@ BinaryHeap.prototype.bubbleUp = function(idx) {
    return;
 };
 
-},{}],22:[function(require,module,exports){
+},{}],24:[function(require,module,exports){
 /**
  *
  * absolute angle to relative angle, in degrees
@@ -5086,7 +5845,7 @@ exports.centroid = function() {
    ];
 };
 
-},{}],23:[function(require,module,exports){
+},{}],25:[function(require,module,exports){
 /**
  * @fileoverview Matrix manipulation, used by GameJs itself. You
  * probably do not need this unless you manipulate a Context's transformation
@@ -5178,7 +5937,7 @@ var scale = exports.scale = function(m1, svec) {
    return multiply(m1, [sx, 0, 0, sy, 0, 0]);
 };
 
-},{}],24:[function(require,module,exports){
+},{}],26:[function(require,module,exports){
 /**
  * @fileoverview Utility functions for working with Objects
  */
@@ -5281,7 +6040,7 @@ exports.accessors = function(object, props) {
    return;
 };
 
-},{}],25:[function(require,module,exports){
+},{}],27:[function(require,module,exports){
 /**
  * @fileoverview A seedable random-number generator.
  *
@@ -5432,7 +6191,7 @@ exports.random = function() {
 exports.init = function(seed) {
   alea = new Alea(seed);
 };
-},{}],26:[function(require,module,exports){
+},{}],28:[function(require,module,exports){
 /**
  * @fileoverview Utilies for URI handling.
  *
@@ -5550,7 +6309,7 @@ var removeDotSegments = function(path) {
    return out.join('/');
 };
 
-},{}],27:[function(require,module,exports){
+},{}],29:[function(require,module,exports){
 var math=require('./math');
 
 /**
@@ -5676,7 +6435,7 @@ exports.truncate = function(v, maxLength) {
    return v;
 };
 
-},{"./math":22}],28:[function(require,module,exports){
+},{"./math":24}],30:[function(require,module,exports){
 var gamejs = require('../gamejs');
 var uri = require('./utils/uri');
 var Callback = require('./callback').Callback;
@@ -5901,7 +6660,7 @@ function guid(moduleId) {
    };
    return moduleId + '@' + (S4()+S4());
 }
-},{"../gamejs":2,"./callback":3,"./utils/uri":26}],29:[function(require,module,exports){
+},{"../gamejs":4,"./callback":5,"./utils/uri":28}],31:[function(require,module,exports){
 /**
  * @fileoverview
  *
@@ -6036,7 +6795,7 @@ Document.fromURL = function(url) {
    return new Document(response.responseXML);
 };
 
-},{}],30:[function(require,module,exports){
+},{}],32:[function(require,module,exports){
 var gamejs = require('gamejs'),
     inherits = require('super');
 
@@ -6074,7 +6833,7 @@ module.exports = {
 //TODO: Kill this in favour of Entity
 //exports.actors = require('./gramework/actors');
 
-},{"./gramework/animate":31,"./gramework/camera":32,"./gramework/dispatcher":33,"./gramework/entity":34,"./gramework/image":35,"./gramework/input":36,"./gramework/layers":37,"./gramework/particles":38,"./gramework/scenes":39,"./gramework/state":40,"./gramework/tilemap":41,"./gramework/uielements":42,"./gramework/vectors":43,"gamejs":44,"super":72}],31:[function(require,module,exports){
+},{"./gramework/animate":33,"./gramework/camera":34,"./gramework/dispatcher":35,"./gramework/entity":36,"./gramework/image":37,"./gramework/input":38,"./gramework/layers":39,"./gramework/particles":40,"./gramework/scenes":41,"./gramework/state":42,"./gramework/tilemap":43,"./gramework/uielements":44,"./gramework/vectors":45,"gamejs":46,"super":74}],33:[function(require,module,exports){
 var gamejs = require('gamejs'),
     inherits = require('super'),
     _ = require('underscore');
@@ -6193,7 +6952,7 @@ Animation.prototype.isFinished = function() {
     return this._isFinished;
 };
 
-},{"gamejs":44,"super":72,"underscore":73}],32:[function(require,module,exports){
+},{"gamejs":46,"super":74,"underscore":75}],34:[function(require,module,exports){
 /*
  * Create a camera around a display.
  *
@@ -6366,7 +7125,7 @@ _.extend(Camera.prototype, {
     }
 });
 
-},{"gamejs":44,"underscore":73}],33:[function(require,module,exports){
+},{"gamejs":46,"underscore":75}],35:[function(require,module,exports){
 /*global document*/
 var _ = require('underscore'),
     inherits = require('super'),
@@ -6479,7 +7238,7 @@ _.extend(Dispatcher.prototype, {
     }
 });
 
-},{"./state":40,"super":72,"underscore":73}],34:[function(require,module,exports){
+},{"./state":42,"super":74,"underscore":75}],36:[function(require,module,exports){
 // A stripped down, simpler Actors module.
 var gamejs = require('gamejs'),
     inherits = require('super'),
@@ -6536,14 +7295,14 @@ Entity.prototype.setPos = function(x, y) {
     this.rect.y = y;
 };
 
-},{"gamejs":44,"super":72}],35:[function(require,module,exports){
+},{"gamejs":46,"super":74}],37:[function(require,module,exports){
 var gamejs = require('gamejs');
 
 var imgfy = exports.imgfy = function(path) {
     return gamejs.image.load(path);
 };
 
-},{"gamejs":44}],36:[function(require,module,exports){
+},{"gamejs":46}],38:[function(require,module,exports){
 var gamejs = require('gamejs'),
     inherits = require('super'),
     Vec2d = require('./vectors').Vec2d,
@@ -6641,7 +7400,7 @@ GameController.prototype.movementVector = function() {
     return vel.normalized();
 };
 
-},{"./vectors":43,"gamejs":44,"super":72,"underscore":73}],37:[function(require,module,exports){
+},{"./vectors":45,"gamejs":46,"super":74,"underscore":75}],39:[function(require,module,exports){
 var imgfy = require('./image').imgfy;
 
 // Use for repeating Backgrounds on a screen, adjust speed
@@ -6675,7 +7434,7 @@ Scrollable.prototype = {
     }
 };
 
-},{"./image":35}],38:[function(require,module,exports){
+},{"./image":37}],40:[function(require,module,exports){
 var gamejs = require('gamejs');
 
 var Particle = exports.Particle = function(position, options) {
@@ -6766,7 +7525,7 @@ Emitter.prototype.draw = function(surface) {
     }, this);
 };
 
-},{"gamejs":44}],39:[function(require,module,exports){
+},{"gamejs":46}],41:[function(require,module,exports){
 var gamejs = require('gamejs'),
     inherits = require('super'),
     Camera = require('./camera'),
@@ -6882,7 +7641,7 @@ _.extend(Scene.prototype, {
     }
 });
 
-},{"./camera":32,"gamejs":44,"super":72,"underscore":73}],40:[function(require,module,exports){
+},{"./camera":34,"gamejs":46,"super":74,"underscore":75}],42:[function(require,module,exports){
 var gamejs = require('gamejs'),
     inherits = require('super');
 
@@ -6945,7 +7704,7 @@ module.exports = {
     FadeTransition: FadeTransition
 };
 
-},{"gamejs":44,"super":72}],41:[function(require,module,exports){
+},{"gamejs":46,"super":74}],43:[function(require,module,exports){
 /*jshint es5:true */
 /*
  * Tilemap module.
@@ -7095,7 +7854,7 @@ var LayerView = function(map, layer, opts) {
     return this;
 };
 
-},{"gamejs":44,"super":72}],42:[function(require,module,exports){
+},{"gamejs":46,"super":74}],44:[function(require,module,exports){
 /*jshint es5:true */
 /*
  * Interface Entity module.
@@ -7572,7 +8331,7 @@ SliderWidget.prototype.init = function(options){
 };
 */
 
-},{"./entity":34,"gamejs":44,"super":72,"underscore":73}],43:[function(require,module,exports){
+},{"./entity":36,"gamejs":46,"super":74,"underscore":75}],45:[function(require,module,exports){
 /*jslint es5: true*/
 /*
  * Vector Utilities
@@ -7749,45 +8508,41 @@ Vec2d.prototype = {
 };
 
 
-},{"gamejs":44,"underscore":73}],44:[function(require,module,exports){
-module.exports=require(2)
-},{"./gamejs/callback":45,"./gamejs/display":46,"./gamejs/draw":47,"./gamejs/event":48,"./gamejs/font":49,"./gamejs/http":50,"./gamejs/image":51,"./gamejs/mask":52,"./gamejs/mixer":53,"./gamejs/noise":54,"./gamejs/pathfinding/astar":55,"./gamejs/sprite":56,"./gamejs/surfacearray":57,"./gamejs/time":58,"./gamejs/tmx":59,"./gamejs/transform":60,"./gamejs/utils/arrays":61,"./gamejs/utils/base64":62,"./gamejs/utils/math":64,"./gamejs/utils/matrix":65,"./gamejs/utils/objects":66,"./gamejs/utils/prng":67,"./gamejs/utils/uri":68,"./gamejs/utils/vectors":69,"./gamejs/worker":70,"./gamejs/xml":71}],45:[function(require,module,exports){
-module.exports=require(3)
-},{}],46:[function(require,module,exports){
+},{"gamejs":46,"underscore":75}],46:[function(require,module,exports){
 module.exports=require(4)
-},{"../gamejs":44,"./event":48}],47:[function(require,module,exports){
+},{"./gamejs/callback":47,"./gamejs/display":48,"./gamejs/draw":49,"./gamejs/event":50,"./gamejs/font":51,"./gamejs/http":52,"./gamejs/image":53,"./gamejs/mask":54,"./gamejs/mixer":55,"./gamejs/noise":56,"./gamejs/pathfinding/astar":57,"./gamejs/sprite":58,"./gamejs/surfacearray":59,"./gamejs/time":60,"./gamejs/tmx":61,"./gamejs/transform":62,"./gamejs/utils/arrays":63,"./gamejs/utils/base64":64,"./gamejs/utils/math":66,"./gamejs/utils/matrix":67,"./gamejs/utils/objects":68,"./gamejs/utils/prng":69,"./gamejs/utils/uri":70,"./gamejs/utils/vectors":71,"./gamejs/worker":72,"./gamejs/xml":73}],47:[function(require,module,exports){
 module.exports=require(5)
 },{}],48:[function(require,module,exports){
 module.exports=require(6)
-},{"./callback":45,"./display":46}],49:[function(require,module,exports){
+},{"../gamejs":46,"./event":50}],49:[function(require,module,exports){
 module.exports=require(7)
-},{"../gamejs":44,"./utils/objects":66}],50:[function(require,module,exports){
+},{}],50:[function(require,module,exports){
 module.exports=require(8)
-},{}],51:[function(require,module,exports){
+},{"./callback":47,"./display":48}],51:[function(require,module,exports){
 module.exports=require(9)
-},{"../gamejs":44}],52:[function(require,module,exports){
+},{"../gamejs":46,"./utils/objects":68}],52:[function(require,module,exports){
 module.exports=require(10)
-},{"../gamejs":44,"./utils/objects":66}],53:[function(require,module,exports){
+},{}],53:[function(require,module,exports){
 module.exports=require(11)
-},{"../gamejs":44}],54:[function(require,module,exports){
+},{"../gamejs":46}],54:[function(require,module,exports){
 module.exports=require(12)
-},{}],55:[function(require,module,exports){
+},{"../gamejs":46,"./utils/objects":68}],55:[function(require,module,exports){
 module.exports=require(13)
-},{"../utils/binaryheap":63}],56:[function(require,module,exports){
+},{"../gamejs":46}],56:[function(require,module,exports){
 module.exports=require(14)
-},{"../gamejs":44,"./utils/arrays":61,"./utils/objects":66,"./utils/vectors":69}],57:[function(require,module,exports){
+},{}],57:[function(require,module,exports){
 module.exports=require(15)
-},{"../gamejs":44,"./utils/objects":66}],58:[function(require,module,exports){
+},{"../utils/binaryheap":65}],58:[function(require,module,exports){
 module.exports=require(16)
-},{"./callback":45}],59:[function(require,module,exports){
+},{"../gamejs":46,"./utils/arrays":63,"./utils/objects":68,"./utils/vectors":71}],59:[function(require,module,exports){
 module.exports=require(17)
-},{"../gamejs":44,"./utils/base64":62,"./utils/objects":66,"./utils/uri":68,"./xml":71}],60:[function(require,module,exports){
+},{"../gamejs":46,"./utils/objects":68}],60:[function(require,module,exports){
 module.exports=require(18)
-},{"../gamejs":44,"./utils/math":64,"./utils/matrix":65,"./utils/vectors":69}],61:[function(require,module,exports){
+},{"./callback":47}],61:[function(require,module,exports){
 module.exports=require(19)
-},{}],62:[function(require,module,exports){
+},{"../gamejs":46,"./utils/base64":64,"./utils/objects":68,"./utils/uri":70,"./xml":73}],62:[function(require,module,exports){
 module.exports=require(20)
-},{}],63:[function(require,module,exports){
+},{"../gamejs":46,"./utils/math":66,"./utils/matrix":67,"./utils/vectors":71}],63:[function(require,module,exports){
 module.exports=require(21)
 },{}],64:[function(require,module,exports){
 module.exports=require(22)
@@ -7801,11 +8556,15 @@ module.exports=require(25)
 module.exports=require(26)
 },{}],69:[function(require,module,exports){
 module.exports=require(27)
-},{"./math":64}],70:[function(require,module,exports){
+},{}],70:[function(require,module,exports){
 module.exports=require(28)
-},{"../gamejs":44,"./callback":45,"./utils/uri":68}],71:[function(require,module,exports){
+},{}],71:[function(require,module,exports){
 module.exports=require(29)
-},{}],72:[function(require,module,exports){
+},{"./math":66}],72:[function(require,module,exports){
+module.exports=require(30)
+},{"../gamejs":46,"./callback":47,"./utils/uri":70}],73:[function(require,module,exports){
+module.exports=require(31)
+},{}],74:[function(require,module,exports){
 /**
  * slice
  */
@@ -7931,7 +8690,7 @@ exports.merge = function (arr) {
   return main;
 };
 
-},{}],73:[function(require,module,exports){
+},{}],75:[function(require,module,exports){
 //     Underscore.js 1.5.2
 //     http://underscorejs.org
 //     (c) 2009-2013 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -9209,7 +9968,682 @@ exports.merge = function (arr) {
 
 }).call(this);
 
-},{}],74:[function(require,module,exports){
+},{}],76:[function(require,module,exports){
+//  Underscore.string
+//  (c) 2010 Esa-Matti Suuronen <esa-matti aet suuronen dot org>
+//  Underscore.string is freely distributable under the terms of the MIT license.
+//  Documentation: https://github.com/epeli/underscore.string
+//  Some code is borrowed from MooTools and Alexandru Marasteanu.
+//  Version '2.3.2'
+
+!function(root, String){
+  'use strict';
+
+  // Defining helper functions.
+
+  var nativeTrim = String.prototype.trim;
+  var nativeTrimRight = String.prototype.trimRight;
+  var nativeTrimLeft = String.prototype.trimLeft;
+
+  var parseNumber = function(source) { return source * 1 || 0; };
+
+  var strRepeat = function(str, qty){
+    if (qty < 1) return '';
+    var result = '';
+    while (qty > 0) {
+      if (qty & 1) result += str;
+      qty >>= 1, str += str;
+    }
+    return result;
+  };
+
+  var slice = [].slice;
+
+  var defaultToWhiteSpace = function(characters) {
+    if (characters == null)
+      return '\\s';
+    else if (characters.source)
+      return characters.source;
+    else
+      return '[' + _s.escapeRegExp(characters) + ']';
+  };
+
+  // Helper for toBoolean
+  function boolMatch(s, matchers) {
+    var i, matcher, down = s.toLowerCase();
+    matchers = [].concat(matchers);
+    for (i = 0; i < matchers.length; i += 1) {
+      matcher = matchers[i];
+      if (!matcher) continue;
+      if (matcher.test && matcher.test(s)) return true;
+      if (matcher.toLowerCase() === down) return true;
+    }
+  }
+
+  var escapeChars = {
+    lt: '<',
+    gt: '>',
+    quot: '"',
+    amp: '&',
+    apos: "'"
+  };
+
+  var reversedEscapeChars = {};
+  for(var key in escapeChars) reversedEscapeChars[escapeChars[key]] = key;
+  reversedEscapeChars["'"] = '#39';
+
+  // sprintf() for JavaScript 0.7-beta1
+  // http://www.diveintojavascript.com/projects/javascript-sprintf
+  //
+  // Copyright (c) Alexandru Marasteanu <alexaholic [at) gmail (dot] com>
+  // All rights reserved.
+
+  var sprintf = (function() {
+    function get_type(variable) {
+      return Object.prototype.toString.call(variable).slice(8, -1).toLowerCase();
+    }
+
+    var str_repeat = strRepeat;
+
+    var str_format = function() {
+      if (!str_format.cache.hasOwnProperty(arguments[0])) {
+        str_format.cache[arguments[0]] = str_format.parse(arguments[0]);
+      }
+      return str_format.format.call(null, str_format.cache[arguments[0]], arguments);
+    };
+
+    str_format.format = function(parse_tree, argv) {
+      var cursor = 1, tree_length = parse_tree.length, node_type = '', arg, output = [], i, k, match, pad, pad_character, pad_length;
+      for (i = 0; i < tree_length; i++) {
+        node_type = get_type(parse_tree[i]);
+        if (node_type === 'string') {
+          output.push(parse_tree[i]);
+        }
+        else if (node_type === 'array') {
+          match = parse_tree[i]; // convenience purposes only
+          if (match[2]) { // keyword argument
+            arg = argv[cursor];
+            for (k = 0; k < match[2].length; k++) {
+              if (!arg.hasOwnProperty(match[2][k])) {
+                throw new Error(sprintf('[_.sprintf] property "%s" does not exist', match[2][k]));
+              }
+              arg = arg[match[2][k]];
+            }
+          } else if (match[1]) { // positional argument (explicit)
+            arg = argv[match[1]];
+          }
+          else { // positional argument (implicit)
+            arg = argv[cursor++];
+          }
+
+          if (/[^s]/.test(match[8]) && (get_type(arg) != 'number')) {
+            throw new Error(sprintf('[_.sprintf] expecting number but found %s', get_type(arg)));
+          }
+          switch (match[8]) {
+            case 'b': arg = arg.toString(2); break;
+            case 'c': arg = String.fromCharCode(arg); break;
+            case 'd': arg = parseInt(arg, 10); break;
+            case 'e': arg = match[7] ? arg.toExponential(match[7]) : arg.toExponential(); break;
+            case 'f': arg = match[7] ? parseFloat(arg).toFixed(match[7]) : parseFloat(arg); break;
+            case 'o': arg = arg.toString(8); break;
+            case 's': arg = ((arg = String(arg)) && match[7] ? arg.substring(0, match[7]) : arg); break;
+            case 'u': arg = Math.abs(arg); break;
+            case 'x': arg = arg.toString(16); break;
+            case 'X': arg = arg.toString(16).toUpperCase(); break;
+          }
+          arg = (/[def]/.test(match[8]) && match[3] && arg >= 0 ? '+'+ arg : arg);
+          pad_character = match[4] ? match[4] == '0' ? '0' : match[4].charAt(1) : ' ';
+          pad_length = match[6] - String(arg).length;
+          pad = match[6] ? str_repeat(pad_character, pad_length) : '';
+          output.push(match[5] ? arg + pad : pad + arg);
+        }
+      }
+      return output.join('');
+    };
+
+    str_format.cache = {};
+
+    str_format.parse = function(fmt) {
+      var _fmt = fmt, match = [], parse_tree = [], arg_names = 0;
+      while (_fmt) {
+        if ((match = /^[^\x25]+/.exec(_fmt)) !== null) {
+          parse_tree.push(match[0]);
+        }
+        else if ((match = /^\x25{2}/.exec(_fmt)) !== null) {
+          parse_tree.push('%');
+        }
+        else if ((match = /^\x25(?:([1-9]\d*)\$|\(([^\)]+)\))?(\+)?(0|'[^$])?(-)?(\d+)?(?:\.(\d+))?([b-fosuxX])/.exec(_fmt)) !== null) {
+          if (match[2]) {
+            arg_names |= 1;
+            var field_list = [], replacement_field = match[2], field_match = [];
+            if ((field_match = /^([a-z_][a-z_\d]*)/i.exec(replacement_field)) !== null) {
+              field_list.push(field_match[1]);
+              while ((replacement_field = replacement_field.substring(field_match[0].length)) !== '') {
+                if ((field_match = /^\.([a-z_][a-z_\d]*)/i.exec(replacement_field)) !== null) {
+                  field_list.push(field_match[1]);
+                }
+                else if ((field_match = /^\[(\d+)\]/.exec(replacement_field)) !== null) {
+                  field_list.push(field_match[1]);
+                }
+                else {
+                  throw new Error('[_.sprintf] huh?');
+                }
+              }
+            }
+            else {
+              throw new Error('[_.sprintf] huh?');
+            }
+            match[2] = field_list;
+          }
+          else {
+            arg_names |= 2;
+          }
+          if (arg_names === 3) {
+            throw new Error('[_.sprintf] mixing positional and named placeholders is not (yet) supported');
+          }
+          parse_tree.push(match);
+        }
+        else {
+          throw new Error('[_.sprintf] huh?');
+        }
+        _fmt = _fmt.substring(match[0].length);
+      }
+      return parse_tree;
+    };
+
+    return str_format;
+  })();
+
+
+
+  // Defining underscore.string
+
+  var _s = {
+
+    VERSION: '2.3.0',
+
+    isBlank: function(str){
+      if (str == null) str = '';
+      return (/^\s*$/).test(str);
+    },
+
+    stripTags: function(str){
+      if (str == null) return '';
+      return String(str).replace(/<\/?[^>]+>/g, '');
+    },
+
+    capitalize : function(str){
+      str = str == null ? '' : String(str);
+      return str.charAt(0).toUpperCase() + str.slice(1);
+    },
+
+    chop: function(str, step){
+      if (str == null) return [];
+      str = String(str);
+      step = ~~step;
+      return step > 0 ? str.match(new RegExp('.{1,' + step + '}', 'g')) : [str];
+    },
+
+    clean: function(str){
+      return _s.strip(str).replace(/\s+/g, ' ');
+    },
+
+    count: function(str, substr){
+      if (str == null || substr == null) return 0;
+
+      str = String(str);
+      substr = String(substr);
+
+      var count = 0,
+        pos = 0,
+        length = substr.length;
+
+      while (true) {
+        pos = str.indexOf(substr, pos);
+        if (pos === -1) break;
+        count++;
+        pos += length;
+      }
+
+      return count;
+    },
+
+    chars: function(str) {
+      if (str == null) return [];
+      return String(str).split('');
+    },
+
+    swapCase: function(str) {
+      if (str == null) return '';
+      return String(str).replace(/\S/g, function(c){
+        return c === c.toUpperCase() ? c.toLowerCase() : c.toUpperCase();
+      });
+    },
+
+    escapeHTML: function(str) {
+      if (str == null) return '';
+      return String(str).replace(/[&<>"']/g, function(m){ return '&' + reversedEscapeChars[m] + ';'; });
+    },
+
+    unescapeHTML: function(str) {
+      if (str == null) return '';
+      return String(str).replace(/\&([^;]+);/g, function(entity, entityCode){
+        var match;
+
+        if (entityCode in escapeChars) {
+          return escapeChars[entityCode];
+        } else if (match = entityCode.match(/^#x([\da-fA-F]+)$/)) {
+          return String.fromCharCode(parseInt(match[1], 16));
+        } else if (match = entityCode.match(/^#(\d+)$/)) {
+          return String.fromCharCode(~~match[1]);
+        } else {
+          return entity;
+        }
+      });
+    },
+
+    escapeRegExp: function(str){
+      if (str == null) return '';
+      return String(str).replace(/([.*+?^=!:${}()|[\]\/\\])/g, '\\$1');
+    },
+
+    splice: function(str, i, howmany, substr){
+      var arr = _s.chars(str);
+      arr.splice(~~i, ~~howmany, substr);
+      return arr.join('');
+    },
+
+    insert: function(str, i, substr){
+      return _s.splice(str, i, 0, substr);
+    },
+
+    include: function(str, needle){
+      if (needle === '') return true;
+      if (str == null) return false;
+      return String(str).indexOf(needle) !== -1;
+    },
+
+    join: function() {
+      var args = slice.call(arguments),
+        separator = args.shift();
+
+      if (separator == null) separator = '';
+
+      return args.join(separator);
+    },
+
+    lines: function(str) {
+      if (str == null) return [];
+      return String(str).split("\n");
+    },
+
+    reverse: function(str){
+      return _s.chars(str).reverse().join('');
+    },
+
+    startsWith: function(str, starts){
+      if (starts === '') return true;
+      if (str == null || starts == null) return false;
+      str = String(str); starts = String(starts);
+      return str.length >= starts.length && str.slice(0, starts.length) === starts;
+    },
+
+    endsWith: function(str, ends){
+      if (ends === '') return true;
+      if (str == null || ends == null) return false;
+      str = String(str); ends = String(ends);
+      return str.length >= ends.length && str.slice(str.length - ends.length) === ends;
+    },
+
+    succ: function(str){
+      if (str == null) return '';
+      str = String(str);
+      return str.slice(0, -1) + String.fromCharCode(str.charCodeAt(str.length-1) + 1);
+    },
+
+    titleize: function(str){
+      if (str == null) return '';
+      str  = String(str).toLowerCase();
+      return str.replace(/(?:^|\s|-)\S/g, function(c){ return c.toUpperCase(); });
+    },
+
+    camelize: function(str){
+      return _s.trim(str).replace(/[-_\s]+(.)?/g, function(match, c){ return c ? c.toUpperCase() : ""; });
+    },
+
+    underscored: function(str){
+      return _s.trim(str).replace(/([a-z\d])([A-Z]+)/g, '$1_$2').replace(/[-\s]+/g, '_').toLowerCase();
+    },
+
+    dasherize: function(str){
+      return _s.trim(str).replace(/([A-Z])/g, '-$1').replace(/[-_\s]+/g, '-').toLowerCase();
+    },
+
+    classify: function(str){
+      return _s.titleize(String(str).replace(/[\W_]/g, ' ')).replace(/\s/g, '');
+    },
+
+    humanize: function(str){
+      return _s.capitalize(_s.underscored(str).replace(/_id$/,'').replace(/_/g, ' '));
+    },
+
+    trim: function(str, characters){
+      if (str == null) return '';
+      if (!characters && nativeTrim) return nativeTrim.call(str);
+      characters = defaultToWhiteSpace(characters);
+      return String(str).replace(new RegExp('\^' + characters + '+|' + characters + '+$', 'g'), '');
+    },
+
+    ltrim: function(str, characters){
+      if (str == null) return '';
+      if (!characters && nativeTrimLeft) return nativeTrimLeft.call(str);
+      characters = defaultToWhiteSpace(characters);
+      return String(str).replace(new RegExp('^' + characters + '+'), '');
+    },
+
+    rtrim: function(str, characters){
+      if (str == null) return '';
+      if (!characters && nativeTrimRight) return nativeTrimRight.call(str);
+      characters = defaultToWhiteSpace(characters);
+      return String(str).replace(new RegExp(characters + '+$'), '');
+    },
+
+    truncate: function(str, length, truncateStr){
+      if (str == null) return '';
+      str = String(str); truncateStr = truncateStr || '...';
+      length = ~~length;
+      return str.length > length ? str.slice(0, length) + truncateStr : str;
+    },
+
+    /**
+     * _s.prune: a more elegant version of truncate
+     * prune extra chars, never leaving a half-chopped word.
+     * @author github.com/rwz
+     */
+    prune: function(str, length, pruneStr){
+      if (str == null) return '';
+
+      str = String(str); length = ~~length;
+      pruneStr = pruneStr != null ? String(pruneStr) : '...';
+
+      if (str.length <= length) return str;
+
+      var tmpl = function(c){ return c.toUpperCase() !== c.toLowerCase() ? 'A' : ' '; },
+        template = str.slice(0, length+1).replace(/.(?=\W*\w*$)/g, tmpl); // 'Hello, world' -> 'HellAA AAAAA'
+
+      if (template.slice(template.length-2).match(/\w\w/))
+        template = template.replace(/\s*\S+$/, '');
+      else
+        template = _s.rtrim(template.slice(0, template.length-1));
+
+      return (template+pruneStr).length > str.length ? str : str.slice(0, template.length)+pruneStr;
+    },
+
+    words: function(str, delimiter) {
+      if (_s.isBlank(str)) return [];
+      return _s.trim(str, delimiter).split(delimiter || /\s+/);
+    },
+
+    pad: function(str, length, padStr, type) {
+      str = str == null ? '' : String(str);
+      length = ~~length;
+
+      var padlen  = 0;
+
+      if (!padStr)
+        padStr = ' ';
+      else if (padStr.length > 1)
+        padStr = padStr.charAt(0);
+
+      switch(type) {
+        case 'right':
+          padlen = length - str.length;
+          return str + strRepeat(padStr, padlen);
+        case 'both':
+          padlen = length - str.length;
+          return strRepeat(padStr, Math.ceil(padlen/2)) + str
+                  + strRepeat(padStr, Math.floor(padlen/2));
+        default: // 'left'
+          padlen = length - str.length;
+          return strRepeat(padStr, padlen) + str;
+        }
+    },
+
+    lpad: function(str, length, padStr) {
+      return _s.pad(str, length, padStr);
+    },
+
+    rpad: function(str, length, padStr) {
+      return _s.pad(str, length, padStr, 'right');
+    },
+
+    lrpad: function(str, length, padStr) {
+      return _s.pad(str, length, padStr, 'both');
+    },
+
+    sprintf: sprintf,
+
+    vsprintf: function(fmt, argv){
+      argv.unshift(fmt);
+      return sprintf.apply(null, argv);
+    },
+
+    toNumber: function(str, decimals) {
+      if (!str) return 0;
+      str = _s.trim(str);
+      if (!str.match(/^-?\d+(?:\.\d+)?$/)) return NaN;
+      return parseNumber(parseNumber(str).toFixed(~~decimals));
+    },
+
+    numberFormat : function(number, dec, dsep, tsep) {
+      if (isNaN(number) || number == null) return '';
+
+      number = number.toFixed(~~dec);
+      tsep = typeof tsep == 'string' ? tsep : ',';
+
+      var parts = number.split('.'), fnums = parts[0],
+        decimals = parts[1] ? (dsep || '.') + parts[1] : '';
+
+      return fnums.replace(/(\d)(?=(?:\d{3})+$)/g, '$1' + tsep) + decimals;
+    },
+
+    strRight: function(str, sep){
+      if (str == null) return '';
+      str = String(str); sep = sep != null ? String(sep) : sep;
+      var pos = !sep ? -1 : str.indexOf(sep);
+      return ~pos ? str.slice(pos+sep.length, str.length) : str;
+    },
+
+    strRightBack: function(str, sep){
+      if (str == null) return '';
+      str = String(str); sep = sep != null ? String(sep) : sep;
+      var pos = !sep ? -1 : str.lastIndexOf(sep);
+      return ~pos ? str.slice(pos+sep.length, str.length) : str;
+    },
+
+    strLeft: function(str, sep){
+      if (str == null) return '';
+      str = String(str); sep = sep != null ? String(sep) : sep;
+      var pos = !sep ? -1 : str.indexOf(sep);
+      return ~pos ? str.slice(0, pos) : str;
+    },
+
+    strLeftBack: function(str, sep){
+      if (str == null) return '';
+      str += ''; sep = sep != null ? ''+sep : sep;
+      var pos = str.lastIndexOf(sep);
+      return ~pos ? str.slice(0, pos) : str;
+    },
+
+    toSentence: function(array, separator, lastSeparator, serial) {
+      separator = separator || ', ';
+      lastSeparator = lastSeparator || ' and ';
+      var a = array.slice(), lastMember = a.pop();
+
+      if (array.length > 2 && serial) lastSeparator = _s.rtrim(separator) + lastSeparator;
+
+      return a.length ? a.join(separator) + lastSeparator + lastMember : lastMember;
+    },
+
+    toSentenceSerial: function() {
+      var args = slice.call(arguments);
+      args[3] = true;
+      return _s.toSentence.apply(_s, args);
+    },
+
+    slugify: function(str) {
+      if (str == null) return '';
+
+      var from  = "ąàáäâãåæăćęèéëêìíïîłńòóöôõøśșțùúüûñçżź",
+          to    = "aaaaaaaaaceeeeeiiiilnoooooosstuuuunczz",
+          regex = new RegExp(defaultToWhiteSpace(from), 'g');
+
+      str = String(str).toLowerCase().replace(regex, function(c){
+        var index = from.indexOf(c);
+        return to.charAt(index) || '-';
+      });
+
+      return _s.dasherize(str.replace(/[^\w\s-]/g, ''));
+    },
+
+    surround: function(str, wrapper) {
+      return [wrapper, str, wrapper].join('');
+    },
+
+    quote: function(str, quoteChar) {
+      return _s.surround(str, quoteChar || '"');
+    },
+
+    unquote: function(str, quoteChar) {
+      quoteChar = quoteChar || '"';
+      if (str[0] === quoteChar && str[str.length-1] === quoteChar)
+        return str.slice(1,str.length-1);
+      else return str;
+    },
+
+    exports: function() {
+      var result = {};
+
+      for (var prop in this) {
+        if (!this.hasOwnProperty(prop) || prop.match(/^(?:include|contains|reverse)$/)) continue;
+        result[prop] = this[prop];
+      }
+
+      return result;
+    },
+
+    repeat: function(str, qty, separator){
+      if (str == null) return '';
+
+      qty = ~~qty;
+
+      // using faster implementation if separator is not needed;
+      if (separator == null) return strRepeat(String(str), qty);
+
+      // this one is about 300x slower in Google Chrome
+      for (var repeat = []; qty > 0; repeat[--qty] = str) {}
+      return repeat.join(separator);
+    },
+
+    naturalCmp: function(str1, str2){
+      if (str1 == str2) return 0;
+      if (!str1) return -1;
+      if (!str2) return 1;
+
+      var cmpRegex = /(\.\d+)|(\d+)|(\D+)/g,
+        tokens1 = String(str1).toLowerCase().match(cmpRegex),
+        tokens2 = String(str2).toLowerCase().match(cmpRegex),
+        count = Math.min(tokens1.length, tokens2.length);
+
+      for(var i = 0; i < count; i++) {
+        var a = tokens1[i], b = tokens2[i];
+
+        if (a !== b){
+          var num1 = parseInt(a, 10);
+          if (!isNaN(num1)){
+            var num2 = parseInt(b, 10);
+            if (!isNaN(num2) && num1 - num2)
+              return num1 - num2;
+          }
+          return a < b ? -1 : 1;
+        }
+      }
+
+      if (tokens1.length === tokens2.length)
+        return tokens1.length - tokens2.length;
+
+      return str1 < str2 ? -1 : 1;
+    },
+
+    levenshtein: function(str1, str2) {
+      if (str1 == null && str2 == null) return 0;
+      if (str1 == null) return String(str2).length;
+      if (str2 == null) return String(str1).length;
+
+      str1 = String(str1); str2 = String(str2);
+
+      var current = [], prev, value;
+
+      for (var i = 0; i <= str2.length; i++)
+        for (var j = 0; j <= str1.length; j++) {
+          if (i && j)
+            if (str1.charAt(j - 1) === str2.charAt(i - 1))
+              value = prev;
+            else
+              value = Math.min(current[j], current[j - 1], prev) + 1;
+          else
+            value = i + j;
+
+          prev = current[j];
+          current[j] = value;
+        }
+
+      return current.pop();
+    },
+
+    toBoolean: function(str, trueValues, falseValues) {
+      if (typeof str === "number") str = "" + str;
+      if (typeof str !== "string") return !!str;
+      str = _s.trim(str);
+      if (boolMatch(str, trueValues || ["true", "1"])) return true;
+      if (boolMatch(str, falseValues || ["false", "0"])) return false;
+    }
+  };
+
+  // Aliases
+
+  _s.strip    = _s.trim;
+  _s.lstrip   = _s.ltrim;
+  _s.rstrip   = _s.rtrim;
+  _s.center   = _s.lrpad;
+  _s.rjust    = _s.lpad;
+  _s.ljust    = _s.rpad;
+  _s.contains = _s.include;
+  _s.q        = _s.quote;
+  _s.toBool   = _s.toBoolean;
+
+  // Exporting
+
+  // CommonJS module is defined
+  if (typeof exports !== 'undefined') {
+    if (typeof module !== 'undefined' && module.exports)
+      module.exports = _s;
+
+    exports._s = _s;
+  }
+
+  // Register as a named module with AMD.
+  if (typeof define === 'function' && define.amd)
+    define('underscore.string', [], function(){ return _s; });
+
+
+  // Integrate with Underscore.js if defined
+  // or create our own underscore object.
+  root._ = root._ || {};
+  root._.string = root._.str = _s;
+}(this, String);
+
+},{}],77:[function(require,module,exports){
 //     Underscore.js 1.6.0
 //     http://underscorejs.org
 //     (c) 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
@@ -10554,121 +11988,4 @@ exports.merge = function (arr) {
   }
 }).call(this);
 
-},{}],75:[function(require,module,exports){
-var _ = require('underscore'),
-    gamejs     = require('gamejs'),
-    gramework  = require('gramework'),
-    Dispatcher = gramework.Dispatcher,
-    Scene      = gramework.Scene,
-    Vec2d      = gramework.vectors.Vec2d,
-    entities      = require('./entities'),
-    testEntities = require('./testEntities');
-
-var Game = Scene.extend({
-    initialize: function(options) {
-        this.gravity = new Vec2d(0, 50);
-
-        // Handles world speed.
-        this.velocity = new Vec2d(0, 0);
-        this.speed = 0;
-        this.accel = 0;
-
-        // For now, keep it simple with one protestor. Can adjust from there.
-        this.createAnimation();
-    },
-
-    createAnimation: function() {
-        var kane = new testEntities.Citizenkane({
-            x: 960 - 30,
-            y: 0,
-            world: this
-        });
-        
-        this.entities.add(kane);
-    },
-
-    update: function(dt) {
-        Scene.prototype.update.call(this, dt);
-
-        dt = (dt / 1000); // Sane velocity mutations.
-    },
-
-    draw: function(surface) {
-        surface.clear();
-        this.view.clear();
-
-        this.view.fill("#7b7b7b");
-        surface.fill("#7b7b7b");
-        Scene.prototype.draw.call(this, surface, {clear: false});
-    },
-
-    event: function(ev) {
-        // Placeholder. Need to send event and identify active protestor.
-    }
-});
-
-var main = function() {
-    var game = new Game({});
-    var d = new Dispatcher(gamejs, {
-        initial: game
-    });
-};
-
-gamejs.preload([
-    './assets/images/spritesheet-test.png'
-]);
-gamejs.ready(main);
-
-
-},{"./entities":1,"./testEntities":76,"gamejs":2,"gramework":30,"underscore":74}],76:[function(require,module,exports){
-var _ = require('underscore'),
-    gamejs    = require('gamejs'),
-    gramework = require('gramework'),
-    animate   = gramework.animate,
-    Entity    = gramework.Entity,
-    Vec2d     = gramework.vectors.Vec2d;
-
-var Citizenkane = Entity.extend({
-    initialize: function(options) {
-        options = (options || {});
-
-        this.world    = options.world;
-        this.velocity = new Vec2d(0, 0);
-        this.speed    = 0;
-        this.onGround = false;
-        this.xwidth = 30;
-        this.xheight = 30;
-
-        this.sprite = new animate.SpriteSheet('./assets/spritesheet-test.png', this.xwidth, this.xheight);
-
-        this.anim = new animate.Animation(this.sprite, "static", {
-            static: {frames: _.range(4), rate: 2}
-        });
-
-        // TODO: Shouldnt need to do this.
-        this.image = this.anim.update(0);
-
-        this.anim.start('static');
-    },
-
-    update: function(dt) {
-        this.image = this.anim.update(dt);
-    },
-
-    draw: function(surface) {
-        if (this.image) {
-            Entity.prototype.draw.apply(this, arguments);
-        } else {
-            gamejs.draw.rect(surface, this.hex, this.rect);
-        }
-    }
-
-});
-
-var Citizenkane = Citizenkane.extend({});
-
-module.exports = {
-    Citizenkane: Citizenkane
-};
-
-},{"gamejs":2,"gramework":30,"underscore":74}]},{},[75])
+},{}]},{},[3])
