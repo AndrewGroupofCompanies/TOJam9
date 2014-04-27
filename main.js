@@ -1,4 +1,5 @@
 var _ = require('underscore'),
+    _s = require('underscore.string'),
     gamejs = require('gamejs'),
     gramework = require('gramework'),
     Dispatcher = gramework.Dispatcher,
@@ -63,9 +64,16 @@ var Game = Scene.extend({
             protester05: initSpriteSheet(imgfy(Images.protester05), 30, 30),
             protester06: initSpriteSheet(imgfy(Images.protester06), 30, 30),
             protester07: initSpriteSheet(imgfy(Images.protester10), 30, 30),
-            protester08: initSpriteSheet(imgfy(Images.protester11), 30, 30),
-            protester09: initSpriteSheet(imgfy(Images.protester12), 30, 30),
+            protester08: initSpriteSheet(imgfy(Images.protester08), 30, 30),
+            protester09: initSpriteSheet(imgfy(Images.protester09), 30, 30),
+            protester10: initSpriteSheet(imgfy(Images.protester10), 30, 30),
+            protester11: initSpriteSheet(imgfy(Images.protester11), 30, 30),
+            protester12: initSpriteSheet(imgfy(Images.protester12), 30, 30),
+            protester13: initSpriteSheet(imgfy(Images.protester13), 30, 30),
+            protester14: initSpriteSheet(imgfy(Images.protester14), 30, 30),
+            protester15: initSpriteSheet(imgfy(Images.protester15), 30, 30),
             gascloud: initSpriteSheet(imgfy(Images.gascloud), 60, 60)
+
         };
 
         this.terrain = new scrollables.AllTerrain({
@@ -131,7 +139,9 @@ var Game = Scene.extend({
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
             var randomNum= _.random(1,4);
-            var spriteId  = 'protester0' + randomNum;
+            var zeroPadded = _s.pad(randomNum.toString(), 2, '0', 'left');
+            var spriteId  = 'protester' + zeroPadded;
+            console.log(spriteId);
             var tmpSpriteSheet = this.spriteSheets[spriteId];
             var p = new entities.Protestor({
                 x: 80 + (i * 15), y: this.runningPlane,
