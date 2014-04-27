@@ -438,6 +438,9 @@ var Game = Scene.extend({
     },
 
     update: function(dt) {
+        if (!this._musicPlaying) {
+            this.music.play(true);
+        }
         this.scrollGenerator.update(dt);
         this.terrain.update(dt);
         this.policeGenerator(dt);
