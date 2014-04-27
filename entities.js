@@ -153,7 +153,7 @@ var Protestor = Citizen.extend({
         this.runSpeed = 1.0; // Our speed modifier.
         this.accel = 1.0;
         this.speed = this.runSpeed;
-        this.maxspeed = 2.0;
+        this.maxspeed = 1.0;
 
         this.canDeke = true;
         this.stumbleCounter = 0;
@@ -216,11 +216,6 @@ var Protestor = Citizen.extend({
         var decel = this.speed / 1.5 * dt;
         if (accel.isZero()) {
             dampenVector(this.velocity, decel);
-        } else {
-            if (accel.x === 0) {
-                console.log("dampenVector X");
-                this.accel.x = dampen(this.accel.x, decel);
-            }
         }
 
         // If we're near police we should ensure that the movement is positive.
@@ -245,7 +240,7 @@ var Protestor = Citizen.extend({
             //console.log(this.hex, " is deciding what to do");
             // Generally, we'll stay where we are.
             if (this.makeDecision()) {
-                this.accel = 1.5;
+                this.accel = 1;
                 this.speed += _.first(_.sample(
                     [-(this.runSpeed), (this.runSpeed)]
                 , 1));
@@ -399,7 +394,7 @@ var Police = Citizen.extend({
         this.hex = "#0033CC";
         this.speed = 0.5;
 
-        this.pressurePadding = 15;
+        this.pressurePadding = 35;
 
         // States
         this.isCapturing = false;
@@ -455,12 +450,21 @@ var Police = Citizen.extend({
         this.velocity.add(accel.mul(dt).mul(this.speed));
         this.velocity = this.velocity.truncate(this.maxSpeed);
 
+        var decel = this.speed / 1.5 * dt;
+        if (accel.isZero()) {
+            dampenVector(this.velocity, decel);
+        }
+
         if (this.isCapturing) return;
 
         if (this.nearPoliceLine()) {
+            this.accel = 1;
             this.speed = -0.5;
         } else if (this.nearBack()) {
+            this.accel = 0.5;
             this.speed = 0.5;
+        } else {
+            this.accel = 0;
         }
     },
 
@@ -626,6 +630,7 @@ var Player = Protestor.extend({
 
         if (this.rect.x <= 0) {
             this.kill();
+            this.world.spawnPlayer();
         }
 
         // If we're near police we should warn the active Player.

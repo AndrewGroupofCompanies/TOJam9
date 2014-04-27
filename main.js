@@ -90,7 +90,7 @@ var Game = Scene.extend({
 
         // The front line of the protestors. Let's keep them grouped.
         this.frontLine = this.surface.getSize()[0] - 10;
-        this.backLine = 10;
+        this.backLine = -25;
         this.createProtestors(15);
         this.scrollGenerator = new scrollables.SceneryGenerator({
             world: this,
@@ -99,7 +99,7 @@ var Game = Scene.extend({
                 Images.staticcloud
             ]
         });
-        
+
         //this.animscrollGenerator = new scrollables.AnimScrollableGenerator({
         //    world: this,
         //    spriteSheet: [
@@ -114,7 +114,7 @@ var Game = Scene.extend({
         // is in it, the police pressure does not increase. We keep track
         // of this so that when we're ahead of it, pressure increases!
         this.policeDistraction = this.policePressure + 50;
-        //this.createPolice(10);
+        this.createPolice(10);
 
         // Obstacles
         this.Obstacles = null;
@@ -177,6 +177,10 @@ var Game = Scene.extend({
     // one.
     spawnPlayer: function() {
         var protestor = _.sample(this.getProtestors(), 1)[0];
+        if (!protestor) {
+            console.log("No protestors found to spawn");
+            return;
+        }
 
         this.player = new entities.Player({
             existing: protestor
