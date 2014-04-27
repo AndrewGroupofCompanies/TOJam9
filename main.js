@@ -1,4 +1,5 @@
 var _ = require('underscore'),
+    _s = require('underscore.string'),
     gamejs = require('gamejs'),
     gramework = require('gramework'),
     Dispatcher = gramework.Dispatcher,
@@ -8,19 +9,21 @@ var _ = require('underscore'),
     entities = require('./entities'),
     obstacles = require('./obstacles'),
     Vec2d = gramework.vectors.Vec2d,
+    gameui = require('./gameui'),
     GameController = gramework.input.GameController;
 
 var Images = {
+    //font:          './assets/fonts/emulogic.ttf', 
     cop01:         './assets/images/cop01.png',
     bg_test:       './assets/images/bg_test.jpg',
     sprite_test:   './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
     terrain: './assets/images/terrain01.png',
-    protester01:   './assets/images/protester_01_pete.png',
-    protester02:   './assets/images/protester04.png',
-    protester03:   './assets/images/protester04.png',
-    protester04:   './assets/images/protester_04_xyz.png',
-    protester05:   './assets/images/protester04.png',
+    protester01:   './assets/images/protester01.png',
+    protester02:   './assets/images/protester02.png',
+    protester03:   './assets/images/protester07.png',
+    protester04:   './assets/images/protester04.png',
+    protester05:   './assets/images/protester07.png',
     protester06:   './assets/images/protester04.png',
     protester07:   './assets/images/protester04.png',
     protester08:   './assets/images/protester04.png',
@@ -35,7 +38,8 @@ var Images = {
     fence:         './assets/images/fencebroken.png',
     barricade:     './assets/images/barricade.png',
     gascloud: './assets/images/gascloud.png',
-    staticcloud: './assets/images/staticcloud.png'
+    staticcloud: './assets/images/staticcloud.png',
+    border: './assets/images/border01.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -64,11 +68,29 @@ var Game = Scene.extend({
             protester05: initSpriteSheet(imgfy(Images.protester05), 30, 30),
             protester06: initSpriteSheet(imgfy(Images.protester06), 30, 30),
             protester07: initSpriteSheet(imgfy(Images.protester10), 30, 30),
-            protester08: initSpriteSheet(imgfy(Images.protester11), 30, 30),
-            protester09: initSpriteSheet(imgfy(Images.protester12), 30, 30),
+            protester08: initSpriteSheet(imgfy(Images.protester08), 30, 30),
+            protester09: initSpriteSheet(imgfy(Images.protester09), 30, 30),
+            protester10: initSpriteSheet(imgfy(Images.protester10), 30, 30),
+            protester11: initSpriteSheet(imgfy(Images.protester11), 30, 30),
+            protester12: initSpriteSheet(imgfy(Images.protester12), 30, 30),
+            protester13: initSpriteSheet(imgfy(Images.protester13), 30, 30),
+            protester14: initSpriteSheet(imgfy(Images.protester14), 30, 30),
+            protester15: initSpriteSheet(imgfy(Images.protester15), 30, 30),
             gascloud: initSpriteSheet(imgfy(Images.gascloud), 60, 60)
+
         };
 
+        this.topbar = new gameui.TopBar({
+            color: [0,0,0],
+            width: this.surface.getSize()[0],
+            height: 40,
+            x: 0,
+            y:0,
+            world: this,
+            subBorderImage: Images.border,
+            subFont: "8px Ebit"
+        });
+   
         this.terrain = new scrollables.AllTerrain({
             width: 1024,
             image: Images.terrain
@@ -131,8 +153,10 @@ var Game = Scene.extend({
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
-            var randomNum= _.random(1,4);
-            var spriteId  = 'protester0' + randomNum;
+            var randomNum= _.random(1,5);
+            var zeroPadded = _s.pad(randomNum.toString(), 2, '0', 'left');
+            var spriteId  = 'protester' + zeroPadded;
+            console.log(spriteId);
             var tmpSpriteSheet = this.spriteSheets[spriteId];
             var p = new entities.Protestor({
                 x: 80 + (i * 15), y: this.runningPlane,
