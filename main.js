@@ -12,11 +12,11 @@ var _ = require('underscore'),
     Vec2d = gramework.vectors.Vec2d,
     gameui = require('./gameui'),
     TitleScreen = require('./screens').TitleScreen,
+    Cutscene = require('./screens').Cutscene,
     FadeTransition = gramework.state.FadeTransition,
     GameController = gramework.input.GameController;
 
 var Images = {
-    //font:          './assets/fonts/emulogic.ttf', 
     cop01:         './assets/images/cop01.png',
     bg_test:       './assets/images/bg_test.jpg',
     sprite_test:   './assets/images/spritesheet-enemy.png',
@@ -44,7 +44,9 @@ var Images = {
     staticcloud: './assets/images/staticcloud.png',
     border: './assets/images/border01.png',
     goat: './assets/images/goat.png',
-    portraitAndrew: './assets/images/portrait-andrewgardner.png'
+    beagle: './assets/images/beagle_icon.png',
+    portraitAndrew: './assets/images/portrait-andrewgardner.png',
+    screen_start: './assets/images/screen_start.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -238,7 +240,13 @@ var Game = Scene.extend({
             portrait: this.spriteSheets.protester01[1],
             z: 0.5
         });
-        this.entities.add(p);
+
+        var b = new entities.Beagle({
+            guardian: p,
+            image: Images.beagle
+        })
+
+        this.entities.add([p, b]);
 
         this.protestorGroupActive = true;
         // Don't show any obstacles while the group enters.
@@ -398,8 +406,17 @@ var main = function() {
         pixelScale: 4
     });
 
+    var openingCutscene = new Cutscene({
+        next: game,
+        borderImage: Images.border,
+        text: ['okay'],
+        pixelScale: 4
+    });
+
     var titleScreen = new TitleScreen({
-        game: game
+        image: Images.screen_start,
+        next: openingCutscene,
+        pixelScale: 4
     });
 
     var d = new Dispatcher(gamejs, {
