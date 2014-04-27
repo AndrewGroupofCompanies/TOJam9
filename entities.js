@@ -365,8 +365,8 @@ var Police = Citizen.extend({
         diving: {frames: _.range(21, 40), rate: 30, loop: false},
         deke: {frames: _.range(81, 91), rate: 30, loop: false},
         duck: {frames: _.range(41, 50), rate: 30, loop: false},
-        falling: {frames: _.range(241, 260), rate: 30, loop: false},
         reaching: {frames: _.range(281, 305), rate: 30, loop: false},
+        falling: {frames: _.range(321, 340), rate: 30, loop: false},
         capturing: {frames: _.range(361, 400), rate: 30, loop: false}
     },
 
@@ -436,8 +436,13 @@ var Police = Citizen.extend({
         //console.log("executeCapture", entity.isDeking);
         if (entity.isDeking) {
             entity.resetSafetyCounter();
-            this.accel = new Vec2d(2, 0);
-            this.speed = -10;
+            this.velocity.setX(-1);
+            _.delay(function() {
+                self.setAnimation("falling");
+                if (self.rect.x <= -50) {
+                    self.kill();
+                }
+            }, 500);
             this.shouldFall = true;
         } else {
             this.setAnimation("capturing");
@@ -588,7 +593,7 @@ var Player = Protestor.extend({
 
         this.tapCountdown = 0;
         this.pressureCount = 0;
-        this.pressureDelay = 500; // in milliseconds.
+        this.pressureDelay = 200; // in milliseconds.
 
         this.doubleTapSpeed = 200; // in milliseconds
     },
