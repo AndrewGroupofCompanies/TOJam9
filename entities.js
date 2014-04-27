@@ -429,6 +429,7 @@ var Police = Citizen.extend({
     },
 
     executeCapture: function(entity) {
+        var self = this;
         // Don't double lap cops due to the time delay on this function.
         if (entity.isCaptured) return;
 
@@ -444,6 +445,11 @@ var Police = Citizen.extend({
             entity.isBeingCaptured();
             // Set speed to negative, so the two go off the screen.
             this.velocity.setX(-1);
+            _.delay(function() {
+                if (self.rect.x <= -50) {
+                    self.kill();
+                }
+            }, 1000);
         }
     },
 
@@ -478,7 +484,6 @@ var Police = Citizen.extend({
             // Otherwise, we still have acceleration, so slowly get rid of it.
             dampenVector(this.accel, decel);
         }
-
 
         if (this.nearPoliceLine()) {
             this.accel = new Vec2d(0.25, 0);
