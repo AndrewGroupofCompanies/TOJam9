@@ -27,6 +27,10 @@ var Scrollable = Entity.extend({
         if (this.world) {
             this.move(-scale_factor, 0);
         }
+
+        if (this.rect.x <= -100) {
+            this.kill();
+        }
     }
 });
 
