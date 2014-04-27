@@ -7,26 +7,29 @@ some details
 
 ## Start screen
 
-- 01 ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start.png?raw=true)
+**see README-startscreen.md**
 
-- 02 ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start02.png?raw=true)
+- screen_start.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start.png?raw=true)
 
-- 03 ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start03.png?raw=true)
+- screen_start02.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start02.png?raw=true)
 
-- 04 ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start04.png?raw=true)
+- screen_start03.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start03.png?raw=true)
+
+- screen_start04.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start04.png?raw=true)
+
+- screen_start05.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start05.png?raw=true)
 
 ## Lose screen
 
-- 01 screen_lose_cop_with_beagle.png cop holding Beagle (Beagle drawn by andrew??) 
+**see README-lose.md**
 
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_lose_cop_with_beagle.png?raw=true)
+- screen_lose_cop_with_beagle.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_lose_cop_with_beagle.png?raw=true)
 
-- 02 screen_lose_protestors_arrested.png cop holding beagle in foreground and protestors arrested
-
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_lose_protestors_arrested.png?raw=true)
+- screen_lose_protestors_arrested.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_lose_protestors_arrested.png?raw=true)
 
 ## Game over screen
 
+**see README-gameover.md**
 
 - 01 gameover
 
@@ -43,16 +46,4 @@ some details
 - 04 gameover
 
 ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover04.png?raw=true)
-
-#### random images
-
-- ![](http://pbs.twimg.com/media/BChXiLuCQAA1sea.jpg)
-- ![](http://hateandanger.files.wordpress.com/2012/03/giant-crowd-of-protesters-one-lone-riot-cop-police-officer-storm-trooper.jpg?w=472)
-- ![](http://www.thirteen.org/metrofocus/files/2011/09/John-cropped-590x472.jpg)
-- ![](http://dalje.com/slike/slike_3/r1/g2008/m12/x30189984931163628_6.jpg)
-- ![](http://ww2.hdnux.com/photos/06/64/40/1787929/51/628x471.jpg)
-- ![](http://news.bbcimg.co.uk/media/images/72519000/jpg/_72519922_020773879-1.jpg)
-- ![](http://image.shutterstock.com/display_pic_with_logo/7085/7085,1257500033,19/stock-photo-riot-policeman-isolated-40400299.jpg)
-- ![](http://image.shutterstock.com/display_pic_with_logo/436297/436297,1327567979,2/stock-photo-istanbul-turkey-may-the-demonstrators-who-are-against-to-prohibition-of-may-celebration-93615814.jpg)
-- ![]()
 
