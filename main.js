@@ -62,6 +62,8 @@ var Game = Scene.extend({
         this.paused = false;
         this.debug = true;
 
+        this.startingProtestors = 1;
+
         //Gotta init them spriteSheets
         this.spriteSheets = {
             police: initSpriteSheet(imgfy(Images.cop01), 30, 30),
@@ -102,11 +104,18 @@ var Game = Scene.extend({
         var previousAdd = this.entities.add;
         this.entities.add = function(list) {
             previousAdd.apply(this, arguments);
-
             this._sprites.sort(function(a, b){
                 return b.z-a.z;
             });
         };
+
+        this.scrollGenerator = new scrollables.SceneryGenerator({
+            world: this,
+            images: [
+                Images.tree_01,
+                Images.staticcloud
+            ]
+        });
 
         // Handles world speed.
         this.velocity = new Vec2d(0, 0);
@@ -117,31 +126,21 @@ var Game = Scene.extend({
         // The front line of the protestors. Let's keep them grouped.
         this.frontLine = this.surface.getSize()[0] - 10;
         this.backLine = -25;
-        this.createProtestors(15);
-
-        this.scrollGenerator = new scrollables.SceneryGenerator({
-            world: this,
-            images: [
-                Images.tree_01,
-                Images.staticcloud
-            ]
-        });
-
-        //this.animscrollGenerator = new scrollables.AnimScrollableGenerator({
-        //    world: this,
-        //    spriteSheet: [
-        //       this.spriteSheets.gascloud
-        //    ]
-        //});
+        this.createProtestors(this.startingProtestors);
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
+
+        this.startingPolice = 1;
+        this.policeAdditionDelay = 5; // seconds.
+        this.policeDelay = this.resetPoliceDelay();
+        this.maxPolice = 15;
 
         // Police distraction is a "safe" zone in which while the active player
         // is in it, the police pressure does not increase. We keep track
         // of this so that when we're ahead of it, pressure increases!
         this.policeDistraction = this.policePressure + 50;
-        this.createPolice(10);
+        this.createPolice(this.startingPolice);
 
         // Obstacles
         this.Obstacles = null;
@@ -190,10 +189,17 @@ var Game = Scene.extend({
         });
     },
 
-    createPolice: function(limit) {
+    resetPoliceDelay: function() {
+        return this.policeAdditionDelay;
+    },
+
+    createPolice: function(limit, options) {
+        options = (options || {});
+
         _.each(_.range(limit), function(i) {
+            var x = (options.x || (i * 5));
             var p = new entities.Police({
-                x: (i * 5), y: this.runningPlane,
+                x: x, y: this.runningPlane,
                 width: 30, height: 30,
                 spriteSheet: this.spriteSheets.police,
                 world: this
@@ -235,10 +241,23 @@ var Game = Scene.extend({
         this.policeDistraction += step;
     },
 
+    policeGenerator: function(dt) {
+        if (this.getPolice().length >= this.maxPolice) return;
+
+        dt = (dt / 1000);
+        this.policeDelay -= dt;
+        if (this.policeDelay <= 0) {
+            this.createPolice(1, {x: -5});
+            this.policeDelay = this.resetPoliceDelay();
+        }
+    },
+
     update: function(dt) {
         this.scrollGenerator.update(dt);
         //this.animscrollGenerator.update(dt);
         this.terrain.update(dt);
+
+        this.policeGenerator(dt);
 
         Scene.prototype.update.call(this, dt);
 
