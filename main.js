@@ -41,7 +41,8 @@ var Images = {
     barricade:     './assets/images/barricade.png',
     gascloud: './assets/images/gascloud.png',
     staticcloud: './assets/images/staticcloud.png',
-    border: './assets/images/border01.png'
+    border: './assets/images/border01.png',
+    goat: './assets/images/goat.png'
 };
 
 var initSpriteSheet = function(image, width, height) {

@@ -13,6 +13,7 @@ var TopBar = uielements.Element.extend({
 
         this.subBorderImage = options.subBorderImage;
         this.subFont = options.subFont;
+        this.portraits = options.portraits;
 
         this.subelements = new gamejs.sprite.Group();
 
@@ -56,7 +57,7 @@ var TopBar = uielements.Element.extend({
         this.subelements.draw(surface);
     },
 
-    displayText: function(text, priority) {
+    displayText: function(text, portrait, priority) {
         // If priority is given, text will be added to queue, and displayed necessarily
         // (Won't be interrupted)
         // If priority if false, text is interruptable
