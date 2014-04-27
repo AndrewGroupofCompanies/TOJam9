@@ -140,7 +140,6 @@ var Citizen = Entity.extend({
         }
 
         if (this.dekeCounter <= 0 && this.isDeking) {
-            console.log("alas, my deke has finished");
             this.endDeke();
         }
 
@@ -451,7 +450,6 @@ var Police = Citizen.extend({
         } else {
             this.decideCounter -= dt;
             if (this.decideCounter <= 0) {
-                console.log("moving cop");
                 this.accel = new Vec2d(1, 0);
                 this.speed += _.first(_.sample([-1, 1], 1));
                 this.decideCounter = this.resetDecision();
