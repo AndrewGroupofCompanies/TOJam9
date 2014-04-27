@@ -583,7 +583,7 @@ var Player = Protestor.extend({
 
         this.tapCountdown = 0;
         this.pressureCount = 0;
-        this.pressureDelay = 1000; // in milliseconds.
+        this.pressureDelay = 500; // in milliseconds.
 
         this.doubleTapSpeed = 200; // in milliseconds
     },
