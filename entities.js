@@ -262,8 +262,7 @@ var Protestor = Citizen.extend({
 
     // Is captured by the cops, just get off the screen.
     isBeingCaptured: function() {
-        this.speed = -10;
-        this.accel = new Vec2d(2, 0);
+        this.velocity.setX(-1);
         this.isCaptured = true;
         this.setAnimation('captured');
         this.world.topbar.displayText('Fuck!', this.portrait, true);
@@ -273,15 +272,15 @@ var Protestor = Citizen.extend({
         Citizen.prototype.adjustVector.call(this, dt);
         dt = (dt / 1000);
 
-        // Adjust accel and speed because we may be sprinting forward.
-        var accel = new Vec2d(this.accel.x, 0);
-        this.velocity.add(accel.mul(dt).mul(this.speed));
-        this.velocity = this.velocity.truncate(this.maxSpeed);
-
         // No movement exept for normal speed adjustment.
         if (this.isCaptured) {
             return;
         }
+
+        // Adjust accel and speed because we may be sprinting forward.
+        var accel = new Vec2d(this.accel.x, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.velocity = this.velocity.truncate(this.maxSpeed);
 
         var decel = Math.abs(this.speed / 1.2 * dt);
         if (accel.isZero()) {
@@ -622,14 +621,14 @@ var Player = Protestor.extend({
     adjustVector: function(dt) {
         dt = (dt / 1000); // Sanity.
 
+        if (this.isCaptured) {
+            return;
+        }
+
         // Adjust accel and speed because we may be sprinting forward.
         var accel = new Vec2d(this.accel.x, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
         this.velocity = this.velocity.truncate(this.maxSpeed);
-
-        if (this.isCaptured) {
-            return;
-        }
 
         // Adjust speed based on input.
         if (this.isDeking) {
