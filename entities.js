@@ -125,7 +125,7 @@ var Citizen = Entity.extend({
         }
 
         // Don't adjust any other animations post-capture
-        if (this.isCaptured) {
+        if (this.isCaptured || this.completedCapture) {
             return;
         }
 
@@ -201,7 +201,7 @@ var Citizen = Entity.extend({
 
     say: function(text, priority) {
         if (typeof(priority)==='undefined'){
-            var priority = false;
+            priority = false;
         }
         console.log(this.portrait);
         this.world.topbar.displayText(text, this.portrait, priority);
@@ -381,6 +381,7 @@ var Police = Citizen.extend({
 
         this.isPolice = true; // identifier
 
+        this.isDead = false;
         this.collisionRect = this.rect.clone();
         this.collisionRect.width = 30 / 2;
 
@@ -443,6 +444,7 @@ var Police = Citizen.extend({
         if (entity.isDeking) {
             entity.resetSafetyCounter();
             this.velocity.setX(-1);
+            this.completedCapture = true;
             _.delay(function() {
                 self.setAnimation("falling");
                 if (self.rect.x <= -50) {
@@ -482,6 +484,7 @@ var Police = Citizen.extend({
         dt = (dt / 1000);
 
         if (this.isCapturing) return;
+        if (this.completedCapture) return;
 
         // Adjust accel and speed because we may be sprinting forward.
         var accel = new Vec2d(this.accel.x, 0);
@@ -515,6 +518,8 @@ var Police = Citizen.extend({
 
     update: function(dt) {
         Citizen.prototype.update.call(this, dt);
+
+        if (this.completedCapture) return;
 
         dt = (dt / 1000);
 

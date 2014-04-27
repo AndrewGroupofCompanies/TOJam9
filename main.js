@@ -22,6 +22,7 @@ var Images = {
     sprite_test:   './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
     terrain: './assets/images/terrain01.png',
+    titlescreen: './assets/images/titlescreen.png',
     protester01:   './assets/images/protester01.png',
     protester02:   './assets/images/protester02.png',
     protester03:   './assets/images/protester03.png',
@@ -47,14 +48,12 @@ var Images = {
     indicator: './assets/images/active_player_icon.png',
     beagle: './assets/images/beagle_icon.png',
     portraitAndrew: './assets/images/portrait-andrewgardner.png',
-    screen_start: './assets/images/screen_start.png',
-    opening01:'./assets/images/screen_start.png',
-    opening02:'./assets/images/screen_start02.png',
-    opening03:'./assets/images/screen_start03.png',
-    opening04:'./assets/images/screen_start04.png',
-    opening05:'./assets/images/screen_start05.png',
-    screen_gameover: './assets/images/screen_gameover.png',
-    screen_lose: './assets/images/screen_lose_cop_with_beagle.png'
+    opening01: './assets/images/opening01.png',
+    opening02: './assets/images/opening02.png',
+    opening03: './assets/images/opening03.png',
+    opening04: './assets/images/opening04.png',
+    opening05: './assets/images/opening05.png',
+    lose: './assets/images/lose.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -67,6 +66,24 @@ var imgfy = function(image) {
 };
 
 var GROUND_HEIGHT = 20;
+
+var GameOver = Scene.extend({
+    initialize: function(options) {
+        this.image = imgfy(Images.gameover);
+    },
+
+    draw: function(surface) {
+        surface.blit(this.image, [0,0]);
+    },
+
+    event: function(ev) {
+        if (ev.type === gamejs.event.KEY_DOWN) {
+            if (ev.key === gamejs.event.K_r) {
+                main();
+            }
+        }
+    }
+});
 
 var Game = Scene.extend({
     initialize: function(options) {
@@ -293,6 +310,12 @@ var Game = Scene.extend({
             protestor = this.getBeagleCarrier()[0];
         }
 
+        if (!protestor) {
+            // Game over man!
+            this.dispatcher.push(new GameOver({}));
+            return;
+        }
+
         this.player = new entities.Player({
             existing: protestor
         });
@@ -456,8 +479,8 @@ var main = function() {
 
         ],
         text: [],
-        //portrait: 
-        pixelScale: 4      
+        //portrait:
+        pixelScale: 4
     });
 
     var game = new Game({
@@ -482,7 +505,7 @@ var main = function() {
         ],[
             'They have the nerve to open a breeding mill in our community.',
             'The cops want to protect the right to kill these dogs?',
-            'I’m sick of waiting for change.'
+            "I'm sick of waiting for change."
         ],[
             'Beagles are the dog of choice for animal experiments.',
             'Because they don\'t really fight back.',
@@ -493,7 +516,7 @@ var main = function() {
     });
 
     var titleScreen = new TitleScreen({
-        image: Images.screen_start,
+        image: Images.titlescreen,
         next: openingCutscene,
         pixelScale: 4
     });

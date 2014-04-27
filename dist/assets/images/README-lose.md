@@ -1,15 +1,12 @@
-## Lose screen
+# Lose screen
 
-- 01 screen_lose_cop_with_beagle.png cop holding Beagle (Beagle drawn by andrew??) 
+- lose.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/lose.png?raw=true)
 
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_lose_cop_with_beagle.png?raw=true)
+## ideas
 
-- 02 screen_lose_protestors_arrested.png cop holding beagle in foreground and protestors arrested
+a cop holding a Beagle (Beagle drawn by andrew??) 
 
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_lose_protestors_arrested.png?raw=true)
-
-
-#### Lose screen images
+## images
 
 - ![](http://pbs.twimg.com/media/BChXiLuCQAA1sea.jpg)
 - ![](http://hateandanger.files.wordpress.com/2012/03/giant-crowd-of-protesters-one-lone-riot-cop-police-officer-storm-trooper.jpg?w=472)
