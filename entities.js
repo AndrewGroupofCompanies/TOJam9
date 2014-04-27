@@ -136,7 +136,8 @@ var Citizen = Entity.extend({
     stumble: function() {
         this.setAnimation("stumble");
         this.stumbleCounter = 500;
-        this.accel = -1.5;
+        this.accel = 1.5;
+        this.speed = 3;
         this.isStumbling = true;
         this.canDeke = false;
     },
