@@ -472,8 +472,8 @@ var Police = Citizen.extend({
         this.captureCountdown = this.resetCaptureCountdown();
 
         this.setAnimation("reaching");
-        this.accel = new Vec2d(0.5, 0);
-        this.speed = 1;
+        //this.accel = new Vec2d(0.5, 0);
+        //this.speed = 1;
 
         // We now give the user a split second to react to the police.
         _.delay(this.executeCapture.bind(this), 500, entity);
@@ -503,7 +503,6 @@ var Police = Citizen.extend({
             this.accel = new Vec2d(0.25, 0);
             this.speed = -1;
         } else if (this.nearBack()) {
-            this.accel = new Vec2d(0.25, 0);
             this.speed = 1;
             this.velocity.setX(0.25);
         } else {
@@ -558,8 +557,10 @@ var Police = Citizen.extend({
 
     draw: function(surface) {
         if (this.isCapturing) {
+            /*
             gamejs.draw.circle(surface, "rgb(100, 0, 100)",
                 [this.rect.left + 30, this.rect.bottom - 2], 4, 2);
+            */
         }
 
         if (this.world.debug) {
@@ -759,8 +760,10 @@ var Player = Protestor.extend({
         Protestor.prototype.draw.apply(this, arguments);
 
         if (this.isCaptured === false) {
+            /*
             gamejs.draw.circle(surface, "rgb(255, 0, 0)",
                 [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
+            */
         }
         if (this.world.debug) {
             //gamejs.draw.rect(surface, "#ffcccc", this.collisionRect);
