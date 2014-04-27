@@ -33,7 +33,9 @@ var Images = {
     protester15:   './assets/images/protester_12_plorry.png',
     tree_01:       './assets/images/tree_01.png',
     fence:         './assets/images/fencebroken.png',
-    barricade:     './assets/images/barricade.png'
+    barricade:     './assets/images/barricade.png',
+    gascloud: './assets/images/gascloud.png',
+    staticcloud: './assets/images/staticcloud.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -62,6 +64,7 @@ var Game = Scene.extend({
             protester07: initSpriteSheet(imgfy(Images.protester10), 30, 30),
             protester08: initSpriteSheet(imgfy(Images.protester11), 30, 30),
             protester09: initSpriteSheet(imgfy(Images.protester12), 30, 30),
+            gascloud: initSpriteSheet(imgfy(Images.gascloud), 60, 60)
         };
 
         this.terrain = new scrollables.AllTerrain({
@@ -91,9 +94,17 @@ var Game = Scene.extend({
         this.scrollGenerator = new scrollables.SceneryGenerator({
             world: this,
             images: [
-                Images.tree_01
+                Images.tree_01,
+                Images.staticcloud
             ]
         });
+        
+        //this.animscrollGenerator = new scrollables.AnimScrollableGenerator({
+        //    world: this,
+        //    spriteSheet: [
+        //       this.spriteSheets.gascloud
+        //    ]
+        //});
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
@@ -192,6 +203,7 @@ var Game = Scene.extend({
 
     update: function(dt) {
         this.scrollGenerator.update(dt);
+        //this.animscrollGenerator.update(dt);
         this.terrain.update(dt);
 
         Scene.prototype.update.call(this, dt);
