@@ -7,7 +7,7 @@ some details
 
 ## Start screen
 
-**see README-startscreen.md**
+**see [README-startscreen.md](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/README-startscreen.md)**
 
 - screen_start.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start.png?raw=true)
 
@@ -21,7 +21,7 @@ some details
 
 ## Lose screen
 
-**see README-lose.md**
+**see [README-lose.md](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/README-lose.md)**
 
 - screen_lose_cop_with_beagle.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_lose_cop_with_beagle.png?raw=true)
 
@@ -29,7 +29,7 @@ some details
 
 ## Game over screen
 
-**see README-gameover.md**
+**see [README-gameover.md](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/README-gameover.md)**
 
 - 01 gameover
 

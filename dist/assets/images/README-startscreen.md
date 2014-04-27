@@ -1,4 +1,17 @@
-## Start screen
+# Start screen
+
+
+- screen_start.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start.png?raw=true)
+
+- screen_start02.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start02.png?raw=true)
+
+- screen_start03.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start03.png?raw=true)
+
+- screen_start04.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start04.png?raw=true)
+
+- screen_start05.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start05.png?raw=true)
+
+## Ideas
 
 5 image cutscene
 
@@ -24,7 +37,18 @@ a crowd of raised hands receive a beagle
 - 05
 everyone with a bundle
 
-#### images
+## googlefu
+
+- http://images.google.com/s?q=protesters+standing+line
+-
+- riot cops guarding fence
+- warehouse with fence
+- line of handcuffed kneeling protesters
+- handcuffs protesters
+- lone riot cop
+
+## Images
+
 
 - ![](http://www.spfence.net/Images/warehouse_fence.jpg)
 - ![](http://www.freesharing.org/wp-content/uploads/2014/03/Stunning-Aviles-Ramos-Residence-Outside-View-from-the-Street-Covered-by-Concrete-Fence-and-Wooden-Gate-Door-Beautiful-Evening-View.jpg)
@@ -34,6 +58,14 @@ everyone with a bundle
 - ![](http://soccernet-assets.espn.go.com/design05/images/2010/1012/serbiafanswithriotpoliceitaly20101012_412x232.jpg)
 - ![](http://boingboing.net/images/RNCcopppp.jpg)
 - ![](http://pix.avaxnews.com/avaxnews/3d/26/0000263d_medium.jpeg)
+- ![](http://extras.mnginteractive.com/live/media/site51/2012/0219/20120219_083746_0219_MUNDO_Mexico%20Prison%20Riot.jpg)
+- ![](http://www.realfragment.de/images/reportage/schwarzer_donnerstag/01.jpg)
+- ![](http://bc.ctvnews.ca/polopoly_fs/1.1163752!/httpImage/image.jpg_gen/derivatives/landscape_960/image.jpg)
+- ![](http://m.static.newsvine.com/servista/imagesizer?file=laura-conawayBD1F81AD-D69B-C251-E3B2-AAA9B07F7ED1.jpg)
+- ![](http://media.apps.chicagotribune.com/layercake/uploads/chinews-nato-march-protesters-openin-20120520/%20dancing600.jpg)
+- ![](http://files.cdn.ecowatch.com/wp-content/uploads/2013/05/Protest-Line-2.jpg)
+- ![](http://www.nationmultimedia.com/new/2014/04/24/life/images/30232066-01_big.jpg)
+- ![](http://images.smh.com.au/2012/08/17/3564340/pussy9-20120817203006498830-620x414.jpg)
 - ![]()
 - ![]()
 - ![]()
