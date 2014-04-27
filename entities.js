@@ -694,8 +694,8 @@ var Beagle = Entity.extend({
     },
 
     update: function(dt) {
-        var pos = this.guardian.center();
-        this.setPos(Math.floor(pos[0]), Math.floor(pos[1]));
+        var pos = this.guardian.topLeft();
+        this.setPos(Math.floor(pos[0]) + 6, Math.floor(pos[1] - 20));
     }
 });
 

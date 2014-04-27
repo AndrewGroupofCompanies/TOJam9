@@ -12,11 +12,11 @@ var _ = require('underscore'),
     Vec2d = gramework.vectors.Vec2d,
     gameui = require('./gameui'),
     TitleScreen = require('./screens').TitleScreen,
+    Cutscene = require('./screens').Cutscene,
     FadeTransition = gramework.state.FadeTransition,
     GameController = gramework.input.GameController;
 
 var Images = {
-    //font:          './assets/fonts/emulogic.ttf', 
     cop01:         './assets/images/cop01.png',
     bg_test:       './assets/images/bg_test.jpg',
     sprite_test:   './assets/images/spritesheet-enemy.png',
@@ -44,8 +44,9 @@ var Images = {
     staticcloud: './assets/images/staticcloud.png',
     border: './assets/images/border01.png',
     goat: './assets/images/goat.png',
-    beagle: './assets/images/beagle.png',
-    portraitAndrew: './assets/images/portrait-andrewgardner.png'
+    beagle: './assets/images/beagle_icon.png',
+    portraitAndrew: './assets/images/portrait-andrewgardner.png',
+    screen_start: './assets/images/screen_start.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -407,11 +408,16 @@ var main = function() {
     });
 
     var openingCutscene = new Cutscene({
-        next: game
+        next: game,
+        borderImage: Images.border,
+        text: ['okay'],
+        pixelScale: 4
     });
 
     var titleScreen = new TitleScreen({
-        next: openingCutscene
+        image: Images.screen_start,
+        next: openingCutscene,
+        pixelScale: 4
     });
 
     var d = new Dispatcher(gamejs, {

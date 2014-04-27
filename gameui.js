@@ -39,7 +39,7 @@ var TopBar = uielements.Element.extend({
             height: 28
         });
 
-        this.portraitBox.setImage(this.portraits.andrew);
+        //this.portraitBox.setImage(this.portraits.andrew);
 
         this.textQueue = [];
         this.showingQueuedText = false;
@@ -57,7 +57,9 @@ var TopBar = uielements.Element.extend({
             this.textBlock.show();
             var nextText = this.textQueue.shift();
             this.textBlock.setText(nextText[0]);
-            this.portraitBox.image = this.portraits[nextText[1]];
+            if (nextText[1]) {
+                this.portraitBox.image = this.portraits[nextText[1]];
+            }
             this.showingQueuedText = true;
         }
         if (this.textBlock.doneDuration >= 600) {
