@@ -44,6 +44,7 @@ var Images = {
     staticcloud: './assets/images/staticcloud.png',
     border: './assets/images/border01.png',
     goat: './assets/images/goat.png',
+    indicator: './assets/images/active_player_icon.png',
     beagle: './assets/images/beagle_icon.png',
     portraitAndrew: './assets/images/portrait-andrewgardner.png',
     screen_start: './assets/images/screen_start.png',
@@ -52,6 +53,8 @@ var Images = {
     opening03:'./assets/images/screen_start03.png',
     opening04:'./assets/images/screen_start04.png',
     opening05:'./assets/images/screen_start05.png'
+    screen_gameover: './assets/images/screen_gameover.png',
+    screen_lose: './assets/images/screen_lose_cop_with_beagle.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -69,6 +72,8 @@ var Game = Scene.extend({
     initialize: function(options) {
         this.paused = false;
         this.debug = true;
+        this.timer = 0;
+        this.indicator = null;
 
         this.startingProtestors = 1;
         this.maxProtestors = 25;
@@ -168,7 +173,7 @@ var Game = Scene.extend({
             takeover: gamejs.event.K_t
         });
         this.player = null;
-        //this.spawnPlayer();
+        this.spawnPlayer();
 
         this.eventable = new EventEmitter();
         this.eventBindings();
@@ -249,7 +254,7 @@ var Game = Scene.extend({
         var b = new entities.Beagle({
             guardian: p,
             image: Images.beagle
-        })
+        });
 
         this.entities.add([p, b]);
 
@@ -290,6 +295,17 @@ var Game = Scene.extend({
         this.player = new entities.Player({
             existing: protestor
         });
+
+        if (!this.indicator) {
+            this.indicator = new entities.PlayerIndicator({
+                image: Images.indicator,
+                follow: this.player
+            });
+            this.entities.add(this.indicator);
+        } else {
+            this.indicator.follow = this.player;
+        }
+
         this.entities.add(this.player);
 
         protestor.kill();
@@ -308,6 +324,12 @@ var Game = Scene.extend({
     increasePolicePressure: function(step) {
         step = (step || 1);
         this.policePressure += step;
+
+        // As time goes up, we want to shrink the distraction box.
+        var s = Math.round(this.timer / 10) * 10;
+        if ((s / 20) % 1) {
+            step -= (step * 0.3);
+        }
         this.policeDistraction += step;
     },
 
@@ -331,6 +353,8 @@ var Game = Scene.extend({
         Scene.prototype.update.call(this, dt);
 
         dt = (dt / 1000); // Sane velocity mutations.
+
+        this.timer += dt;
 
         // Await our group of protestors.
         this.protestorGroupDelay -= dt;

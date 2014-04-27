@@ -1,9 +1,9 @@
 # Screens
 
-some details
+##### some details
 
-    width by height
-    325px by 88px
+screens excluding the topbar area should be a size of:  
+325px by 88px (width by height)
 
 ## Start screen
 
@@ -31,19 +31,11 @@ some details
 
 **see [README-gameover.md](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/README-gameover.md)**
 
-- 01 gameover
+- screen_gameover.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover.png?raw=true)
 
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover.png?raw=true)
+- screen_gameover02.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover02.png?raw=true)
 
-- 02 gameover
+- screen_gameover03.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover03.png?raw=true)
 
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover02.png?raw=true)
-
-- 03 gameover
-
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover03.png?raw=true)
-
-- 04 gameover
-
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover04.png?raw=true)
+- screen_gameover04.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover04.png?raw=true)
 

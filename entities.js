@@ -230,7 +230,7 @@ var Protestor = Citizen.extend({
 
         // Police padding. If we get too near the police and are aware of them,
         // we should
-        this.awarenessDistance = 20;
+        this.awarenessDistance = 40;
 
         // Eventually police can advance, and we won't be aware of this. This is
         // where we can get captured.
@@ -582,6 +582,7 @@ var BeagleCarrier = Protestor.extend({
     },
 });
 
+
 var Player = Protestor.extend({
     initialize: function(options) {
         Protestor.prototype.initialize.call(this, options);
@@ -598,7 +599,7 @@ var Player = Protestor.extend({
 
         this.tapCountdown = 0;
         this.pressureCount = 0;
-        this.pressureDelay = 200; // in milliseconds.
+        this.pressureDelay = 80; // in milliseconds.
 
         this.doubleTapSpeed = 200; // in milliseconds
     },
@@ -765,11 +766,24 @@ var Beagle = Entity.extend({
     initialize: function(options) {
         this.image = gamejs.image.load(options.image);
         this.guardian = options.guardian;
-        this.z = -1
+        this.z = -1;
     },
 
     update: function(dt) {
         var pos = this.guardian.topLeft();
+        this.setPos(Math.floor(pos[0]) + 6, Math.floor(pos[1] - 20));
+    }
+});
+
+var PlayerIndicator = Entity.extend({
+    initialize: function(options) {
+        this.image = gamejs.image.load(options.image);
+        this.follow = options.follow;
+        this.z = -1;
+    },
+
+    update: function(dt) {
+        var pos = this.follow.topLeft();
         this.setPos(Math.floor(pos[0]) + 6, Math.floor(pos[1] - 20));
     }
 });
@@ -779,5 +793,6 @@ module.exports = {
     Police: Police,
     Player: Player,
     BeagleCarrier: BeagleCarrier,
-    Beagle: Beagle
+    Beagle: Beagle,
+    PlayerIndicator: PlayerIndicator
 };
