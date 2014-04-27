@@ -575,6 +575,7 @@ var BeagleCarrier = Protestor.extend({
     },
 });
 
+
 var Player = Protestor.extend({
     initialize: function(options) {
         Protestor.prototype.initialize.call(this, options);
@@ -767,10 +768,24 @@ var Beagle = Entity.extend({
     }
 });
 
+var PlayerIndicator = Entity.extend({
+    initialize: function(options) {
+        this.image = gamejs.image.load(options.image);
+        this.follow = options.follow;
+        this.z = -1;
+    },
+
+    update: function(dt) {
+        var pos = this.follow.topLeft();
+        this.setPos(Math.floor(pos[0]) + 6, Math.floor(pos[1] - 20));
+    }
+});
+
 module.exports = {
     Protestor: Protestor,
     Police: Police,
     Player: Player,
     BeagleCarrier: BeagleCarrier,
-    Beagle: Beagle
+    Beagle: Beagle,
+    PlayerIndicator: PlayerIndicator
 };
