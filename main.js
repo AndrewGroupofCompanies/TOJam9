@@ -619,7 +619,7 @@ var main = function() {
     });
 
     var d = new Dispatcher(gamejs, {
-        initial: titlescreen,
+        initial: titleScreen,
         defaultTransition: FadeTransition,
         canvas: {flag: gamejs.display.DISABLE_SMOOTHING | gamejs.display.FULLSCREEN}
     });
