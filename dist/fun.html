@@ -2,22 +2,28 @@
 <head>
 <title> FUN </title>
     <style type=text/css>
-        @font-face{
-            font-family:Ebit;
-            src: url("./assets/fonts/emulogic.ttf");
-        }
-        canvas { 
-          background-color:black;
-          outline: none;
-          -webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
-        }
+      body {
+        margin-top: 120px;
+        margin-left: 120px;
+      }
+      @font-face{
+        font-family:Ebit;
+        src: url("./assets/fonts/emulogic.ttf");
+      }
+      canvas { 
+        background-color:white;
+        outline: none;
+        -webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
+      }
     </style>
 </head>
 <body>
-<p style="visibility: hidden; font-family: Ebit">Okay</p>
 
-<canvas id='gjs-canvas' width='1260' height='512'></canvas>
+
+<canvas id='gjs-canvas' width='720' height='512'></canvas>
 <script src='./fun.js'></script>
+
+<p style="visibility: hidden; font-family: Ebit">&nbsp;</p>
 
 </body>
 </html>
