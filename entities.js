@@ -361,13 +361,17 @@ var Protestor = Citizen.extend({
             // Identify obstacles and deke them out if necessary.
             this.world.getObstacles().forEach(function(o) {
                 if (this.collisionRect.collideRect(o.collisionRect)) {
-                    if (o.high) {
-                        this.duck();
-                    } else if (o.low) {
-                        this.deke();
-                    }
+                    this.collidingWithObstacle(o);
                 }
             }, this);
+        }
+    },
+
+    collidingWithObstacle: function(obstacle) {
+        if (obstacle.high) {
+            this.duck();
+        } else if (obstacle.low) {
+            this.deke();
         }
     },
 
@@ -599,6 +603,20 @@ var Player = Protestor.extend({
         return false;
     },
 
+    collidingWithObstacle: function(obstacle) {
+        if (this.isCaptured === true) return;
+
+        if (this.isPushing) {
+            this.stumble();
+        } else {
+            if (obstacle.high) {
+                this.duck();
+            } else if (obstacle.low) {
+                this.deke();
+            }
+        }
+    },
+
     update: function(dt) {
         if (this.world.paused) return;
 
@@ -608,21 +626,6 @@ var Player = Protestor.extend({
 
         if (this.rect.x <= 0) {
             this.kill();
-        }
-
-        if (this.isCaptured === false) {
-            var collisions = gamejs.sprite.spriteCollide(this, this.world.entities, false);
-            if (collisions.length > 0) {
-                collisions.forEach(function(collision){
-                    if (collision.name === 'obstacle') {
-                        if (this.isPushing) {
-                            this.stumble();
-                        } else {
-                            this.duck();
-                        }
-                    }
-                }, this);
-            }
         }
 
         // If we're near police we should warn the active Player.
