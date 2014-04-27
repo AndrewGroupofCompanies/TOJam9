@@ -329,7 +329,8 @@ var Game = Scene.extend({
         this.velocity.add(accel.mul(dt).mul(this.speed));
 
         this.obstaclesOff -= dt;
-        if (this.obstaclesOff <= 0) {
+        // TODO: No obstacles while we test police distraction.
+        if (false && this.obstaclesOff <= 0) {
             if (this.Obstacles && this.Obstacles.alive) {
                 this.Obstacles.update(dt);
             } else if (this.Obstacles === null) {
@@ -348,10 +349,8 @@ var Game = Scene.extend({
         this.view.clear();
 
         this.surface.fill('#fff');
-
         this.terrain.draw(this.view);
-
-            //this.scrollables.draw(this.view);
+        //this.scrollables.draw(this.view);
 
         // Draw the police pressure line as useful debugging.
         gamejs.draw.line(this.view, "#cccccc",

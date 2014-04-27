@@ -85,7 +85,6 @@ var Citizen = Entity.extend({
         // When they duck and going backwards, just push them a little so they
         // don't get stuck with the fence.
         if (this.velocity.getX() < 0) {
-            console.log("duck and push");
             this.accel = new Vec2d(1.5, 0);
             this.speed = 1;
         }
@@ -240,6 +239,9 @@ var Protestor = Citizen.extend({
         if (this.anim) {
             this.anim.setFrame(_.random(0,23));
         }
+
+        this.safetyCounterStart = 1.5;
+        this.safetyCounter = this.resetSafetyCounter();
     },
 
     makeDecision: function() {
@@ -253,6 +255,11 @@ var Protestor = Citizen.extend({
         return this.decideCounterStart;
     },
 
+    resetSafetyCounter: function() {
+        this.safetyCounter = this.safetyCounterStart;
+        return this.safetyCounter;
+    },
+
     // Is captured by the cops, just get off the screen.
     isBeingCaptured: function() {
         this.speed = -10;
@@ -261,7 +268,6 @@ var Protestor = Citizen.extend({
         this.setAnimation('captured');
         this.world.topbar.displayText('Fuck!', this.portrait, true);
     },
-
 
     adjustVector: function(dt) {
         Citizen.prototype.adjustVector.call(this, dt);
@@ -332,14 +338,17 @@ var Protestor = Citizen.extend({
     update: function(dt) {
         Citizen.prototype.update.apply(this, arguments);
 
+        dt = (dt / 1000);
+        this.safetyCounter -= dt;
+
         // Protestors collision rect is a bit above rect x;
         this.collisionRect.x = this.rect.x + 10;
     },
 
     draw: function(surface) {
         if (this.world.debug) {
+            //gamejs.draw.rect(surface, "#ffcc00", this.collisionRect);
             /*
-            gamejs.draw.rect(surface, "#ffcc00", this.collisionRect);
             gamejs.draw.line(surface, "#ffcc00",
                 [this.rect.x - this.awarenessDistance, 0],
                 [this.rect.x - this.awarenessDistance, surface.getSize()[1]]);
@@ -356,6 +365,8 @@ var Police = Citizen.extend({
         diving: {frames: _.range(21, 40), rate: 30, loop: false},
         deke: {frames: _.range(81, 91), rate: 30, loop: false},
         duck: {frames: _.range(41, 50), rate: 30, loop: false},
+        falling: {frames: _.range(241, 260), rate: 30, loop: false},
+        reaching: {frames: _.range(281, 305), rate: 30, loop: false},
         capturing: {frames: _.range(361, 400), rate: 30, loop: false}
     },
 
@@ -365,7 +376,7 @@ var Police = Citizen.extend({
         this.isPolice = true; // identifier
 
         this.collisionRect = this.rect.clone();
-        this.collisionRect.width = 30;
+        this.collisionRect.width = 30 / 2;
 
         this.hex = "#0033CC";
         this.speed = 0.5;
@@ -374,12 +385,19 @@ var Police = Citizen.extend({
 
         // States
         this.isCapturing = false;
+        this.completedCapture = false;
         this.canCapture = false;
+        this.captureCountdownStart = 1.5;
+        this.captureCountdown = this.resetCaptureCountdown();
 
         this.anim.setFrame(_.random(0,7));
 
         this.decideCounterStart = 1.5;
         this.decideCounter = this.resetDecision();
+    },
+
+    resetCaptureCountdown: function() {
+        return this.captureCountdownStart;
     },
 
     resetDecision: function() {
@@ -410,30 +428,48 @@ var Police = Citizen.extend({
         return false;
     },
 
+    executeCapture: function(entity) {
+        // Don't double lap cops due to the time delay on this function.
+        if (entity.isCaptured) return;
+
+        //console.log("executeCapture", entity.isDeking);
+        if (entity.isDeking) {
+            entity.resetSafetyCounter();
+            this.accel = new Vec2d(2, 0);
+            this.speed = -10;
+            this.shouldFall = true;
+        } else {
+            this.setAnimation("capturing");
+            this.completedCapture = true;
+            entity.isBeingCaptured();
+            // Set speed to negative, so the two go off the screen.
+            this.velocity.setX(-1);
+        }
+    },
+
     // This cop is busy capturing someone now.
     actionCapture: function(entity) {
-        //console.log("actionCapture", entity);
-
         this.isCapturing = true;
-        entity.isBeingCaptured();
+        this.captureCountdown = this.resetCaptureCountdown();
 
-        this.setAnimation("diving");
+        this.setAnimation("reaching");
+        this.accel = new Vec2d(0.5, 0);
+        this.speed = 1;
 
-        // Set speed to negative, so the two go off the screen.
-        this.accel = new Vec2d(1.25, 0);
-        this.speed = -10;
+        // We now give the user a split second to react to the police.
+        _.delay(this.executeCapture.bind(this), 500, entity);
     },
 
     adjustVector: function(dt) {
         Citizen.prototype.adjustVector.call(this, dt);
         dt = (dt / 1000);
 
+        if (this.isCapturing) return;
+
         // Adjust accel and speed because we may be sprinting forward.
         var accel = new Vec2d(this.accel.x, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
         this.velocity = this.velocity.truncate(this.maxSpeed);
-
-        if (this.isCapturing) return;
 
         var decel = Math.abs(this.speed / 1.2 * dt);
         if (accel.isZero()) {
@@ -464,16 +500,31 @@ var Police = Citizen.extend({
     update: function(dt) {
         Citizen.prototype.update.call(this, dt);
 
+        dt = (dt / 1000);
+
+        if (this.isCapturing === true) {
+            this.captureCountdown -= dt;
+            if (this.captureCountdown <= 0) {
+                this.isCapturing = false;
+                this.captureCountdown = this.resetCaptureCountdown();
+            }
+        }
+
         // Police identify when they sense a protestor within their graps. When
         // they do, they make a lounge for them, and may potentially capture
         // them!
-        if (this.isCapturing === false) {
+        if (this.isCapturing === false && this.completedCapture === false) {
             this.world.getProtestors().forEach(function(entity) {
-                // If the entity is not the player, they can't be captured if
-                // canCapture is true, but if they are the player, still
-                // possible.
                 if (entity.isCaptured) return;
-                if (this.canCapture === false && entity.isPlayer === false) return;
+                if (entity.safetyCounter > 0) return;
+                if (this.canCapture === false) {
+                    // If the entity is not the player, they can't be captured if
+                    // canCapture is true, but if they are the player, still
+                    // possible.
+                    if (entity.isPlayer === false) {
+                        return;
+                    }
+                }
                 if (this.collisionRect.collideRect(entity.rect)) {
                     this.actionCapture(entity);
                 }
@@ -488,6 +539,10 @@ var Police = Citizen.extend({
         if (this.isCapturing) {
             gamejs.draw.circle(surface, "rgb(100, 0, 100)",
                 [this.rect.left + 30, this.rect.bottom - 2], 4, 2);
+        }
+
+        if (this.world.debug) {
+            //gamejs.draw.rect(surface, "#ffcccc", this.collisionRect);
         }
 
         Citizen.prototype.draw.apply(this, arguments);
@@ -600,14 +655,6 @@ var Player = Protestor.extend({
         }
     },
 
-    draw: function(surface) {
-        if (this.isCaptured === false) {
-            gamejs.draw.circle(surface, "rgb(255, 0, 0)",
-                [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
-        }
-        Protestor.prototype.draw.apply(this, arguments);
-    },
-
     // In policeDistraction zone.
     isDistractingPolice: function() {
         //console.log(this.rect.x, this.world.policeDistraction);
@@ -654,8 +701,8 @@ var Player = Protestor.extend({
         }
 
         if (this.rect.x <= 0) {
-            this.kill();
             if (this.isCaptured === false) {
+                this.kill();
                 this.world.spawnPlayer();
             }
         }
@@ -684,6 +731,18 @@ var Player = Protestor.extend({
         }
 
         Protestor.prototype.update.apply(this, arguments);
+    },
+
+    draw: function(surface) {
+        Protestor.prototype.draw.apply(this, arguments);
+
+        if (this.isCaptured === false) {
+            gamejs.draw.circle(surface, "rgb(255, 0, 0)",
+                [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
+        }
+        if (this.world.debug) {
+            //gamejs.draw.rect(surface, "#ffcccc", this.collisionRect);
+        }
     }
 });
 
