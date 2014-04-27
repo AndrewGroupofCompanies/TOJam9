@@ -129,7 +129,7 @@ var Game = Scene.extend({
         this.backLine = -25;
         this.createProtestors(this.startingProtestors);
         this.protestorGroupActive = false;
-        this.protestorGroupDelay = 5; // in seconds.
+        this.protestorGroupDelay = 1; // in seconds.
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
@@ -202,7 +202,14 @@ var Game = Scene.extend({
 
     getProtestors: function() {
         return _.filter(this.entities._sprites, function(entity) {
+            if (entity.isBeagleCarrier) return false;
             return entity.isProtestor === true;
+        });
+    },
+
+    getBeagleCarrier: function() {
+        return _.filter(this.entities._sprites, function(entity) {
+            return entity.isBeagleCarrier === true;
         });
     },
 
@@ -212,8 +219,18 @@ var Game = Scene.extend({
                 x: (this.frontLine + 5 + (i * 5))
             });
         }, this);
-        this.protestorGroupActive = true;
 
+        // Create the beagle carrier.
+        var p = new entities.BeagleCarrier({
+            x: this.frontLine, y: this.runningPlane,
+            width: 30, height: 30,
+            world: this,
+            spriteSheet: this.spriteSheets.protester01, // TODO,
+            z: 0.5
+        });
+        this.entities.add(p);
+
+        this.protestorGroupActive = true;
         // Don't show any obstacles while the group enters.
         this.obstaclesOff = 5; // in seconds.
     },
@@ -242,8 +259,8 @@ var Game = Scene.extend({
     spawnPlayer: function() {
         var protestor = _.sample(this.getProtestors(), 1)[0];
         if (!protestor) {
-            console.log("No protestors found to spawn");
-            return;
+            // Player is taking over th beagle carrier. Last remaining hope!
+            protestor = this.getBeagleCarrier()[0];
         }
 
         this.player = new entities.Player({

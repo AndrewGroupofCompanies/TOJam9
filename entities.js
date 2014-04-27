@@ -490,6 +490,24 @@ var Police = Citizen.extend({
     }
 });
 
+// Doesn't do much different, but we need to identify the beagle carrier
+// and keep them up front.
+var BeagleCarrier = Protestor.extend({
+    isBeagleCarrier: true,
+
+    nearFront: function() {
+        return true;
+    },
+
+    // Carrier doesn't move. Just stays in place until we take them over.
+    adjustVector: function(dt) {
+        Protestor.prototype.adjustVector.call(this, dt);
+        if (this.rect.x <= (this.world.frontLine - 12)) {
+            this.velocity.setX(0);
+        }
+    },
+});
+
 var Player = Protestor.extend({
     initialize: function(options) {
         Protestor.prototype.initialize.call(this, options);
@@ -668,5 +686,6 @@ var Player = Protestor.extend({
 module.exports = {
     Protestor: Protestor,
     Police: Police,
-    Player: Player
+    Player: Player,
+    BeagleCarrier: BeagleCarrier
 };
