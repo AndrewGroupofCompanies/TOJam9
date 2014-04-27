@@ -18,11 +18,15 @@ var _ = require('underscore'),
 
 var Images = {
     cop01:         './assets/images/cop01.png',
+    copStatic: './assets/images/cop_static.png',
     bg_test:       './assets/images/bg_test.jpg',
     sprite_test:   './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
     terrain: './assets/images/terrain01.png',
     titlescreen: './assets/images/titlescreen.png',
+    ending02: './assets/images/ending02.png',
+    ending03: './assets/images/ending03.png',
+    ending04: './assets/images/ending04.png',
     protester01:   './assets/images/protester01.png',
     protester02:   './assets/images/protester02.png',
     protester03:   './assets/images/protester03.png',
@@ -47,14 +51,20 @@ var Images = {
     goat: './assets/images/goat.png',
     indicator: './assets/images/active_player_icon.png',
     beagle: './assets/images/beagle_icon.png',
-    portraitAndrew: './assets/images/portrait-andrewgardner.png',
+    portrait1: './assets/images/portrait-andrewgardner.png',
+    portrait2: './assets/images/portrait-protestor01.png',
+    portrait3: './assets/images/portrait-protestor02.png',
+    portrait4: './assets/images/portrait-protestor03.png',
+    portrait5: './assets/images/portrait-protestor04.png',
+    portrait6: './assets/images/portrait-protestor05.png',
+    portrait7: './assets/images/portrait-protestor06.png',
+    portrait8: './assets/images/portrait-protestor07.png',
     opening01: './assets/images/opening01.png',
     opening02: './assets/images/opening02.png',
     opening03: './assets/images/opening03.png',
     opening04: './assets/images/opening04.png',
     opening05: './assets/images/opening05.png',
     lose: './assets/images/lose.png',
-    cop_static: './assets/images/cop_static.png',
     music: './assets/music/jam.ogg',
     intromusic: './assets/music/intro.ogg',
     posisound: './assets/music/positive.ogg',
@@ -100,36 +110,44 @@ var Game = Scene.extend({
         this.warningLevel = 0;
         this.indicator = null;
 
+        this.gamewinScene = options.gamewinScene;
         this.startingProtestors = 1;
         this.maxProtestors = 10;
         this.obstaclesOff = 0;
+        this.loseScene = options.loseScene;
 
         gamejs.mixer.setNumChannels(1);
-
         this.music = new gamejs.mixer.Sound(Images.music);
         this._musicPlaying = false;
 
         this.portraits = {
-            andrew: imgfy(Images.portraitAndrew)
+            andrew: imgfy(Images.portrait1),
+            2: imgfy(Images.portrait2),
+            3: imgfy(Images.portrait3),
+            4: imgfy(Images.portrait4),
+            5: imgfy(Images.portrait5),
+            6: imgfy(Images.portrait6),
+            7: imgfy(Images.portrait7)
         };
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
+            policeStatic: [initSpriteSheet(imgfy(Images.copStatic), 30, 30), 'cop'],
             police: [initSpriteSheet(imgfy(Images.cop01), 30, 30), 'andrew'],
             protester01: [initSpriteSheet(imgfy(Images.protester01), 30, 30), 'andrew'],
-            protester02: [initSpriteSheet(imgfy(Images.protester02), 30, 30), 'andrew'],
-            protester03: [initSpriteSheet(imgfy(Images.protester03), 30, 30), 'andrew'],
-            protester04: [initSpriteSheet(imgfy(Images.protester04), 30, 30), 'andrew'],
-            protester05: [initSpriteSheet(imgfy(Images.protester05), 30, 30), 'andrew'],
-            protester06: [initSpriteSheet(imgfy(Images.protester06), 30, 30), 'andrew'],
-            protester07: [initSpriteSheet(imgfy(Images.protester07), 30, 30), 'andrew'],
+            protester02: [initSpriteSheet(imgfy(Images.protester02), 30, 30), 2],
+            protester03: [initSpriteSheet(imgfy(Images.protester03), 30, 30), 3],
+            protester04: [initSpriteSheet(imgfy(Images.protester04), 30, 30), 4],
+            protester05: [initSpriteSheet(imgfy(Images.protester05), 30, 30), 5],
+            protester06: [initSpriteSheet(imgfy(Images.protester06), 30, 30), 6],
+            protester07: [initSpriteSheet(imgfy(Images.protester07), 30, 30), 7],
             protester08: [initSpriteSheet(imgfy(Images.protester08), 30, 30), 'andrew'],
-            protester09: [initSpriteSheet(imgfy(Images.protester09), 30, 30), 'andrew'],
-            protester10: [initSpriteSheet(imgfy(Images.protester10), 30, 30), 'andrew'],
-            protester11: [initSpriteSheet(imgfy(Images.protester11), 30, 30), 'andrew'],
-            protester12: [initSpriteSheet(imgfy(Images.protester12), 30, 30), 'andrew'],
-            protester13: [initSpriteSheet(imgfy(Images.protester13), 30, 30), 'andrew'],
-            protester14: [initSpriteSheet(imgfy(Images.protester14), 30, 30), 'andrew'],
+            protester09: [initSpriteSheet(imgfy(Images.protester09), 30, 30), 2],
+            protester10: [initSpriteSheet(imgfy(Images.protester10), 30, 30), 3],
+            protester11: [initSpriteSheet(imgfy(Images.protester11), 30, 30), 4],
+            protester12: [initSpriteSheet(imgfy(Images.protester12), 30, 30), 5],
+            protester13: [initSpriteSheet(imgfy(Images.protester13), 30, 30), 6],
+            protester14: [initSpriteSheet(imgfy(Images.protester14), 30, 30), 7],
             protester15: [initSpriteSheet(imgfy(Images.protester15), 30, 30), 'andrew']
             //gascloud: initSpriteSheet(imgfy(Images.gascloud), 60, 60)
         };
@@ -206,7 +224,7 @@ var Game = Scene.extend({
             takeover: gamejs.event.K_t
         });
         this.player = null;
-        this.spawnPlayer();
+        //this.spawnPlayer();
 
         this.eventable = new EventEmitter();
         this.eventBindings();
@@ -215,12 +233,31 @@ var Game = Scene.extend({
     eventBindings: function() {
         var self = this;
         this.eventable.once("protestorsReady", this.joinProtestorGroup.bind(this));
-
         this.eventable.on("gameover", this.triggerGameOver.bind(this));
+        this.eventable.once("gamewin", this.triggerGameWin.bind(this));
     },
 
     triggerGameOver: function() {
-        this.dispatcher.push(new GameOver({}));
+        this.dispatcher.push(this.loseScene);
+    },
+
+    triggerGameWin: function() {
+        console.log("triggerGameWin");
+        _.each(_.range(5), function(i) {
+            var p = new entities.PoliceLineGuard({
+                x: this.frontLine - 10 - (i * 4), y: this.runningPlane + (i * 5),
+                width: 30, height: 30,
+                world: this,
+                image: Images.copStatic,
+                z: 0.5
+            });
+            this.entities.add(p);
+        }, this);
+
+        var self = this;
+        _.delay(function() {
+            self.dispatcher.push(self.gamewinScene);
+        }, 1000);
     },
 
     pickProtestorSprite: function() {
@@ -439,13 +476,14 @@ var Game = Scene.extend({
         }
 
         this.policeRect.width = this.policePressure;
+        var r, b;
         if (this.reddening) {
-            var r = this.sirenColor[0] + 10;
+            r = this.sirenColor[0] + 10;
             if (r > 255) {
                 r = 255;
                 this.reddening = false;
             }
-            var b = this.sirenColor[2] - 20;
+            b = this.sirenColor[2] - 20;
             if (b < 0) {
                 b = 0;
             }
@@ -453,13 +491,13 @@ var Game = Scene.extend({
                 r,
                 0,
                 b
-            ]
+            ];
         } else {
-            var r = this.sirenColor[0] - 20;
+            r = this.sirenColor[0] - 20;
             if (r < 0) {
                 r = 0;
             }
-            var b = this.sirenColor[2] + 10;
+            b = this.sirenColor[2] + 10;
             if (b > 255) {
                 b = 255;
                 this.reddening = true;
@@ -468,7 +506,7 @@ var Game = Scene.extend({
                 r,
                 0,
                 b
-            ]
+            ];
         }
 
         //Event firings
@@ -513,6 +551,9 @@ var Game = Scene.extend({
             );
         }
 
+        if (this.timer > 60) {
+            this.eventable.emit("gamewin");
+        }
     },
 
     draw: function(surface) {
@@ -524,26 +565,28 @@ var Game = Scene.extend({
         //this.scrollables.draw(this.view);
 
         // Draw the police pressure line as useful debugging.
+        /*
         gamejs.draw.line(this.view, "#cccccc",
             [this.policePressure, 0],
             [this.policePressure, surface.getSize()[1]]);
 
-        // Police distraction zone.
         gamejs.draw.line(this.view, "#cccccc",
             [this.policeDistraction, 0],
             [this.policeDistraction, surface.getSize()[1]]);
+        */
 
         // Front line.
+        /*
         gamejs.draw.line(this.view, "#cccccc",
             [this.frontLine, 0],
             [this.frontLine, surface.getSize()[1]]);
-        
+        */
+
         _.range(0,this.policeRect.width,10).forEach(function(width){
             var tempRect = this.policeRect.clone();
             tempRect.width -= width;
             gamejs.draw.rect(this.view, "rgba(" + this.sirenColor.join(',') + ',0.1)', tempRect);
-        }, this);        
-        
+        }, this);
 
         Scene.prototype.draw.call(this, surface, {clear: false});
 
@@ -577,16 +620,36 @@ var main = function() {
         next: openingCutscene,
         borderImage: Images.border,
         images: [
-
+            imgfy(Images.lose)
         ],
         text: [],
+        duration: 5000,
+        imageDuration: 7000,
         //portrait:
+        pixelScale: 4
+    });
+
+    var gamewinScreen = new Cutscene({
+        borderImage: Images.border,
+        images: [
+            imgfy(Images.ending02),
+            imgfy(Images.ending03),
+            imgfy(Images.ending04),
+        ],
+        text: [
+            "We're almost at the edge of the property! The beagle will be free!",
+            "I can't believe how well we all worked together to- MORE COPS!?!",
+            "No! Leave the beagle alone! It deserves to live!",
+            "This is a true story. This rescue failed and the beagle was sold to a lab. The protesters would return to break out 26 dogs and, ultimately, shut the breeding facility down. Google the \"Consort Beagles Campaign\" for more.",
+
+        ],
         pixelScale: 4
     });
 
     var game = new Game({
         pixelScale: 4,
-        loseScene: gameoverCutscene
+        loseScene: gameoverCutscene,
+        gamewinScene: gamewinScreen
     });
 
     var openingCutscene = new Cutscene({
@@ -595,7 +658,9 @@ var main = function() {
         images: [
             imgfy(Images.opening01),
             imgfy(Images.opening02),
-            imgfy(Images.opening03)
+            imgfy(Images.opening03),
+            imgfy(Images.opening04),
+            imgfy(Images.opening05)
         ],
         text: _.sample([[
             'I showed up to protest the beagle breeding mill.',
@@ -621,7 +686,7 @@ var main = function() {
     });
 
     var d = new Dispatcher(gamejs, {
-        initial: titleScreen,
+        initial: game,
         defaultTransition: FadeTransition,
         canvas: {flag: gamejs.display.DISABLE_SMOOTHING | gamejs.display.FULLSCREEN}
     });

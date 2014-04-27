@@ -42,6 +42,8 @@ var Cutscene = Scene.extend({
         this.text = options.text;
         this.images = options.images || [];
         this.borderImage = options.borderImage;
+        this.duration = options.duration || null;
+        console.log(this.duration);
         //this.portrait = options.portrait;
         this._isDone = false;
         this.topbar = new gameui.TopBar({
@@ -66,18 +68,27 @@ var Cutscene = Scene.extend({
 
     update: function(dt) {
         this.elapsed += dt;
+        console.log(this.elapsed);
+        console.log(this.duration);
         this.topbar.update(dt);
         if (this.elapsed >= this.imageDuration) {
             this.elapsed = 0;
             this.currentImage++;
         }
-        if (this.topbar.textQueue.length === 0 && !this.topbar.showingQueuedText) {
-            this._isDone = true;
+        if (this.duration) {
+            if (this.elapsed > this.duration) {
+                this._isDone = true;
+            }
+        } else {
+            if (this.topbar.textQueue.length === 0 && !this.topbar.showingQueuedText) {
+                this._isDone = true;
+            }
         }
         if (this.isDone()){
-            this.dispatcher.push(this.next);
+            if (this.next) {
+                this.dispatcher.push(this.next);
+            }
         }
-        //this.
     },
 
     draw: function(surface) {
