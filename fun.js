@@ -6,14 +6,15 @@ var _ = require('underscore'),
     Dispatcher = gramework.Dispatcher,
     Scene = gramework.Scene,
     animate = gramework.animate,
+    Entity = gramework.Entity,
     entities = require('./entities'),
     Vec2d = gramework.vectors.Vec2d,
     FadeTransition = gramework.state.FadeTransition,
     GameController = gramework.input.GameController;
 
 var Images = {
-    cop01:         './assets/images/cop01.png',
-    cop02:         './assets/images/cop02.png',
+    // cop01:         './assets/images/cop01.png',
+    // cop02:         './assets/images/cop02.png',
     protester01:   './assets/images/protester01.png',
     protester02:   './assets/images/protester02.png',
     protester03:   './assets/images/protester03.png',
@@ -23,37 +24,41 @@ var Images = {
     protester07:   './assets/images/protester01.png',
 };
 
-var Simplesprite = Entity.extend({
+var FunCitizen = Entity.extend({
+    animSpec: {
+        running:  {frames: _.range(40),       rate: 30, loop: true},
+        deke:     {frames: _.range(81, 90),   rate: 30},
+        duck:     {frames: _.range(41, 50),   rate: 30},
+        stumble:  {frames: _.range(121, 145), rate: 30},
+        captured: {frames: _.range(240, 260), rate: 30}
+    },
+
     initialize: function(options) {
-        options          = (options || {});
-        this.world       = options.world;
-        this.spritesheet = options.spritesheet;
-        this.xwidth      = options.x;
-        this.xheight     = options.y;
+        options = (options || {});
 
-        animSpec: {
-            running: {frames: _.range(40), rate: 30, loop: true},
-            deke: {frames: _.range(81, 90), rate: 30},
-            duck: {frames: _.range(41, 50), rate: 30},
-            stumble: {frames: _.range(121, 145), rate: 30},
-            captured: {frames: _.range(240, 260), rate: 30}
-        };
+        this.world = options.world;
 
-        this.sprite = new animate.SpriteSheet(this.spritesheet, this.xwidth, this.xheight);
+        if (options.spriteSheet) {
+            this.spriteSheet = options.spriteSheet;
+            this.anim = new animate.Animation(this.spriteSheet, "deke", this.animSpec);
+            this.image = this.anim.update(0);
+            this.anim.setFrame(0);
+        }
 
-        this.anim = new animate.Animation(this.sprite, "static", {
-            static: {frames: _.range(40), rate: 2}
-        });
-
-        // TODO: Shouldnt need to do this.
-        this.image = this.anim.update(0);
-
-        this.anim.start('static');
     },
 
     update: function(dt) {
-        this.image = this.anim.update(dt);
+        if (this.world.paused) return;
+
+        if (this.image && !this.anim.isFinished()) {
+            this.image = this.anim.update(dt);
+        }
+
+        if (this.anim && this.anim.isFinished()) {
+            this.anim.start('deke');
+        }
     },
+
 
     draw: function(surface) {
         if (this.image) {
@@ -61,11 +66,28 @@ var Simplesprite = Entity.extend({
         } else {
             gamejs.draw.rect(surface, this.hex, this.rect);
         }
-    }
+
+        if (this.world.debug) {
+            // Draw some useful info above the head!
+            /*
+            var fAccel = font.render("a" + String(this.accel.x));
+            surface.blit(fAccel, [this.rect.x + 5, this.rect.y - 10]);
+
+            var fSpeed = font.render("o" + String(this.speed));
+            surface.blit(fSpeed, [this.rect.x + 25, this.rect.y - 10]);
+            */
+        }
+    },
+
+    setAnimation: function(animation) {
+        if (this.anim.currentAnimation !== animation) {
+            this.anim.start(animation);
+        }
+    },
 
 });
 
-var Simplesprite = Simplesprite.extend({});
+var FunCitizen = FunCitizen.extend({});
 
 var initSpriteSheet = function(image, width, height) {
     var ss = new animate.SpriteSheet(image, width, height);
@@ -104,11 +126,13 @@ var Game = Scene.extend({
 
         _.each(this.spriteSheets, function(element, index, list) {
 
+            console.log('hi');
+
             var x =  30 + (30 * (index-1));
             var y =  30;
 
             console.log(element);
-            var p = new entities.Protestor({
+            var p = new FunCitizen({
                 x: x,
                 y: y,
                 width: 30,
@@ -117,7 +141,7 @@ var Game = Scene.extend({
                 spriteSheet: element,
             });
             this.entities.add(p);
-            console.log('hi');
+            
         }, this);
 
     },
