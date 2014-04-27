@@ -64,13 +64,13 @@ _.extend(SceneryGenerator.prototype, {
 
 var TerrainLayer = Entity.extend({
     initialize: function(options) {
+
         this.z = options.z;
         this.scale_factor = 1 / Math.pow(Math.E, (this.z / 5));
-        this.image = new gamejs.Surface(this.rect);
         this.rect.height = Math.floor((this.rect.height * this.scale_factor)/3.5);
         this.rect.top += Math.floor(this.scale_factor * 20);
         this.imageFile = gamejs.image.load(options.image);
-        this.image = new gamejs.Surface(this.rect);
+        this.image = new gamejs.Surface([this.rect.width, this.rect.height]);
         this.baseImage = this.image.clone();
         this.rect01 = this.rect.clone();
         this.rect01.top = 0;
@@ -95,8 +95,6 @@ var TerrainLayer = Entity.extend({
 
         this.image.blit(this.baseImage, this.rect01);
         this.image.blit(this.baseImage, this.rect02);
-
-        //Entity.prototype.update.apply(this, arguments);
     },
 
     draw: function(surface) {
