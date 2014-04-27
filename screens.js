@@ -42,6 +42,7 @@ var Cutscene = Scene.extend({
         this.text = options.text;
         this.images = options.images || [];
         this.borderImage = options.borderImage;
+        this.duration = options.duration || null;
         //this.portrait = options.portrait;
         this._isDone = false;
         this.topbar = new gameui.TopBar({
@@ -71,8 +72,14 @@ var Cutscene = Scene.extend({
             this.elapsed = 0;
             this.currentImage++;
         }
-        if (this.topbar.textQueue.length === 0 && !this.topbar.showingQueuedText) {
-            this._isDone = true;
+        if (this.duration) {
+            if (this.elapsed > this.duration) {
+                this._isDone = true;
+            }
+        } else {
+            if (this.topbar.textQueue.length === 0 && !this.topbar.showingQueuedText) {
+                this._isDone = true;
+            }
         }
         if (this.isDone()){
             this.dispatcher.push(this.next);

@@ -99,6 +99,7 @@ var Game = Scene.extend({
         this.startingProtestors = 1;
         this.maxProtestors = 10;
         this.obstaclesOff = 0;
+        this.loseScene = options.loseScene;
 
         gamejs.mixer.setNumChannels(1);
 
@@ -216,7 +217,7 @@ var Game = Scene.extend({
     },
 
     triggerGameOver: function() {
-        this.dispatcher.push(new GameOver({}));
+        this.dispatcher.push(this.loseScene);
     },
 
     pickProtestorSprite: function() {
@@ -573,9 +574,10 @@ var main = function() {
         next: openingCutscene,
         borderImage: Images.border,
         images: [
-
+            imgfy(Images.lose)
         ],
         text: [],
+        duration: 5000,
         //portrait:
         pixelScale: 4
     });
