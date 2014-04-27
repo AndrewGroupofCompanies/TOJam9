@@ -4,6 +4,8 @@ var _ = require('underscore'),
     Entity = gramework.Entity,
     animate = gramework.animate,
     Vec2d = gramework.vectors.Vec2d,
+    dampenVector = gramework.vectors.dampenVector,
+    dampen = gramework.vectors.dampen,
     GameController = gramework.input.GameController;
 
 var randomHex = function() {
@@ -147,7 +149,10 @@ var Protestor = Citizen.extend({
         this.isProtestor = true; // Identifier.
 
         this.runSpeed = 1.0; // Our speed modifier.
+        this.accel = 1.0;
         this.speed = this.runSpeed;
+        this.maxspeed = 2.0;
+
         this.canDeke = true;
         this.stumbleCounter = 0;
         this.duckCounter = 0;
@@ -165,7 +170,7 @@ var Protestor = Citizen.extend({
         // where we can get captured.
         this.aware = true;
 
-        this.decideCounterStart = 3;
+        this.decideCounterStart = 1.5;
         this.decideCounter = this.resetDecision();
 
         this.collisionRect.width = this.rect.width / 2;
@@ -177,7 +182,7 @@ var Protestor = Citizen.extend({
     },
 
     makeDecision: function() {
-        return _.random(0, 10) > 8.5;
+        return _.random(0, 10) > 7;
     },
 
     resetDecision: function() {
@@ -206,13 +211,29 @@ var Protestor = Citizen.extend({
             return;
         }
 
+        var decel = this.speed / 1.5 * dt;
+        if (accel.isZero()) {
+            dampenVector(this.velocity, decel);
+        } else {
+            if (accel.x === 0) {
+                console.log("dampenVector X");
+                this.accel.x = dampen(this.accel.x, decel);
+            }
+        }
+
         // If we're near police we should ensure that the movement is positive.
         if (this.nearPolice()) {
             //console.log(this.hex, " is near the police!");
             this.speed = this.runSpeed;
+            this.accel = 1;
+            return;
         } else if (this.nearFront()) {
             //console.log(this.hex, " is near the front!");
             this.speed = -(this.runSpeed);
+            this.accel = 1;
+            return;
+        } else {
+            this.accel = 0;
         }
 
         // Every now and then, let's decide what to do. Stay at our speed,
@@ -222,11 +243,10 @@ var Protestor = Citizen.extend({
             //console.log(this.hex, " is deciding what to do");
             // Generally, we'll stay where we are.
             if (this.makeDecision()) {
+                this.accel = 1.5;
                 this.speed += _.first(_.sample(
-                    [-(this.runSpeed), this.runSpeed]
+                    [-(this.runSpeed), (this.runSpeed)]
                 , 1));
-            } else {
-                this.speed = 0;
             }
             this.decideCounter = this.resetDecision();
         }
@@ -242,7 +262,7 @@ var Protestor = Citizen.extend({
 
     // We're near the front of the pack, just hold back.
     nearFront: function() {
-        if ((this.rect.x + this.rect.width + this.awarenessDistance) >= this.world.frontLine) {
+        if ((this.rect.x + this.rect.width) >= this.world.frontLine) {
             return true;
         }
         return false;
