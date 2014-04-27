@@ -36,7 +36,8 @@ var Images = {
     fence:         './assets/images/fencebroken.png',
     barricade:     './assets/images/barricade.png',
     gascloud: './assets/images/gascloud.png',
-    staticcloud: './assets/images/staticcloud.png'
+    staticcloud: './assets/images/staticcloud.png',
+    border: './assets/images/border01.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -69,7 +70,7 @@ var Game = Scene.extend({
             gascloud: initSpriteSheet(imgfy(Images.gascloud), 60, 60)
         };
 
-        this.topbar = new gameui.TopBar(this);
+        this.topbar = new gameui.TopBar(this, Images.border);
 
         this.terrain = new scrollables.AllTerrain({
             width: 1024,
