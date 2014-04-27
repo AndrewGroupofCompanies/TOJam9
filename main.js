@@ -52,7 +52,7 @@ var Images = {
     opening02:'./assets/images/screen_start02.png',
     opening03:'./assets/images/screen_start03.png',
     opening04:'./assets/images/screen_start04.png',
-    opening05:'./assets/images/screen_start05.png'
+    opening05:'./assets/images/screen_start05.png',
     screen_gameover: './assets/images/screen_gameover.png',
     screen_lose: './assets/images/screen_lose_cop_with_beagle.png'
 };
