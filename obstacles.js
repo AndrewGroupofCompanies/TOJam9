@@ -10,6 +10,7 @@ var Obstacle = Entity.extend({
 
         this.isObstacle = true; // identifier
 
+        this.z = options.z;
         this.world = options.world;
         this.velocity = new Vec2d(0, 0);
         this.speed = -2;
@@ -23,6 +24,7 @@ var Obstacle = Entity.extend({
     },
 
     update: function(dt) {
+        if (this.world.paused) return;
         this.rect.left += this.speed;
     },
 
@@ -111,7 +113,8 @@ ObstacleEmitter.prototype = {
                 y: this.world.height() - 130,
                 height: 187,
                 width: 150,
-                image: this.images[_.indexOf(AllowedObstacles, ObstacleKlass)]
+                image: this.images[_.indexOf(AllowedObstacles, ObstacleKlass)],
+                z: 1
             }));
             this.currentDuration = 0;
             this.count -= 1;

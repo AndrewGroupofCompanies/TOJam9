@@ -52,6 +52,7 @@ var GROUND_HEIGHT = 20;
 
 var Game = Scene.extend({
     initialize: function(options) {
+        this.paused = false;
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
@@ -92,7 +93,7 @@ var Game = Scene.extend({
 
         // The front line of the protestors. Let's keep them grouped.
         this.frontLine = this.surface.getSize()[0] - 10;
-        this.backLine = 10;
+        this.backLine = -25;
         this.createProtestors(15);
         this.scrollGenerator = new scrollables.SceneryGenerator({
             world: this,
@@ -101,7 +102,7 @@ var Game = Scene.extend({
                 Images.staticcloud
             ]
         });
-        
+
         //this.animscrollGenerator = new scrollables.AnimScrollableGenerator({
         //    world: this,
         //    spriteSheet: [
@@ -123,7 +124,7 @@ var Game = Scene.extend({
 
         // Player management
         this.controller = new GameController({
-            pressure: gamejs.event.K_p,
+            pause: gamejs.event.K_p,
             takeover: gamejs.event.K_t
         });
         this.player = null;
@@ -179,6 +180,10 @@ var Game = Scene.extend({
     // one.
     spawnPlayer: function() {
         var protestor = _.sample(this.getProtestors(), 1)[0];
+        if (!protestor) {
+            console.log("No protestors found to spawn");
+            return;
+        }
 
         this.player = new entities.Player({
             existing: protestor
@@ -264,8 +269,10 @@ var Game = Scene.extend({
         // Placeholder. Need to send event and identify active protestor.
         var handled = this.controller.handle(ev);
         if (!handled) return;
-        if (handled.value === this.controller.controls.pressure) {
-            this.policePressure += 10;
+        if (handled.value === this.controller.controls.pause) {
+            if (handled.action === "keyDown") {
+                this.paused = !this.paused;
+            }
         } else if (handled.value === this.controller.controls.takeover) {
             if (this.player !== null) {
                 // Kill the active player protestor.
