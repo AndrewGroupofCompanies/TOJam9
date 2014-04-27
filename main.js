@@ -1,4 +1,5 @@
 var _ = require('underscore'),
+    EventEmitter = require('events').EventEmitter,
     _s = require('underscore.string'),
     gamejs = require('gamejs'),
     gramework = require('gramework'),
@@ -23,7 +24,7 @@ var Images = {
     terrain: './assets/images/terrain01.png',
     protester01:   './assets/images/protester01.png',
     protester02:   './assets/images/protester02.png',
-    protester03:   './assets/images/protester07.png',
+    protester03:   './assets/images/protester03.png',
     protester04:   './assets/images/protester04.png',
     protester05:   './assets/images/protester07.png',
     protester06:   './assets/images/protester04.png',
@@ -63,6 +64,8 @@ var Game = Scene.extend({
         this.debug = true;
 
         this.startingProtestors = 1;
+        this.maxProtestors = 25;
+        this.obstaclesOff = 0;
 
         this.portraits = {
             andrew: imgfy(Images.portraitAndrew)
@@ -132,6 +135,8 @@ var Game = Scene.extend({
         this.frontLine = this.surface.getSize()[0] - 10;
         this.backLine = -25;
         this.createProtestors(this.startingProtestors);
+        this.protestorGroupActive = false;
+        this.protestorGroupDelay = 1; // in seconds.
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
@@ -157,20 +162,35 @@ var Game = Scene.extend({
         });
         this.player = null;
         //this.spawnPlayer();
+
+        this.eventable = new EventEmitter();
+        this.eventBindings();
     },
 
-    createProtestors: function(limit) {
+    eventBindings: function() {
+        var self = this;
+        this.eventable.once("protestorsReady", this.joinProtestorGroup.bind(this));
+    },
+
+    pickProtestorSprite: function() {
+        var randomNum = _.random(1,5);
+        var zeroPadded = _s.pad(randomNum.toString(), 2, '0', 'left');
+        var spriteId = 'protester' + zeroPadded;
+        var spriteSheet = this.spriteSheets[spriteId];
+        return spriteSheet;
+    },
+
+    createProtestors: function(limit, options) {
+        options = (options || {});
         _.each(_.range(limit), function(i) {
-            var randomNum= _.random(1,5);
-            var zeroPadded = _s.pad(randomNum.toString(), 2, '0', 'left');
-            var spriteId  = 'protester' + zeroPadded;
-            var tmpSpriteSheet = this.spriteSheets[spriteId][0];
+            var x = (options.x || 80 + (i * 15));
+            var sheet = this.pickProtestorSprite();
             var p = new entities.Protestor({
-                x: 80 + (i * 15), y: this.runningPlane,
+                x: x, y: this.runningPlane,
                 width: 30, height: 30,
                 world: this,
-                spriteSheet: tmpSpriteSheet,
-                portrait: this.spriteSheets[spriteId][1],
+                portrait: sheet[1],
+                spriteSheet: sheet[0],
                 z: 0.5,
             });
             this.entities.add(p);
@@ -191,8 +211,38 @@ var Game = Scene.extend({
 
     getProtestors: function() {
         return _.filter(this.entities._sprites, function(entity) {
+            if (entity.isBeagleCarrier) return false;
             return entity.isProtestor === true;
         });
+    },
+
+    getBeagleCarrier: function() {
+        return _.filter(this.entities._sprites, function(entity) {
+            return entity.isBeagleCarrier === true;
+        });
+    },
+
+    joinProtestorGroup: function() {
+        _.each(_.range(this.maxProtestors - 1), function(i) {
+            this.createProtestors(1, {
+                x: (this.frontLine + 5 + (i * 5))
+            });
+        }, this);
+
+        // Create the beagle carrier.
+        var p = new entities.BeagleCarrier({
+            x: this.frontLine, y: this.runningPlane,
+            width: 30, height: 30,
+            world: this,
+            spriteSheet: this.spriteSheets.protester01[0], // TODO,
+            portrait: this.spriteSheets.protester01[1],
+            z: 0.5
+        });
+        this.entities.add(p);
+
+        this.protestorGroupActive = true;
+        // Don't show any obstacles while the group enters.
+        this.obstaclesOff = 5; // in seconds.
     },
 
     resetPoliceDelay: function() {
@@ -220,8 +270,8 @@ var Game = Scene.extend({
     spawnPlayer: function() {
         var protestor = _.sample(this.getProtestors(), 1)[0];
         if (!protestor) {
-            console.log("No protestors found to spawn");
-            return;
+            // Player is taking over th beagle carrier. Last remaining hope!
+            protestor = this.getBeagleCarrier()[0];
         }
 
         this.player = new entities.Player({
@@ -250,6 +300,7 @@ var Game = Scene.extend({
 
     policeGenerator: function(dt) {
         if (this.getPolice().length >= this.maxPolice) return;
+        if (this.protestorGroupActive === false) return;
 
         dt = (dt / 1000);
         this.policeDelay -= dt;
@@ -261,27 +312,34 @@ var Game = Scene.extend({
 
     update: function(dt) {
         this.scrollGenerator.update(dt);
-        //this.animscrollGenerator.update(dt);
         this.terrain.update(dt);
-
         this.policeGenerator(dt);
 
         Scene.prototype.update.call(this, dt);
 
         dt = (dt / 1000); // Sane velocity mutations.
 
+        // Await our group of protestors.
+        this.protestorGroupDelay -= dt;
+        if (this.protestorGroupDelay <= 0) {
+            this.eventable.emit("protestorsReady");
+        }
+
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
 
-        if (this.Obstacles && this.Obstacles.alive) {
-            this.Obstacles.update(dt);
-        } else if (this.Obstacles === null) {
-            this.Obstacles = new obstacles.ObstacleEmitter({
-                world: this,
-                images: [Images.fence, Images.barricade]
-            });
-        } else if (!this.Obstacles.alive) {
-            this.Obstacles = null;
+        this.obstaclesOff -= dt;
+        if (this.obstaclesOff <= 0) {
+            if (this.Obstacles && this.Obstacles.alive) {
+                this.Obstacles.update(dt);
+            } else if (this.Obstacles === null) {
+                this.Obstacles = new obstacles.ObstacleEmitter({
+                    world: this,
+                    images: [Images.fence, Images.barricade]
+                });
+            } else if (!this.Obstacles.alive) {
+                this.Obstacles = null;
+            }
         }
     },
 

@@ -55,7 +55,9 @@ var TopBar = uielements.Element.extend({
         if (this.textQueue.length > 0 && !this.showingQueuedText) {
             this.portraitBox.show();
             this.textBlock.show();
-            this.textBlock.setText(this.textQueue.shift());
+            var nextText = this.textQueue.shift();
+            this.textBlock.setText(nextText[0]);
+            this.portraitBox.image = this.portraits[nextText[1]];
             this.showingQueuedText = true;
         }
         if (this.textBlock.doneDuration >= 600) {

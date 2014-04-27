@@ -12,7 +12,8 @@
     "gamejs": "1.0.0",
     "gramework": "https://github.com/bartek/gramework/tarball/master",
     "underscore": "~1.6.0",
-    "underscore.string": "~2.3.3"
+    "underscore.string": "~2.3.3",
+    "events": "~1.0.0"
   },
   "devDependencies": {
     "browserify": "~2.29.0",
