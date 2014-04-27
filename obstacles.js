@@ -26,6 +26,10 @@ var Obstacle = Entity.extend({
     update: function(dt) {
         if (this.world.paused) return;
         this.rect.left += this.speed;
+
+        if (this.rect.x <= -100) {
+            this.kill();
+        }
     },
 
     draw: function(surface) {
@@ -66,7 +70,7 @@ var Barricade = Obstacle.extend({
 
     update: function(dt) {
         Obstacle.prototype.update.call(this, dt);
-        this.collisionRect.left = this.rect.left + 65;
+        this.collisionRect.left = this.rect.left + 50;
         this.collisionRect.top = this.rect.top + 75;
     }
 
