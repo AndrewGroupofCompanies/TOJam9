@@ -10,6 +10,8 @@ var _ = require('underscore'),
     obstacles = require('./obstacles'),
     Vec2d = gramework.vectors.Vec2d,
     gameui = require('./gameui'),
+    TitleScreen = require('./screens').TitleScreen,
+    FadeTransition = gramework.state.FadeTransition,
     GameController = gramework.input.GameController;
 
 var Images = {
@@ -115,6 +117,7 @@ var Game = Scene.extend({
         this.frontLine = this.surface.getSize()[0] - 10;
         this.backLine = -25;
         this.createProtestors(15);
+
         this.scrollGenerator = new scrollables.SceneryGenerator({
             world: this,
             images: [
@@ -148,7 +151,7 @@ var Game = Scene.extend({
             takeover: gamejs.event.K_t
         });
         this.player = null;
-        this.spawnPlayer();
+        //this.spawnPlayer();
     },
 
     createProtestors: function(limit) {
@@ -309,8 +312,14 @@ var main = function() {
     var game = new Game({
         pixelScale: 4
     });
+
+    var titleScreen = new TitleScreen({
+        game: game
+    });
+
     var d = new Dispatcher(gamejs, {
-        initial: game,
+        initial: titleScreen,
+        defaultTransition: FadeTransition,
         canvas: {flag: gamejs.display.DISABLE_SMOOTHING | gamejs.display.FULLSCREEN}
     });
 };
