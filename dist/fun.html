@@ -10,19 +10,94 @@
         font-family:Ebit;
         src: url("./assets/fonts/emulogic.ttf");
       }
-      canvas { 
+      body {
+        position: relative;
+      }
+      .container {
+        padding-top: 40px;
+      }
+      canvas {
         background-color:white;
         outline: none;
         -webkit-tap-highlight-color: rgba(255, 255, 255, 0); /* mobile webkit */
+        position: absolute;
+      }
+      .title {
+        font-family: Ebit, "Courier New";
+        font-size: 13px;
+        position: absolute;
+        left:    79px;
+        top:     12px;
+        z-index: 9999;
+        text-align: center;
+      }
+      .subtitle {
+        font-size: 11px;
+      }
+      table {
+        margin-top: 27px;
+        margin-left: 30px;
+        float:left;
+      }
+      table td {
+        font-family: Ebit, "Courier New";
+        font-size: 11px;
+        height: 30px;
+        vertical-align: middle;
       }
     </style>
 </head>
 <body>
 
-<canvas id='gjs-canvas' width='720' height='720'></canvas>
+
+<div class="title">
+  Animations from Save Beagle<br>
+  <span class="subtitle">motion capture to pixel</span>
+</div>
+
+<div class="container">
+<div style="float:left">
+  <table border="0">
+    <tr><td>
+      Running
+    </td></tr>
+    <tr><td>
+      Ducking
+    </td></tr>
+    <tr><td>
+      Jumping
+    </td></tr>
+    <tr><td>
+      Stumble Light
+    </td></tr>
+    <tr><td>
+      Stumble Heavy
+    </td></tr>
+    <tr><td>
+      Clotheslined
+    </td></tr>
+    <tr><td>
+      Fall
+    </td></tr>
+    <tr><td>
+      Reach01
+    </td></tr>
+    <tr><td>
+      Reach02
+    </td></tr>
+    <tr><td>
+      Arrest01
+    </td></tr>
+    <tr><td>
+      Arrest02
+    </td></tr>
+  </table>
+</div>
+
+<canvas style="float:left" id='gjs-canvas' width='720' height='720'></canvas>
 <script src='./fun.js'></script>
 
 <p style="visibility: hidden; font-family: Ebit">&nbsp;</p>
-
+</div>
 </body>
 </html>

@@ -1453,16 +1453,7 @@ var Game = Scene.extend({
             this.entities.add(p3);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
-            var p6 = new FunPolice({
-                x: x, y: y,
-                width: 30, height: 30,
-                world: this,
-                spriteSheet: ss[0],
-            });
-            p6.setAnimation("reaching");
-            this.entities.add(p6);
-
+            ypos_multiplier++;
             ypos_multiplier++;
             y =  30 + (30 * (ypos_multiplier));
             var p4 = new FunPolice({
@@ -1476,17 +1467,6 @@ var Game = Scene.extend({
 
             ypos_multiplier++;
             y =  30 + (30 * (ypos_multiplier));
-            var p7 = new FunPolice({
-                x: x, y: y,
-                width: 30, height: 30,
-                world: this,
-                spriteSheet: ss[0],
-            });
-            p7.setAnimation("reaching2");
-            this.entities.add(p7);
-
-            ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
             var p5 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1495,6 +1475,28 @@ var Game = Scene.extend({
             });
             p5.setAnimation("falling");
             this.entities.add(p5);
+
+            ypos_multiplier++;
+            y =  30 + (30 * (ypos_multiplier));
+            var p6 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p6.setAnimation("reaching");
+            this.entities.add(p6);
+
+            ypos_multiplier++;
+            y =  30 + (30 * (ypos_multiplier));
+            var p7 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p7.setAnimation("reaching2");
+            this.entities.add(p7);
 
             ypos_multiplier++;
             y =  30 + (30 * (ypos_multiplier));
