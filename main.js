@@ -42,7 +42,8 @@ var Images = {
     gascloud: './assets/images/gascloud.png',
     staticcloud: './assets/images/staticcloud.png',
     border: './assets/images/border01.png',
-    goat: './assets/images/goat.png'
+    goat: './assets/images/goat.png',
+    portraitAndrew: './assets/images/portrait-andrewgardner.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
