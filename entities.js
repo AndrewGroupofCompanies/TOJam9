@@ -64,7 +64,6 @@ var Citizen = Entity.extend({
     },
 
     deke: function() {
-        this.world.topbar.displayText("Check this deke", this.portrait);
         this.isDeking = true;
         this.canDeke = false;
         this.setAnimation("deke");
@@ -687,9 +686,23 @@ var Player = Protestor.extend({
     }
 });
 
+var Beagle = Entity.extend({
+    initialize: function(options) {
+        this.image = gamejs.image.load(options.image);
+        this.guardian = options.guardian;
+        this.z = -1
+    },
+
+    update: function(dt) {
+        var pos = this.guardian.center();
+        this.setPos(Math.floor(pos[0]), Math.floor(pos[1]));
+    }
+});
+
 module.exports = {
     Protestor: Protestor,
     Police: Police,
     Player: Player,
-    BeagleCarrier: BeagleCarrier
+    BeagleCarrier: BeagleCarrier,
+    Beagle: Beagle
 };

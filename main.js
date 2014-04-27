@@ -44,6 +44,7 @@ var Images = {
     staticcloud: './assets/images/staticcloud.png',
     border: './assets/images/border01.png',
     goat: './assets/images/goat.png',
+    beagle: './assets/images/beagle.png',
     portraitAndrew: './assets/images/portrait-andrewgardner.png'
 };
 
@@ -238,7 +239,13 @@ var Game = Scene.extend({
             portrait: this.spriteSheets.protester01[1],
             z: 0.5
         });
-        this.entities.add(p);
+
+        var b = new entities.Beagle({
+            guardian: p,
+            image: Images.beagle
+        })
+
+        this.entities.add([p, b]);
 
         this.protestorGroupActive = true;
         // Don't show any obstacles while the group enters.
@@ -399,8 +406,12 @@ var main = function() {
         pixelScale: 4
     });
 
+    var openingCutscene = new Cutscene({
+        next: game
+    });
+
     var titleScreen = new TitleScreen({
-        game: game
+        next: openingCutscene
     });
 
     var d = new Dispatcher(gamejs, {
