@@ -16,11 +16,13 @@ var font = new gamejs.font.Font('6px monospace');
 
 var Citizen = Entity.extend({
     animSpec: {
-        running: {frames: _.range(40), rate: 30, loop: true},
-        deke: {frames: _.range(81, 90), rate: 30},
-        duck: {frames: _.range(41, 50), rate: 30},
-        stumble: {frames: _.range(121, 145), rate: 30},
-        captured: {frames: _.range(240, 260), rate: 30}
+        running:    {frames: _.range(0,  40),   rate: 30, loop: true},
+        duck:       {frames: _.range(41, 50),   rate: 30, loop: true},
+        deke:       {frames: _.range(81, 90),   rate: 30, loop: true},
+        stumble:    {frames: _.range(121, 145), rate: 30, loop: true},
+        stumblebig: {frames: _.range(161, 180), rate: 30, loop: true},
+        clothesline:{frames: _.range(201, 215), rate: 30, loop: true},
+        captured:   {frames: _.range(240, 260), rate: 30, loop: true}
     },
 
     defaultAnim: "running",
@@ -374,13 +376,15 @@ var Protestor = Citizen.extend({
 
 var Police = Citizen.extend({
     animSpec: {
-        running: {frames: _.range(40), rate: 30, loop: true},
-        diving: {frames: _.range(21, 40), rate: 30, loop: false},
-        deke: {frames: _.range(81, 91), rate: 30, loop: false},
-        duck: {frames: _.range(41, 50), rate: 30, loop: false},
-        reaching: {frames: _.range(281, 305), rate: 30, loop: false},
-        falling: {frames: _.range(321, 340), rate: 30, loop: false},
-        capturing: {frames: _.range(361, 400), rate: 30, loop: false}
+        running:     {frames: _.range(0,   40),  rate: 30, loop: true},
+        duck:        {frames: _.range(41,  50),  rate: 30, loop: true},
+        deke:        {frames: _.range(81,  90),  rate: 30, loop: true},
+        clothesline: {frames: _.range(201, 215), rate: 30, loop: true},
+        falling:     {frames: _.range(241, 261), rate: 30, loop: true},
+        reaching:    {frames: _.range(281, 295), rate: 30, loop: true},
+        reaching2:   {frames: _.range(320, 336), rate: 30, loop: true},
+        capturing:   {frames: _.range(361, 400), rate: 30, loop: true},
+        capturing2:  {frames: _.range(401, 440), rate: 30, loop: true},
     },
 
     initialize: function(options) {

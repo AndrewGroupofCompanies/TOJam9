@@ -326,6 +326,8 @@ var Citizen = Entity.extend({
         captured: {frames: _.range(240, 260), rate: 30}
     },
 
+    defaultAnim: "running",
+
     initialize: function(options) {
         options = (options || {});
 
@@ -341,9 +343,14 @@ var Citizen = Entity.extend({
         // Default collision rect is nothing different.
         this.collisionRect = this.rect.clone();
 
+        if (options.image) {
+            this.image = gamejs.image.load(options.image);
+        }
+
+
         if (options.spriteSheet) {
             this.spriteSheet = options.spriteSheet;
-            this.anim = new animate.Animation(this.spriteSheet, "running", this.animSpec);
+            this.anim = new animate.Animation(this.spriteSheet, this.defaultAnim, this.animSpec);
             this.image = this.anim.update(0);
             this.anim.setFrame(0);
         }
@@ -423,7 +430,7 @@ var Citizen = Entity.extend({
         this.collisionRect.x = this.rect.x;
         this.collisionRect.y = this.rect.y;
 
-        if (this.image && !this.anim.isFinished()) {
+        if (this.image && this.anim && !this.anim.isFinished()) {
             this.image = this.anim.update(dt);
         }
 
@@ -464,7 +471,7 @@ var Citizen = Entity.extend({
         }, this);
 
         if (this.anim && this.anim.isFinished()) {
-            this.anim.start('running');
+            this.anim.start(this.defaultAnim);
         }
     },
 
@@ -670,13 +677,15 @@ var Protestor = Citizen.extend({
 
 var Police = Citizen.extend({
     animSpec: {
-        running: {frames: _.range(40), rate: 30, loop: true},
-        diving: {frames: _.range(21, 40), rate: 30, loop: false},
-        deke: {frames: _.range(81, 91), rate: 30, loop: false},
-        duck: {frames: _.range(41, 50), rate: 30, loop: false},
-        reaching: {frames: _.range(281, 305), rate: 30, loop: false},
-        falling: {frames: _.range(321, 340), rate: 30, loop: false},
-        capturing: {frames: _.range(361, 400), rate: 30, loop: false}
+        running:     {frames: _.range(0,   40),  rate: 30, loop: true},
+        duck:        {frames: _.range(41,  50),  rate: 30, loop: true},
+        deke:        {frames: _.range(81,  90),  rate: 30, loop: true},
+        clothesline: {frames: _.range(201, 215), rate: 30, loop: true},
+        falling:     {frames: _.range(241, 261), rate: 30, loop: true},
+        reaching:    {frames: _.range(281, 295), rate: 30, loop: true},
+        reaching2:   {frames: _.range(320, 336), rate: 30, loop: true},
+        capturing:   {frames: _.range(361, 400), rate: 30, loop: true},
+        capturing2:  {frames: _.range(401, 440), rate: 30, loop: true},
     },
 
     initialize: function(options) {
@@ -775,8 +784,8 @@ var Police = Citizen.extend({
         this.captureCountdown = this.resetCaptureCountdown();
 
         this.setAnimation("reaching");
-        this.accel = new Vec2d(0.5, 0);
-        this.speed = 1;
+        //this.accel = new Vec2d(0.5, 0);
+        //this.speed = 1;
 
         // We now give the user a split second to react to the police.
         _.delay(this.executeCapture.bind(this), 500, entity);
@@ -806,7 +815,6 @@ var Police = Citizen.extend({
             this.accel = new Vec2d(0.25, 0);
             this.speed = -1;
         } else if (this.nearBack()) {
-            this.accel = new Vec2d(0.25, 0);
             this.speed = 1;
             this.velocity.setX(0.25);
         } else {
@@ -861,8 +869,10 @@ var Police = Citizen.extend({
 
     draw: function(surface) {
         if (this.isCapturing) {
+            /*
             gamejs.draw.circle(surface, "rgb(100, 0, 100)",
                 [this.rect.left + 30, this.rect.bottom - 2], 4, 2);
+            */
         }
 
         if (this.world.debug) {
@@ -871,6 +881,23 @@ var Police = Citizen.extend({
 
         Citizen.prototype.draw.apply(this, arguments);
     }
+});
+
+// Static guard that shows up at the end of the game.
+var PoliceLineGuard = Protestor.extend({
+    isLineGuard: true,
+
+    nearFront: function() {
+        return true;
+    },
+
+    // Guards don't move, game is over.
+    adjustVector: function(dt) {
+        Citizen.prototype.adjustVector.call(this, dt);
+        if (this.rect.x <= (this.world.frontLine - 32)) {
+            this.velocity.setX(0);
+        }
+    },
 });
 
 // Doesn't do much different, but we need to identify the beagle carrier
@@ -1062,8 +1089,10 @@ var Player = Protestor.extend({
         Protestor.prototype.draw.apply(this, arguments);
 
         if (this.isCaptured === false) {
+            /*
             gamejs.draw.circle(surface, "rgb(255, 0, 0)",
                 [this.rect.left + 14, this.rect.bottom - 2], 4, 2);
+            */
         }
         if (this.world.debug) {
             //gamejs.draw.rect(surface, "#ffcccc", this.collisionRect);
@@ -1098,6 +1127,7 @@ var PlayerIndicator = Entity.extend({
 });
 
 module.exports = {
+    PoliceLineGuard: PoliceLineGuard,
     Protestor: Protestor,
     Police: Police,
     Player: Player,
@@ -1205,12 +1235,12 @@ var FunPolice = Entity.extend({
         running:     {frames: _.range(0,   40),  rate: 30, loop: true},
         duck:        {frames: _.range(41,  50),  rate: 30, loop: true},
         deke:        {frames: _.range(81,  90),  rate: 30, loop: true},
-        clothesline: {frames: _.range(161, 177), rate: 30, loop: true},
-        falling:     {frames: _.range(201, 221), rate: 30, loop: true},
-        reaching:    {frames: _.range(281, 297), rate: 30, loop: true},
-        reaching2:   {frames: _.range(320, 337), rate: 30, loop: true},
+        clothesline: {frames: _.range(201, 215), rate: 30, loop: true},
+        falling:     {frames: _.range(241, 261), rate: 30, loop: true},
+        reaching:    {frames: _.range(281, 295), rate: 30, loop: true},
+        reaching2:   {frames: _.range(320, 336), rate: 30, loop: true},
         capturing:   {frames: _.range(361, 400), rate: 30, loop: true},
-        capturing2:  {frames: _.range(401, 441), rate: 30, loop: true},
+        capturing2:  {frames: _.range(401, 440), rate: 30, loop: true},
     },
 
     initialize: function(options) {

@@ -96,12 +96,12 @@ var FunPolice = Entity.extend({
         running:     {frames: _.range(0,   40),  rate: 30, loop: true},
         duck:        {frames: _.range(41,  50),  rate: 30, loop: true},
         deke:        {frames: _.range(81,  90),  rate: 30, loop: true},
-        clothesline: {frames: _.range(161, 177), rate: 30, loop: true},
-        falling:     {frames: _.range(201, 221), rate: 30, loop: true},
-        reaching:    {frames: _.range(281, 297), rate: 30, loop: true},
-        reaching2:   {frames: _.range(320, 337), rate: 30, loop: true},
+        clothesline: {frames: _.range(201, 215), rate: 30, loop: true},
+        falling:     {frames: _.range(241, 261), rate: 30, loop: true},
+        reaching:    {frames: _.range(281, 295), rate: 30, loop: true},
+        reaching2:   {frames: _.range(320, 336), rate: 30, loop: true},
         capturing:   {frames: _.range(361, 400), rate: 30, loop: true},
-        capturing2:  {frames: _.range(401, 441), rate: 30, loop: true},
+        capturing2:  {frames: _.range(401, 440), rate: 30, loop: true},
     },
 
     initialize: function(options) {
