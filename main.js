@@ -87,10 +87,10 @@ var Game = Scene.extend({
             x: 0,
             y:0,
             world: this,
-            subBorderImage: Images.border,
+            subBorderImage: imgfy(Images.border),
             subFont: "8px Ebit"
         });
-   
+
         this.terrain = new scrollables.AllTerrain({
             width: 1024,
             image: Images.terrain
@@ -156,7 +156,6 @@ var Game = Scene.extend({
             var randomNum= _.random(1,5);
             var zeroPadded = _s.pad(randomNum.toString(), 2, '0', 'left');
             var spriteId  = 'protester' + zeroPadded;
-            console.log(spriteId);
             var tmpSpriteSheet = this.spriteSheets[spriteId];
             var p = new entities.Protestor({
                 x: 80 + (i * 15), y: this.runningPlane,
