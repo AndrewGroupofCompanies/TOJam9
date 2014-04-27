@@ -145,14 +145,10 @@ var Citizen = Entity.extend({
         this.restoreMotion();
     },
 
+    // No-op for citizens. Cops don't get clothes lined!
     clothesline: function() {
-
+        return;
     },
-
-    endClothesline: function() {
-
-    },
-
 
     update: function(dt) {
         if (this.world.paused) return;
@@ -291,6 +287,7 @@ var Protestor = Citizen.extend({
         this.setAnimation('captured');
     },
 
+
     adjustVector: function(dt) {
         Citizen.prototype.adjustVector.call(this, dt);
         dt = (dt / 1000);
@@ -423,7 +420,7 @@ var Police = Citizen.extend({
 
     // This cop is busy capturing someone now.
     actionCapture: function(entity) {
-        console.log("actionCapture", entity);
+        //console.log("actionCapture", entity);
 
         this.accel = 5;
         this.isCapturing = true;
@@ -545,10 +542,14 @@ var Player = Protestor.extend({
     adjustVector: function(dt) {
         dt = (dt / 1000); // Sanity.
 
+        // Adjust accel and speed because we may be sprinting forward.
+        var accel = new Vec2d(this.accel, 0);
+        this.velocity.add(accel.mul(dt).mul(this.speed));
+        this.velocity = this.velocity.truncate(this.maxSpeed);
+
         if (this.isCaptured) {
             return;
         }
-
 
         // Adjust speed based on input.
         if (this.isDeking) {
@@ -558,11 +559,6 @@ var Player = Protestor.extend({
         } else {
             this.speed = -1;
         }
-
-        // Adjust accel and speed because we may be sprinting forward.
-        var accel = new Vec2d(this.accel, 0);
-        this.velocity.add(accel.mul(dt).mul(this.speed));
-        this.velocity = this.velocity.truncate(this.maxSpeed);
     },
 
     event: function(ev) {
@@ -606,19 +602,34 @@ var Player = Protestor.extend({
         return false;
     },
 
+    // Player has custom functionality for avoiding obstacles
     collidingWithObstacle: function(obstacle) {
         if (this.isCaptured === true) return;
 
-        if (this.isPushing) {
-            this.stumble();
-        } else {
-            if (obstacle.high) {
+        // If we hit a high obstacle and we're not doing anything, we duck, but
+        // if we were pushing forward or trying to deke, we get clothes lined.
+        if (obstacle.high) {
+            if (this.isDeking || this.isPushing) {
+                this.clothesLine();
+            } else {
+                // We're safe!
                 this.duck();
-            } else if (obstacle.low) {
+            }
+        } else if (obstacle.low) {
+            if (this.isDeking) {
                 this.deke();
+            } else {
+                this.stumble();
             }
         }
     },
+
+    // Oh dear!
+    clothesLine: function() {
+        this.isBeingCaptured();
+        this.canDele = false;
+    },
+
 
     update: function(dt) {
         if (this.world.paused) return;
