@@ -349,9 +349,11 @@ var Protestor = Citizen.extend({
 
 var Police = Citizen.extend({
     animSpec: {
-        running: {frames: _.range(8), rate: 30, loop: true},
+        running: {frames: _.range(40), rate: 30, loop: true},
         diving: {frames: _.range(21, 40), rate: 30, loop: false},
-        capturing: {frames: _.range(41, 55), rate: 30, loop: false}
+        deke: {frames: _.range(81, 91), rate: 30, loop: false},
+        duck: {frames: _.range(41, 50), rate: 30, loop: false},
+        capturing: {frames: _.range(361, 400), rate: 30, loop: false}
     },
 
     initialize: function(options) {
@@ -478,11 +480,6 @@ var Police = Citizen.extend({
 
         this.collisionRect.x = this.rect.x;
         this.collisionRect.y = this.rect.y;
-    },
-
-    // TODO: Placeholder. Can't do anything until we have more police frames.
-    collidingWithObstacle: function(obstacle) {
-        return;
     },
 
     draw: function(surface) {
