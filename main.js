@@ -109,6 +109,7 @@ var Game = Scene.extend({
         this.eventCounter = 0;
         this.warningLevel = 0;
         this.indicator = null;
+        this.goat = false;
 
         this.gamewinScene = options.gamewinScene;
         this.startingProtestors = 1;
@@ -543,6 +544,8 @@ var Game = Scene.extend({
             );
         }
 
+        if (this.timer > 30 )
+
         if (this.policePressure > 75 && this.warningLevel === 0) {
             this.warningLevel++;
             _.sample(this.getProtestors()).say(
@@ -657,9 +660,7 @@ var main = function() {
         images: [
             imgfy(Images.opening01),
             imgfy(Images.opening02),
-            imgfy(Images.opening03),
-            imgfy(Images.opening04),
-            imgfy(Images.opening05)
+            imgfy(Images.opening03)
         ],
         text: _.sample([[
             'I showed up to protest the beagle breeding mill.',

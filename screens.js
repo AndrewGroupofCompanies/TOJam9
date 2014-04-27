@@ -68,8 +68,6 @@ var Cutscene = Scene.extend({
 
     update: function(dt) {
         this.elapsed += dt;
-        console.log(this.elapsed);
-        console.log(this.duration);
         this.topbar.update(dt);
         if (this.elapsed >= this.imageDuration) {
             this.elapsed = 0;
