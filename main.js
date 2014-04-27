@@ -23,7 +23,7 @@ var Images = {
     terrain: './assets/images/terrain01.png',
     protester01:   './assets/images/protester01.png',
     protester02:   './assets/images/protester02.png',
-    protester03:   './assets/images/protester07.png',
+    protester03:   './assets/images/protester03.png',
     protester04:   './assets/images/protester04.png',
     protester05:   './assets/images/protester07.png',
     protester06:   './assets/images/protester04.png',
