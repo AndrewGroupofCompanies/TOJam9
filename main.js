@@ -224,7 +224,7 @@ var Game = Scene.extend({
             takeover: gamejs.event.K_t
         });
         this.player = null;
-        //this.spawnPlayer();
+        this.spawnPlayer();
 
         this.eventable = new EventEmitter();
         this.eventBindings();
@@ -625,7 +625,6 @@ var main = function() {
         text: [],
         duration: 5000,
         imageDuration: 7000,
-        //portrait:
         pixelScale: 4
     });
 
@@ -675,7 +674,6 @@ var main = function() {
             'Because they don\'t really fight back.',
             'But I do.'
         ]]),
-        //portrait: 
         pixelScale: 4
     });
 
@@ -686,7 +684,7 @@ var main = function() {
     });
 
     var d = new Dispatcher(gamejs, {
-        initial: game,
+        initial: titleScreen,
         defaultTransition: FadeTransition,
         canvas: {flag: gamejs.display.DISABLE_SMOOTHING | gamejs.display.FULLSCREEN}
     });
