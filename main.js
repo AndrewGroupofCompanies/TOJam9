@@ -17,20 +17,20 @@ var Images = {
     sprite_test_2: './assets/images/spritesheet-player.png',
     terrain: './assets/images/terrain01.png',
     protester01:   './assets/images/protester_01_pete.png',
-    protester02:   './assets/images/protester_02_pete.png',
-    protester03:   './assets/images/protester_03_pete.png',
+    protester02:   './assets/images/protester04.png',
+    protester03:   './assets/images/protester04.png',
     protester04:   './assets/images/protester_04_xyz.png',
-    protester05:   './assets/images/protester_05_xyz.png',
-    protester06:   './assets/images/protester_06_xyz.png',
-    protester07:   './assets/images/protester_04_xyz.png',
-    protester08:   './assets/images/protester_05_xyz.png',
-    protester09:   './assets/images/protester_06_xyz.png',
-    protester10:   './assets/images/protester_10_plorry.png',
-    protester11:   './assets/images/protester_11_plorry.png',
-    protester12:   './assets/images/protester_12_plorry.png',
-    protester13:   './assets/images/protester_10_plorry.png',
-    protester14:   './assets/images/protester_11_plorry.png',
-    protester15:   './assets/images/protester_12_plorry.png',
+    protester05:   './assets/images/protester04.png',
+    protester06:   './assets/images/protester04.png',
+    protester07:   './assets/images/protester04.png',
+    protester08:   './assets/images/protester04.png',
+    protester09:   './assets/images/protester04.png',
+    protester10:   './assets/images/protester04.png',
+    protester11:   './assets/images/protester04.png',
+    protester12:   './assets/images/protester04.png',
+    protester13:   './assets/images/protester04.png',
+    protester14:   './assets/images/protester04.png',
+    protester15:   './assets/images/protester04.png',
     tree_01:       './assets/images/tree_01.png',
     fence:         './assets/images/fencebroken.png',
     barricade:     './assets/images/barricade.png',
@@ -130,7 +130,7 @@ var Game = Scene.extend({
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
-            var randomNum= _.random(1,9);
+            var randomNum= _.random(1,4);
             var spriteId  = 'protester0' + randomNum;
             var tmpSpriteSheet = this.spriteSheets[spriteId];
             var p = new entities.Protestor({
