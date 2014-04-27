@@ -202,6 +202,12 @@ var Game = Scene.extend({
     eventBindings: function() {
         var self = this;
         this.eventable.once("protestorsReady", this.joinProtestorGroup.bind(this));
+
+        this.eventable.on("gameover", this.triggerGameOver.bind(this));
+    },
+
+    triggerGameOver: function() {
+        this.dispatcher.push(new GameOver({}));
     },
 
     pickProtestorSprite: function() {
@@ -237,7 +243,7 @@ var Game = Scene.extend({
 
     getPolice: function() {
         return _.filter(this.entities._sprites, function(entity) {
-            return entity.isPolice === true;
+            return entity.isPolice === true && entity.completedCapture === false;
         });
     },
 
@@ -314,7 +320,7 @@ var Game = Scene.extend({
 
         if (!protestor) {
             // Game over man!
-            this.dispatcher.push(new GameOver({}));
+            this.eventable.emit("gameover");
             return;
         }
 
@@ -357,6 +363,10 @@ var Game = Scene.extend({
             step -= (step * 0.3);
         }
         this.policeDistraction += step;
+
+        if (this.policeDistraction >= (this.frontLine - 10)) {
+            this.eventable.emit("gameover");
+        }
     },
 
     policeGenerator: function(dt) {
@@ -366,7 +376,10 @@ var Game = Scene.extend({
         dt = (dt / 1000);
         this.policeDelay -= dt;
         if (this.policeDelay <= 0) {
-            this.createPolice(1, {x: -5});
+            var s = Math.round(this.policePressure / 10) * 10;
+            var increase = Math.floor(s / 10);
+
+            this.createPolice(increase, {x: -5});
             this.policeDelay = this.resetPoliceDelay();
         }
     },
