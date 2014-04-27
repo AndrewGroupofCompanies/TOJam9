@@ -497,9 +497,9 @@ var Police = Citizen.extend({
             this.accel = new Vec2d(0.25, 0);
             this.speed = -1;
         } else if (this.nearBack()) {
-            console.log("nearBack");
             this.accel = new Vec2d(0.25, 0);
             this.speed = 1;
+            this.velocity.setX(0.25);
         } else {
             this.decideCounter -= dt;
             if (this.decideCounter <= 0) {
