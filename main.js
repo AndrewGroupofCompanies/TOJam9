@@ -73,10 +73,11 @@ var Game = Scene.extend({
         this.paused = false;
         this.debug = true;
         this.timer = 0;
+        this.eventCounter = 0;
         this.indicator = null;
 
         this.startingProtestors = 1;
-        this.maxProtestors = 25;
+        this.maxProtestors = 10;
         this.obstaclesOff = 0;
 
         this.portraits = {
@@ -132,8 +133,8 @@ var Game = Scene.extend({
         this.scrollGenerator = new scrollables.SceneryGenerator({
             world: this,
             images: [
-                Images.tree_01,
-                Images.staticcloud
+                Images.tree_01//,
+                //Images.staticcloud
             ]
         });
 
@@ -379,13 +380,30 @@ var Game = Scene.extend({
                 this.Obstacles = null;
             }
         }
+
+        //Event firings
+
+        if (this.timer > 2 && this.eventCounter === 0) {
+            this.eventCounter++;
+            _.sample(this.getProtestors()).say(
+                "We got one. We saved a dog."
+            );
+        }
+
+        if (this.timer > 5 && this.eventCounter === 1) {
+            this.eventCounter++;
+            _.sample(this.getProtestors()).say(
+                "Hang back and distract the police."
+            );
+        }
+
     },
 
     draw: function(surface) {
         surface.clear();
         this.view.clear();
 
-        this.surface.fill('#fff');
+        this.surface.fill('rgb(0,20,80)');
         this.terrain.draw(this.view);
         //this.scrollables.draw(this.view);
 
@@ -481,7 +499,7 @@ var main = function() {
     });
 
     var d = new Dispatcher(gamejs, {
-        initial: titleScreen,
+        initial: game,
         defaultTransition: FadeTransition,
         canvas: {flag: gamejs.display.DISABLE_SMOOTHING | gamejs.display.FULLSCREEN}
     });

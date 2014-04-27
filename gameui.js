@@ -95,6 +95,7 @@ var TopBar = uielements.Element.extend({
             if (portrait) {
                 this.portraitBox.setImage(this.portraits[portrait]);
                 this.portraitBox.show();
+                console.log('okay');
             }
             this.textBlock.show();
             this.textBlock.setText(text);
