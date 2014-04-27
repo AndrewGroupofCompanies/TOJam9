@@ -1,4 +1,5 @@
 var _ = require('underscore'),
+    EventEmitter = require('events').EventEmitter,
     _s = require('underscore.string'),
     gamejs = require('gamejs'),
     gramework = require('gramework'),
@@ -154,6 +155,14 @@ var Game = Scene.extend({
         });
         this.player = null;
         //this.spawnPlayer();
+
+        this.eventable = new EventEmitter();
+        this.eventBindings();
+    },
+
+    eventBindings: function() {
+        var self = this;
+        this.eventable.once("protestorsReady", this.joinProtestorGroup.bind(this));
     },
 
     pickProtestorSprite: function() {
@@ -198,7 +207,6 @@ var Game = Scene.extend({
     },
 
     joinProtestorGroup: function() {
-        if (this.protestorGroupActive === true) return;
         _.each(_.range(this.maxProtestors - 1), function(i) {
             this.createProtestors(1, {
                 x: (this.frontLine + 5 + (i * 5))
@@ -286,7 +294,7 @@ var Game = Scene.extend({
         // Await our group of protestors.
         this.protestorGroupDelay -= dt;
         if (this.protestorGroupDelay <= 0) {
-            this.joinProtestorGroup();
+            this.eventable.emit("protestorsReady");
         }
 
         var accel = new Vec2d(this.accel, 0);
