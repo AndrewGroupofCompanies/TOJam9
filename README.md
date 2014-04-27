@@ -22,6 +22,8 @@ Develop
 Secret Andxyz Develop
 ====
 
+##### download gramework
+
     cd $HOME/code
     git clone https://github.com/bartek/gramework
     npm link $HOME/code/gramework
@@ -30,14 +32,15 @@ Secret Andxyz Develop
 
     npm start
 
-##### build & watch andxyz's test game
-
-    watchify ./test.js -o ./dist/test.js -v
-
 ##### build & watch the actual game
 
+    git checkout master
+    git pull
     watchify ./main.js -o ./dist/bundled.js -v
 
+##### build & watch andxyz's playground
+
+    watchify ./test.js -o ./dist/test.js -v
 
 Play
 ====
