@@ -48,13 +48,12 @@ var Images = {
     beagle: './assets/images/beagle_icon.png',
     portraitAndrew: './assets/images/portrait-andrewgardner.png',
     screen_start: './assets/images/screen_start.png',
-    opening01:'./assets/images/screen_start.png',
-    opening02:'./assets/images/screen_start02.png',
-    opening03:'./assets/images/screen_start03.png',
-    opening04:'./assets/images/screen_start04.png',
-    opening05:'./assets/images/screen_start05.png',
-    screen_gameover: './assets/images/screen_gameover.png',
-    screen_lose: './assets/images/screen_lose_cop_with_beagle.png'
+    opening01: './assets/images/opening01.png',
+    opening02: './assets/images/opening02.png',
+    opening03: './assets/images/opening03.png',
+    opening04: './assets/images/opening04.png',
+    opening05: './assets/images/opening05.png',
+    lose: './assets/images/lose.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
