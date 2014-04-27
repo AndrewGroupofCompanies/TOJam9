@@ -61,6 +61,7 @@ var Game = Scene.extend({
         this.debug = true;
 
         this.startingProtestors = 1;
+        this.maxProtestors = 25;
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
@@ -125,6 +126,8 @@ var Game = Scene.extend({
         this.frontLine = this.surface.getSize()[0] - 10;
         this.backLine = -25;
         this.createProtestors(this.startingProtestors);
+        this.protestorGroupActive = false;
+        this.protestorGroupDelay = 5; // in seconds.
 
         // Track the police pressure by using an imaginery line on the x-axis.
         this.policePressure = 50;
@@ -152,17 +155,23 @@ var Game = Scene.extend({
         //this.spawnPlayer();
     },
 
-    createProtestors: function(limit) {
+    pickProtestorSprite: function() {
+        var randomNum = _.random(1,5);
+        var zeroPadded = _s.pad(randomNum.toString(), 2, '0', 'left');
+        var spriteId = 'protester' + zeroPadded;
+        var spriteSheet = this.spriteSheets[spriteId];
+        return spriteSheet;
+    },
+
+    createProtestors: function(limit, options) {
+        options = (options || {});
         _.each(_.range(limit), function(i) {
-            var randomNum= _.random(1,5);
-            var zeroPadded = _s.pad(randomNum.toString(), 2, '0', 'left');
-            var spriteId  = 'protester' + zeroPadded;
-            var tmpSpriteSheet = this.spriteSheets[spriteId];
+            var x = (options.x || 80 + (i * 15));
             var p = new entities.Protestor({
-                x: 80 + (i * 15), y: this.runningPlane,
+                x: x, y: this.runningPlane,
                 width: 30, height: 30,
                 world: this,
-                spriteSheet: tmpSpriteSheet,
+                spriteSheet: this.pickProtestorSprite(),
                 z: 0.5,
             });
             this.entities.add(p);
@@ -185,6 +194,16 @@ var Game = Scene.extend({
         return _.filter(this.entities._sprites, function(entity) {
             return entity.isProtestor === true;
         });
+    },
+
+    joinProtestorGroup: function() {
+        if (this.protestorGroupActive === true) return;
+        _.each(_.range(this.maxProtestors - 1), function(i) {
+            this.createProtestors(1, {
+                x: (this.frontLine + 50 + (i * 5))
+            });
+        }, this);
+        this.protestorGroupActive = true;
     },
 
     resetPoliceDelay: function() {
@@ -241,6 +260,7 @@ var Game = Scene.extend({
 
     policeGenerator: function(dt) {
         if (this.getPolice().length >= this.maxPolice) return;
+        if (this.protestorGroupActive === false) return;
 
         dt = (dt / 1000);
         this.policeDelay -= dt;
@@ -260,6 +280,12 @@ var Game = Scene.extend({
         Scene.prototype.update.call(this, dt);
 
         dt = (dt / 1000); // Sane velocity mutations.
+
+        // Await our group of protestors.
+        this.protestorGroupDelay -= dt;
+        if (this.protestorGroupDelay <= 0) {
+            this.joinProtestorGroup();
+        }
 
         var accel = new Vec2d(this.accel, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
