@@ -66,10 +66,7 @@ var Images = {
     opening05: './assets/images/opening05.png',
     lose: './assets/images/lose.png',
     music: './assets/music/jam.ogg',
-    intromusic: './assets/music/intro.ogg',
-    posisound: './assets/music/positive.ogg',
-    negisound: './assets/music/negative.ogg',
-    caughtsound: './assets/music/copcaught.ogg'
+    intromusic: './assets/music/intro.ogg'
 };
 
 var initSpriteSheet = function(image, width, height) {
