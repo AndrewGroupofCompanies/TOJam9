@@ -1,22 +1,23 @@
 {
-    "name": "TOJam9",
-    "version": "0.0.1",
-    "main": "main.js",
-    "scripts": {
-        "start": "node ./dist/server.js",
-        "build": "browserify . -o ./dist/bundled.js",
-        "watch": "watchify -d . -o ./dist/bundled.js -v",
-        "deploy": "node ./scripts/deploy.js"
-    },
-    "dependencies": {
-        "gamejs": "1.0.0",
-        "gramework": "https://github.com/bartek/gramework/tarball/master",
-        "underscore": "~1.6.0"
-    },
-    "devDependencies": {
-        "browserify": "~2.29.0",
-        "connect": "~2.9.0",
-        "adm-zip": "~0.4.3",
-        "scp": "~0.0.3"
-    }
+  "name": "TOJam9",
+  "version": "0.0.1",
+  "main": "main.js",
+  "scripts": {
+    "start": "node ./dist/server.js",
+    "build": "browserify . -o ./dist/bundled.js",
+    "watch": "watchify -d . -o ./dist/bundled.js -v",
+    "deploy": "node ./scripts/deploy.js"
+  },
+  "dependencies": {
+    "gamejs": "1.0.0",
+    "gramework": "https://github.com/bartek/gramework/tarball/master",
+    "underscore": "~1.6.0",
+    "underscore.string": "~2.3.3"
+  },
+  "devDependencies": {
+    "browserify": "~2.29.0",
+    "connect": "~2.9.0",
+    "adm-zip": "~0.4.3",
+    "scp": "~0.0.3"
+  }
 }
