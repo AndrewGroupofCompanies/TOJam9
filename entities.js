@@ -47,61 +47,9 @@ var Citizen = Entity.extend({
 
     },
 
-    canMove: function(dx, dy) {
-        var collidedX = false,
-            collidedY = false,
-            start;
-
-        // Moving to the right! Endless runner style.
-        if (dx > 0) {
-            start = this.rect.x;
-            this.rect.x += dx;
-        }
-
-        if (dy > 0) {
-            start = this.rect.y;
-            this.rect.y += dy;
-            this.rect.y = Math.floor(this.rect.y);
-            if (this.world.collides(this)) {
-                this.rect.y = Math.floor(this.rect.y);
-                while (this.world.collides(this)) {
-                    collidedY = true;
-                    this.rect.y -= 1;
-                }
-            }
-        }
-
-        return [collidedX, collidedY];
-    },
-
     // Velocity handling.
     adjustVector: function(dt) {
         return;
-    },
-
-    // Collision code!
-    decideNextMovement: function(dt) {
-        dt = (dt / 1000);
-
-        // Decide next movement.
-        var delta = new Vec2d(0, 0);
-        delta.add(this.velocity).mul(dt);
-
-        var collided = this.canMove.apply(this, delta.unpack()),
-            collidedX = collided[0],
-            collidedY = collided[1];
-
-        if (collidedY) {
-            this.velocity.setY(0);
-            if (delta.getY() > 0) {
-                this.onGround = true;
-            }
-        } else {
-            // We're moving up or down, probably not on ground.
-            if (Math.floor(delta.getY()) !== 0) {
-                this.onGround = false;
-            }
-        }
     },
 
     restoreMotion: function() {
@@ -169,8 +117,6 @@ var Citizen = Entity.extend({
         this.rect.y += this.velocity.getY();
         this.collisionRect.x = this.rect.x;
         this.collisionRect.y = this.rect.y;
-
-        this.decideNextMovement(dt);
 
         if (this.image && !this.anim.isFinished()) {
             this.image = this.anim.update(dt);
