@@ -35,15 +35,15 @@ var TitleScreen = Scene.extend({
 
 var Cutscene = Scene.extend({
     initialize: function(options) {
-        this.imageDuration = options.imageDuration || 200;
+        this.imageDuration = options.imageDuration || 2000;
         this.elapsed = 0;
-        this.currentImage++;
+        this.currentImage = 0;
         this.next = options.next;
         this.text = options.text;
         this.images = options.images || [];
         this.borderImage = options.borderImage;
-        this.portraits = options.portraits;
-        this._isDone = true;
+        //this.portrait = options.portrait;
+        this._isDone = false;
         this.topbar = new gameui.TopBar({
             color: [0,0,0],
             width: this.surface.getSize()[0],
@@ -53,7 +53,7 @@ var Cutscene = Scene.extend({
             world: this,
             subBorderImage: gamejs.image.load(this.borderImage),
             subFont: "8px Ebit",
-            portraits: this.portraits
+            //portraits: this.portraits
         });
 
         this.elements.add(this.topbar);

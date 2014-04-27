@@ -409,7 +409,8 @@ var main = function() {
     var openingCutscene = new Cutscene({
         next: game,
         borderImage: Images.border,
-        text: ['okay'],
+        text: ['okay', 'let\'s say this thing now'],
+        //portrait: 
         pixelScale: 4
     });
 

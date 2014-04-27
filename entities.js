@@ -197,6 +197,13 @@ var Citizen = Entity.extend({
         if (this.anim.currentAnimation !== animation) {
             this.anim.start(animation);
         }
+    },
+
+    say: function(text, priority) {
+        if (typeof(priority)==='undefined'){
+            var priority = false;
+        }
+        this.world.topbar.displayText(text, this.portrait, priority);
     }
 
 });
@@ -265,7 +272,7 @@ var Protestor = Citizen.extend({
         this.accel = new Vec2d(2, 0);
         this.isCaptured = true;
         this.setAnimation('captured');
-        this.world.topbar.displayText('Fuck!', this.portrait, true);
+        this.say('I\'m caught!');
     },
 
     adjustVector: function(dt) {
