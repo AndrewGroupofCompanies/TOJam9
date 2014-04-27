@@ -127,6 +127,13 @@ var Citizen = Entity.extend({
         this.isDucking = true;
         this.duckCounter = 500;
         this.canDeke = false;
+
+        // When they duck and going backwards, just push them a little so they
+        // don't get stuck with the fence.
+        if (this.velocity.getX()) {
+            this.accel = 1.5;
+            this.speed = 1;
+        }
     },
 
     endDuck: function() {
