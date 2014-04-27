@@ -620,6 +620,7 @@ var main = function() {
         ],
         text: [],
         duration: 5000,
+        imageDuration: 7000,
         //portrait:
         pixelScale: 4
     });
