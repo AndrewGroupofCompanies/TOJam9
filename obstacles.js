@@ -22,6 +22,7 @@ var Obstacle = Entity.extend({
     },
 
     update: function(dt) {
+        if (this.world.paused) return;
         this.rect.left += this.speed;
     },
 

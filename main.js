@@ -49,6 +49,7 @@ var GROUND_HEIGHT = 20;
 
 var Game = Scene.extend({
     initialize: function(options) {
+        this.paused = false;
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
@@ -109,7 +110,7 @@ var Game = Scene.extend({
 
         // Player management
         this.controller = new GameController({
-            pressure: gamejs.event.K_p,
+            pause: gamejs.event.K_p,
             takeover: gamejs.event.K_t
         });
         this.player = null;
@@ -249,8 +250,10 @@ var Game = Scene.extend({
         // Placeholder. Need to send event and identify active protestor.
         var handled = this.controller.handle(ev);
         if (!handled) return;
-        if (handled.value === this.controller.controls.pressure) {
-            this.policePressure += 10;
+        if (handled.value === this.controller.controls.pause) {
+            if (handled.action === "keyDown") {
+                this.paused = !this.paused;
+            }
         } else if (handled.value === this.controller.controls.takeover) {
             if (this.player !== null) {
                 // Kill the active player protestor.

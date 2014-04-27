@@ -103,6 +103,8 @@ var Citizen = Entity.extend({
     },
 
     update: function(dt) {
+        if (this.world.paused) return;
+
         this.adjustVector(dt);
         this.rect.x += this.velocity.getX();
         this.rect.y += this.velocity.getY();
@@ -598,6 +600,8 @@ var Player = Protestor.extend({
     },
 
     update: function(dt) {
+        if (this.world.paused) return;
+
         if (this.tapCountdown > 0) {
             this.tapCountdown -= dt;
         }

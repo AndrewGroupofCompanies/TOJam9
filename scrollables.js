@@ -20,6 +20,8 @@ var Scrollable = Entity.extend({
     },
 
     update: function(dt) {
+        if (this.world.paused) return;
+
         var scale_factor = 1 / Math.pow(Math.E, (this.z / 5));
         if (this.world) {
             this.move(-scale_factor, 0);
