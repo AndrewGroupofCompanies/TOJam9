@@ -246,7 +246,7 @@ var Game = Scene.extend({
 
     getPolice: function() {
         return _.filter(this.entities._sprites, function(entity) {
-            return entity.isPolice === true && entity.completedCapture === false;
+            return entity._alive === true && entity.isPolice === true;
         });
     },
 
@@ -298,9 +298,8 @@ var Game = Scene.extend({
 
     createPolice: function(limit, options) {
         options = (options || {});
-
         _.each(_.range(limit), function(i) {
-            var x = (options.x || (i * 5));
+            var x = (options.x || (i * 2));
             var p = new entities.Police({
                 x: x, y: this.runningPlane,
                 width: 30, height: 30,
@@ -380,9 +379,13 @@ var Game = Scene.extend({
         this.policeDelay -= dt;
         if (this.policeDelay <= 0) {
             var s = Math.round(this.policePressure / 10) * 10;
-            var increase = Math.floor(s / 10);
+            var increase = Math.floor(s / 20);
 
-            this.createPolice(increase, {x: -5});
+            _.each(_.range(increase), function(i) {
+                if (this.getPolice().length <= this.maxPolice) {
+                    this.createPolice(increase, {x: (-5 + (i * 5))});
+                }
+            }, this);
             this.policeDelay = this.resetPoliceDelay();
         }
     },
@@ -496,7 +499,6 @@ var Game = Scene.extend({
                 true
             );
         }
-
 
     },
 
