@@ -203,6 +203,7 @@ var Citizen = Entity.extend({
         if (typeof(priority)==='undefined'){
             priority = false;
         }
+        console.log(this.portrait);
         this.world.topbar.displayText(text, this.portrait, priority);
     }
 
