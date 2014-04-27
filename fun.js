@@ -275,9 +275,8 @@ var Game = Scene.extend({
             var ypos_multiplier = 0;
             var x, y, y_simple;
 
-            x =  30 + (30 * (xpos_multiplier));
-            y_simple =  30 + (30 * (ypos_multiplier));
-            y = saved_ypos_start + y_simple;
+            x =  210 + 30 + (30 * (xpos_multiplier));
+            y =  30 + (30 * (ypos_multiplier));
             // console.log(x);
             // console.log(y);
 
@@ -291,8 +290,7 @@ var Game = Scene.extend({
             this.entities.add(p1);
 
             ypos_multiplier++;
-            y_simple =  30 + (30 * (ypos_multiplier));
-            y = saved_ypos_start + y_simple;
+            y =  30 + (30 * (ypos_multiplier));
             var p2 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -303,8 +301,7 @@ var Game = Scene.extend({
             this.entities.add(p2);
 
             ypos_multiplier++;
-            y_simple =  30 + (30 * (ypos_multiplier));
-            y = saved_ypos_start + y_simple;
+            y =  30 + (30 * (ypos_multiplier));
             var p3 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -315,32 +312,7 @@ var Game = Scene.extend({
             this.entities.add(p3);
 
             ypos_multiplier++;
-            y_simple =  30 + (30 * (ypos_multiplier));
-            y = saved_ypos_start + y_simple;
-            var p4 = new FunPolice({
-                x: x, y: y,
-                width: 30, height: 30,
-                world: this,
-                spriteSheet: ss[0],
-            });
-            p4.setAnimation("clothesline");
-            this.entities.add(p4);
-
-            ypos_multiplier++;
-            y_simple =  30 + (30 * (ypos_multiplier));
-            y = saved_ypos_start + y_simple;
-            var p5 = new FunPolice({
-                x: x, y: y,
-                width: 30, height: 30,
-                world: this,
-                spriteSheet: ss[0],
-            });
-            p5.setAnimation("falling");
-            this.entities.add(p5);
-
-            ypos_multiplier++;
-            y_simple =  30 + (30 * (ypos_multiplier));
-            y = saved_ypos_start + y_simple;
+            y =  30 + (30 * (ypos_multiplier));
             var p6 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -351,8 +323,18 @@ var Game = Scene.extend({
             this.entities.add(p6);
 
             ypos_multiplier++;
-            y_simple =  30 + (30 * (ypos_multiplier));
-            y = saved_ypos_start + y_simple;
+            y =  30 + (30 * (ypos_multiplier));
+            var p4 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p4.setAnimation("clothesline");
+            this.entities.add(p4);
+
+            ypos_multiplier++;
+            y =  30 + (30 * (ypos_multiplier));
             var p7 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -363,8 +345,18 @@ var Game = Scene.extend({
             this.entities.add(p7);
 
             ypos_multiplier++;
-            y_simple =  30 + (30 * (ypos_multiplier));
-            y = saved_ypos_start + y_simple;
+            y =  30 + (30 * (ypos_multiplier));
+            var p5 = new FunPolice({
+                x: x, y: y,
+                width: 30, height: 30,
+                world: this,
+                spriteSheet: ss[0],
+            });
+            p5.setAnimation("falling");
+            this.entities.add(p5);
+
+            ypos_multiplier++;
+            y =  30 + (30 * (ypos_multiplier));
             var p8 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -375,8 +367,7 @@ var Game = Scene.extend({
             this.entities.add(p8);
 
             ypos_multiplier++;
-            y_simple =  30 + (30 * (ypos_multiplier));
-            y = saved_ypos_start + y_simple;
+            y =  30 + (30 * (ypos_multiplier));
             var p9 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
