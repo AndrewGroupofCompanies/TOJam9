@@ -629,7 +629,9 @@ var Player = Protestor.extend({
 
         if (this.rect.x <= 0) {
             this.kill();
-            this.world.spawnPlayer();
+            if (this.isCaptured === false) {
+                this.world.spawnPlayer();
+            }
         }
 
         // If we're near police we should warn the active Player.
