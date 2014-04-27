@@ -54,7 +54,8 @@ var Images = {
     opening04: './assets/images/opening04.png',
     opening05: './assets/images/opening05.png',
     lose: './assets/images/lose.png',
-    cop_static: './assets/images/cop_static.png'
+    cop_static: './assets/images/cop_static.png',
+    music: './assets/music/jam.mp3'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -98,6 +99,9 @@ var Game = Scene.extend({
         this.startingProtestors = 1;
         this.maxProtestors = 10;
         this.obstaclesOff = 0;
+
+        this.music = new gamejs.mixer.Sound(Images.music);
+        this._musicPlaying = false;
 
         this.portraits = {
             andrew: imgfy(Images.portraitAndrew)
@@ -391,6 +395,9 @@ var Game = Scene.extend({
     },
 
     update: function(dt) {
+        //if (!this._musicPlaying) {
+        //    this.music.play(true);
+       // }
         this.scrollGenerator.update(dt);
         this.terrain.update(dt);
         this.policeGenerator(dt);
