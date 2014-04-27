@@ -35,7 +35,7 @@ var TitleScreen = Scene.extend({
 
 var Cutscene = Scene.extend({
     initialize: function(options) {
-        this.imageDuration = options.imageDuration || 2000;
+        this.imageDuration = options.imageDuration || 1000;
         this.elapsed = 0;
         this.currentImage = 0;
         this.next = options.next;
@@ -53,23 +53,25 @@ var Cutscene = Scene.extend({
             world: this,
             subBorderImage: gamejs.image.load(this.borderImage),
             subFont: "8px Ebit",
+            doneDuration: 1800
             //portraits: this.portraits
         });
 
         this.elements.add(this.topbar);
 
         this.text.forEach(function(text){
-            this.topbar.displayText("Just a quick test", null, true);
+            this.topbar.displayText(text, null, true);
         }, this);
     },
 
     update: function(dt) {
         this.elapsed += dt;
+        this.topbar.update(dt);
         if (this.elapsed >= this.imageDuration) {
             this.elapsed = 0;
             this.currentImage++;
         }
-        if (this.currentImage > this.images.length) {
+        if (this.topbar.textQueue.length === 0 && !this.topbar.showingQueuedText) {
             this._isDone = true;
         }
         if (this.isDone()){
@@ -79,6 +81,7 @@ var Cutscene = Scene.extend({
     },
 
     draw: function(surface) {
+        this.topbar.draw(this.view);
         if (this.currentImage < this.images.length) {
             this.surface.blit(this.images[this.currentImage], [0,40]);
         }
