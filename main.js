@@ -53,7 +53,8 @@ var Images = {
     opening03: './assets/images/opening03.png',
     opening04: './assets/images/opening04.png',
     opening05: './assets/images/opening05.png',
-    lose: './assets/images/lose.png'
+    lose: './assets/images/lose.png',
+    cop_static: './assets/images/cop_static.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -91,6 +92,7 @@ var Game = Scene.extend({
         this.debug = true;
         this.timer = 0;
         this.eventCounter = 0;
+        this.warningLevel = 0;
         this.indicator = null;
 
         this.startingProtestors = 1;
@@ -437,6 +439,15 @@ var Game = Scene.extend({
                 true
             );
         }
+
+        if (this.policePressure > 75 && this.warningLevel === 0) {
+            this.warningLevel++;
+            _.sample(this.getProtestors()).say(
+                "They're gaining on us! Stay back!",
+                true
+            );
+        }
+
 
     },
 
