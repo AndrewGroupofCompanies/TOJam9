@@ -409,14 +409,32 @@ var Game = Scene.extend({
         if (this.timer > 2 && this.eventCounter === 0) {
             this.eventCounter++;
             _.sample(this.getProtestors()).say(
-                "We got one. We saved a dog."
+                "We got one. We saved a dog.",
+                true
             );
         }
 
         if (this.timer > 5 && this.eventCounter === 1) {
             this.eventCounter++;
             _.sample(this.getProtestors()).say(
-                "Hang back and distract the police."
+                "Hang back and distract the police. Slow them down.",
+                true
+            );
+        }
+
+        if (this.timer > 20 && this.eventCounter === 2) {
+            this.eventCounter++;
+            _.sample(this.getProtestors()).say(
+                "Keep running. We just have to get the dog to safety.",
+                true
+            );
+        }
+
+        if (this.timer > 40 && this.eventCounter === 3) {
+            this.eventCounter++;
+            _.sample(this.getProtestors()).say(
+                "Not much further. They can't keep up forever.",
+                true
             );
         }
 
