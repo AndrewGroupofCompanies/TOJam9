@@ -1,4 +1,5 @@
 var _ = require('underscore'),
+    _s = require('underscore.string'),
     gamejs = require('gamejs'),
     gramework = require('gramework'),
     Dispatcher = gramework.Dispatcher,
@@ -21,15 +22,15 @@ var Images = {
     protester04:   './assets/images/protester_04_xyz.png',
     protester05:   './assets/images/protester_05_xyz.png',
     protester06:   './assets/images/protester_06_xyz.png',
-    protester07:   './assets/images/protester_04_xyz.png',
-    protester08:   './assets/images/protester_05_xyz.png',
-    protester09:   './assets/images/protester_06_xyz.png',
+    protester07:   './assets/images/protester_07_gradner.png',
+    protester08:   './assets/images/protester_08_gradner.png',
+    protester09:   './assets/images/protester_09_gradner.png',
     protester10:   './assets/images/protester_10_plorry.png',
-    protester11:   './assets/images/protester_11_plorry.png',
-    protester12:   './assets/images/protester_12_plorry.png',
-    protester13:   './assets/images/protester_10_plorry.png',
-    protester14:   './assets/images/protester_11_plorry.png',
-    protester15:   './assets/images/protester_12_plorry.png',
+    protester11:   './assets/images/protester_10_plorry.png',
+    protester12:   './assets/images/protester_10_plorry.png',
+    protester13:   './assets/images/protester_13_bartek.png',
+    protester14:   './assets/images/protester_14_bartek.png',
+    protester15:   './assets/images/protester_15_bartek.png',
     tree_01:       './assets/images/tree_01.png',
     fence:         './assets/images/fencebroken.png',
     barricade:     './assets/images/barricade.png'
@@ -58,9 +59,15 @@ var Game = Scene.extend({
             protester04: initSpriteSheet(imgfy(Images.protester04), 30, 30),
             protester05: initSpriteSheet(imgfy(Images.protester05), 30, 30),
             protester06: initSpriteSheet(imgfy(Images.protester06), 30, 30),
-            protester07: initSpriteSheet(imgfy(Images.protester10), 30, 30),
-            protester08: initSpriteSheet(imgfy(Images.protester11), 30, 30),
-            protester09: initSpriteSheet(imgfy(Images.protester12), 30, 30),
+            protester07: initSpriteSheet(imgfy(Images.protester07), 30, 30),
+            protester08: initSpriteSheet(imgfy(Images.protester08), 30, 30),
+            protester09: initSpriteSheet(imgfy(Images.protester09), 30, 30),
+            protester10: initSpriteSheet(imgfy(Images.protester10), 30, 30),
+            protester11: initSpriteSheet(imgfy(Images.protester11), 30, 30),
+            protester12: initSpriteSheet(imgfy(Images.protester12), 30, 30),
+            protester13: initSpriteSheet(imgfy(Images.protester13), 30, 30),
+            protester14: initSpriteSheet(imgfy(Images.protester14), 30, 30),
+            protester15: initSpriteSheet(imgfy(Images.protester15), 30, 30),
         };
 
         var previousAdd = this.entities.add;
@@ -121,8 +128,10 @@ var Game = Scene.extend({
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
-            var randomNum= _.random(1,9);
-            var spriteId  = 'protester0' + randomNum;
+            var randomNum= _.random(1,15);
+            var zeroPadded = _s.pad(randomNum.toString(), 2, '0', 'left');
+            var spriteId  = 'protester' + zeroPadded;
+            console.log(spriteId);
             var tmpSpriteSheet = this.spriteSheets[spriteId];
             var p = new entities.Protestor({
                 x: 80 + (i * 15), y: this.runningPlane,

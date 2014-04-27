@@ -16,20 +16,20 @@ totalframes for animation (example: 40) 30x30 pixels
 
 #### see `"dist/assets/images/protester_04_xyz.png"`
 
-### peterstevens
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protester_01_pete.png?raw=true)
-
-### Andxyz
+### andxyz
 ![dist/assets/images/protester_04_xyz.png](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protester_04_xyz.png?raw=true)
+
+### Bartek
+![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protester_13_bartek.png?raw=true)
 
 ### Gradner
 ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protester_07_devok.png?raw=true)
 
+### peterstevens
+![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protester_01_pete.png?raw=true)
+
 ### Plorry
 ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protester_10_plorry.png?raw=true)
-
-### Bartek
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protester_13_bartek.png?raw=true)
 
 
 protester01: initSpriteSheet(imgfy(Images.protester01), 30, 30),
