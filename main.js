@@ -240,7 +240,7 @@ var Game = Scene.extend({
 
     getPolice: function() {
         return _.filter(this.entities._sprites, function(entity) {
-            return entity.isPolice === true;
+            return entity.isPolice === true && entity.completedCapture === false;
         });
     },
 
@@ -373,7 +373,10 @@ var Game = Scene.extend({
         dt = (dt / 1000);
         this.policeDelay -= dt;
         if (this.policeDelay <= 0) {
-            this.createPolice(1, {x: -5});
+            var s = Math.round(this.policePressure / 10) * 10;
+            var increase = Math.floor(s / 10);
+
+            this.createPolice(increase, {x: -5});
             this.policeDelay = this.resetPoliceDelay();
         }
     },
