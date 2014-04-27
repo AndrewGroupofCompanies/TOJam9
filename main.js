@@ -62,7 +62,7 @@ var Game = Scene.extend({
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
-            police: initSpriteSheet(imgfy(Images.cop01), 60, 30),
+            police: initSpriteSheet(imgfy(Images.cop01), 30, 30),
             protester01: initSpriteSheet(imgfy(Images.protester01), 30, 30),
             protester02: initSpriteSheet(imgfy(Images.protester02), 30, 30),
             protester03: initSpriteSheet(imgfy(Images.protester03), 30, 30),
@@ -79,7 +79,6 @@ var Game = Scene.extend({
             protester14: initSpriteSheet(imgfy(Images.protester14), 30, 30),
             protester15: initSpriteSheet(imgfy(Images.protester15), 30, 30),
             gascloud: initSpriteSheet(imgfy(Images.gascloud), 60, 60)
-
         };
 
         this.topbar = new gameui.TopBar({
@@ -164,7 +163,8 @@ var Game = Scene.extend({
                 x: 80 + (i * 15), y: this.runningPlane,
                 width: 30, height: 30,
                 world: this,
-                spriteSheet: tmpSpriteSheet
+                spriteSheet: tmpSpriteSheet,
+                z: 0.5,
             });
             this.entities.add(p);
         }, this);
@@ -192,7 +192,7 @@ var Game = Scene.extend({
         _.each(_.range(limit), function(i) {
             var p = new entities.Police({
                 x: (i * 5), y: this.runningPlane,
-                width: 60, height: 30,
+                width: 30, height: 30,
                 spriteSheet: this.spriteSheets.police,
                 world: this
             });
