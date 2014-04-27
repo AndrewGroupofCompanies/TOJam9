@@ -180,6 +180,7 @@ var Game = Scene.extend({
 
     update: function(dt) {
         this.scrollGenerator.update(dt);
+        this.terrain.update(dt);
 
         Scene.prototype.update.call(this, dt);
 

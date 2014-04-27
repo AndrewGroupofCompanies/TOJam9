@@ -71,15 +71,27 @@ var TerrainLayer = Entity.extend({
         this.rect.top += Math.floor(this.scale_factor * 20);
         this.imageFile = gamejs.image.load(options.image);
         this.image = new gamejs.Surface(this.rect);
+        this.baseImage = this.image.clone();
+        this.rect01 = this.rect.clone();
+        this.rect02 = this.rect01.move(this.w, 0);
         var dims = this.imageFile.getSize();
         var newDims = [Math.floor((dims[0] * this.scale_factor)/3.5), this.rect.height];
         this.imageFile = gamejs.transform.scale(this.imageFile, newDims);
 
         for(var i = 0; i * newDims[0] < this.rect.width; i++) {
             var rect = new gamejs.Rect([i * newDims[0]], newDims);
-            this.image.blit(this.imageFile, rect);
-            //gamejs.draw.rect(this.image, "#000", rect);
+            this.baseImage.blit(this.imageFile, rect);
         }
+    },
+
+    update: function(dt) {
+        this.rect01.move(-this.scale_factor, 0);
+        this.rect02 = this.rect01.move(this.w, 0);
+
+        this.image.blit(this.baseImage, this.rect01);
+        this.image.blit(this.baseImage, this.rect02);
+
+        //Entity.prototype.update.apply(this, arguments);
     },
 
     draw: function(surface) {
@@ -105,6 +117,10 @@ var AllTerrain = function(options) {
 _.extend(AllTerrain.prototype, {
     draw: function(surface) {
         this.layers.draw(surface);
+    },
+
+    update: function(dt) {
+        this.layers.update(dt);
     }
 });
 
