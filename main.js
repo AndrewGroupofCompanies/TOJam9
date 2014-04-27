@@ -64,25 +64,29 @@ var Game = Scene.extend({
 
         this.startingProtestors = 1;
 
+        this.portraits = {
+            andrew: imgfy(Images.portraitAndrew)
+        };
+
         //Gotta init them spriteSheets
         this.spriteSheets = {
-            police: initSpriteSheet(imgfy(Images.cop01), 30, 30),
-            protester01: initSpriteSheet(imgfy(Images.protester01), 30, 30),
-            protester02: initSpriteSheet(imgfy(Images.protester02), 30, 30),
-            protester03: initSpriteSheet(imgfy(Images.protester03), 30, 30),
-            protester04: initSpriteSheet(imgfy(Images.protester04), 30, 30),
-            protester05: initSpriteSheet(imgfy(Images.protester05), 30, 30),
-            protester06: initSpriteSheet(imgfy(Images.protester06), 30, 30),
-            protester07: initSpriteSheet(imgfy(Images.protester10), 30, 30),
-            protester08: initSpriteSheet(imgfy(Images.protester08), 30, 30),
-            protester09: initSpriteSheet(imgfy(Images.protester09), 30, 30),
-            protester10: initSpriteSheet(imgfy(Images.protester10), 30, 30),
-            protester11: initSpriteSheet(imgfy(Images.protester11), 30, 30),
-            protester12: initSpriteSheet(imgfy(Images.protester12), 30, 30),
-            protester13: initSpriteSheet(imgfy(Images.protester13), 30, 30),
-            protester14: initSpriteSheet(imgfy(Images.protester14), 30, 30),
-            protester15: initSpriteSheet(imgfy(Images.protester15), 30, 30),
-            gascloud: initSpriteSheet(imgfy(Images.gascloud), 60, 60)
+            police: [initSpriteSheet(imgfy(Images.cop01), 30, 30), 'andrew'],
+            protester01: [initSpriteSheet(imgfy(Images.protester01), 30, 30), 'andrew'],
+            protester02: [initSpriteSheet(imgfy(Images.protester02), 30, 30), 'andrew'],
+            protester03: [initSpriteSheet(imgfy(Images.protester03), 30, 30), 'andrew'],
+            protester04: [initSpriteSheet(imgfy(Images.protester04), 30, 30), 'andrew'],
+            protester05: [initSpriteSheet(imgfy(Images.protester05), 30, 30), 'andrew'],
+            protester06: [initSpriteSheet(imgfy(Images.protester06), 30, 30), 'andrew'],
+            protester07: [initSpriteSheet(imgfy(Images.protester10), 30, 30), 'andrew'],
+            protester08: [initSpriteSheet(imgfy(Images.protester08), 30, 30), 'andrew'],
+            protester09: [initSpriteSheet(imgfy(Images.protester09), 30, 30), 'andrew'],
+            protester10: [initSpriteSheet(imgfy(Images.protester10), 30, 30), 'andrew'],
+            protester11: [initSpriteSheet(imgfy(Images.protester11), 30, 30), 'andrew'],
+            protester12: [initSpriteSheet(imgfy(Images.protester12), 30, 30), 'andrew'],
+            protester13: [initSpriteSheet(imgfy(Images.protester13), 30, 30), 'andrew'],
+            protester14: [initSpriteSheet(imgfy(Images.protester14), 30, 30), 'andrew'],
+            protester15: [initSpriteSheet(imgfy(Images.protester15), 30, 30), 'andrew']
+            //gascloud: initSpriteSheet(imgfy(Images.gascloud), 60, 60)
         };
 
         this.topbar = new gameui.TopBar({
@@ -93,7 +97,8 @@ var Game = Scene.extend({
             y:0,
             world: this,
             subBorderImage: imgfy(Images.border),
-            subFont: "8px Ebit"
+            subFont: "8px Ebit",
+            portraits: this.portraits
         });
 
         this.terrain = new scrollables.AllTerrain({
@@ -159,12 +164,13 @@ var Game = Scene.extend({
             var randomNum= _.random(1,5);
             var zeroPadded = _s.pad(randomNum.toString(), 2, '0', 'left');
             var spriteId  = 'protester' + zeroPadded;
-            var tmpSpriteSheet = this.spriteSheets[spriteId];
+            var tmpSpriteSheet = this.spriteSheets[spriteId][0];
             var p = new entities.Protestor({
                 x: 80 + (i * 15), y: this.runningPlane,
                 width: 30, height: 30,
                 world: this,
                 spriteSheet: tmpSpriteSheet,
+                portrait: this.spriteSheets[spriteId][1],
                 z: 0.5,
             });
             this.entities.add(p);
@@ -201,7 +207,8 @@ var Game = Scene.extend({
             var p = new entities.Police({
                 x: x, y: this.runningPlane,
                 width: 30, height: 30,
-                spriteSheet: this.spriteSheets.police,
+                spriteSheet: this.spriteSheets.police[0],
+                portrait: this.spriteSheets.police[1],
                 world: this
             });
             this.entities.add(p);

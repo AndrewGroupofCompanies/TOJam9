@@ -21,7 +21,7 @@ var TopBar = uielements.Element.extend({
             borderImage: this.subBorderImage,
             borderWidth: 3,
             borderImageSlice: 3,
-            x: 50,
+            x: 75,
             y: 5,
             width: 200,
             height: 28,
@@ -29,22 +29,37 @@ var TopBar = uielements.Element.extend({
             lineHeight: 12
         });
 
+        this.portraitBox = new uielements.Element({
+            borderImage: this.subBorderImage,
+            borderWidth: 3,
+            borderImageSlice: 3,
+            x: 40,
+            y: 5,
+            width: 28,
+            height: 28
+        });
+
+        this.portraitBox.setImage(this.portraits.andrew);
+
         this.textQueue = [];
         this.showingQueuedText = false;
 
         this.subelements.add(
-            this.textBlock
+            [this.textBlock,
+            this.portraitBox]
         );
     },
 
     update: function(dt) {
         this.subelements.update(dt);
         if (this.textQueue.length > 0 && !this.showingQueuedText) {
+            this.portraitBox.show();
             this.textBlock.show();
             this.textBlock.setText(this.textQueue.shift());
             this.showingQueuedText = true;
         }
         if (this.textBlock.doneDuration >= 600) {
+            this.portraitBox.hide();
             this.textBlock.hide();
             if (this.showingQueuedText) {
                 this.showingQueuedText = false;
@@ -61,12 +76,19 @@ var TopBar = uielements.Element.extend({
         // If priority is given, text will be added to queue, and displayed necessarily
         // (Won't be interrupted)
         // If priority if false, text is interruptable
+        if(typeof(portrait)==='undefined') {
+            var portrait = null;
+        }
         if(typeof(priority)==='undefined') {
-            priority = false;
+            var priority = false;
         }
         if (priority) {
-            this.textQueue.push(text);
+            this.textQueue.push([text, portrait]);
         } else if (!this.showingQueuedText) {
+            if (portrait) {
+                this.portraitBox.setImage(this.portraits[portrait]);
+                this.portraitBox.show();
+            }
             this.textBlock.show();
             this.textBlock.setText(text);
         }
