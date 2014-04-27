@@ -53,7 +53,8 @@ var Images = {
     opening03: './assets/images/opening03.png',
     opening04: './assets/images/opening04.png',
     opening05: './assets/images/opening05.png',
-    lose: './assets/images/lose.png'
+    lose: './assets/images/lose.png',
+    cop_static: './assets/images/cop_static.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -91,6 +92,7 @@ var Game = Scene.extend({
         this.debug = true;
         this.timer = 0;
         this.eventCounter = 0;
+        this.warningLevel = 0;
         this.indicator = null;
 
         this.startingProtestors = 1;
@@ -425,16 +427,43 @@ var Game = Scene.extend({
         if (this.timer > 2 && this.eventCounter === 0) {
             this.eventCounter++;
             _.sample(this.getProtestors()).say(
-                "We got one. We saved a dog."
+                "We got one. We saved a dog.",
+                true
             );
         }
 
         if (this.timer > 5 && this.eventCounter === 1) {
             this.eventCounter++;
             _.sample(this.getProtestors()).say(
-                "Hang back and distract the police."
+                "Hang back and distract the police. Slow them down.",
+                true
             );
         }
+
+        if (this.timer > 20 && this.eventCounter === 2) {
+            this.eventCounter++;
+            _.sample(this.getProtestors()).say(
+                "Keep running. We just have to get the dog to safety.",
+                true
+            );
+        }
+
+        if (this.timer > 40 && this.eventCounter === 3) {
+            this.eventCounter++;
+            _.sample(this.getProtestors()).say(
+                "Not much further. They can't keep up forever.",
+                true
+            );
+        }
+
+        if (this.policePressure > 75 && this.warningLevel === 0) {
+            this.warningLevel++;
+            _.sample(this.getProtestors()).say(
+                "They're gaining on us! Stay back!",
+                true
+            );
+        }
+
     },
 
     draw: function(surface) {
