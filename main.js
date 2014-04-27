@@ -644,6 +644,7 @@ var main = function() {
 
     var gamewinScreen = new Cutscene({
         borderImage: Images.border,
+        imageDuration: 5000,
         images: [
             imgfy(Images.ending01),
             imgfy(Images.ending02),
