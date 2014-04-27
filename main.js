@@ -562,14 +562,15 @@ var Game = Scene.extend({
         //this.scrollables.draw(this.view);
 
         // Draw the police pressure line as useful debugging.
+        /*
         gamejs.draw.line(this.view, "#cccccc",
             [this.policePressure, 0],
             [this.policePressure, surface.getSize()[1]]);
 
-        // Police distraction zone.
         gamejs.draw.line(this.view, "#cccccc",
             [this.policeDistraction, 0],
             [this.policeDistraction, surface.getSize()[1]]);
+        */
 
         // Front line.
         /*
