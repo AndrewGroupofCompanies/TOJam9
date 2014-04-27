@@ -52,6 +52,7 @@ var GROUND_HEIGHT = 20;
 var Game = Scene.extend({
     initialize: function(options) {
         this.paused = false;
+        this.debug = true;
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
@@ -114,7 +115,7 @@ var Game = Scene.extend({
         // is in it, the police pressure does not increase. We keep track
         // of this so that when we're ahead of it, pressure increases!
         this.policeDistraction = this.policePressure + 50;
-        //this.createPolice(10);
+        this.createPolice(10);
 
         // Obstacles
         this.Obstacles = null;

@@ -12,6 +12,8 @@ var randomHex = function() {
     return '#' + (function co(lor){   return (lor += [0,1,2,3,4,5,6,7,8,9,'a','b','c','d','e','f'][Math.floor(Math.random()*16)]) && (lor.length == 6) ?  lor : co(lor); })('');
 };
 
+var font = new gamejs.font.Font('6px monospace');
+
 var Citizen = Entity.extend({
     animSpec: {
         running: {frames: _.range(40), rate: 30, loop: true},
@@ -26,7 +28,7 @@ var Citizen = Entity.extend({
 
         this.world = options.world;
         this.velocity = new Vec2d(0, 0);
-        this.accel = 1.5;
+        this.accel = new Vec2d(1.5, 0);
         this.maxSpeed = 2;
         this.speed = 0;
         this.onGround = false;
@@ -106,7 +108,6 @@ var Citizen = Entity.extend({
         this.isDeking = false;
         this.isDucking = false;
         this.isStumbling = false;
-        this.accel = 1.5;
         this.canDeke = true;
     },
 
@@ -115,7 +116,7 @@ var Citizen = Entity.extend({
         this.canDeke = false;
         this.setAnimation("deke");
         this.dekeCounter = 300;
-        this.accel = 3;
+        this.accel = new Vec2d(1, 0);
     },
 
     endDeke: function() {
@@ -130,8 +131,9 @@ var Citizen = Entity.extend({
 
         // When they duck and going backwards, just push them a little so they
         // don't get stuck with the fence.
-        if (this.velocity.getX()) {
-            this.accel = 1.5;
+        if (this.velocity.getX() < 0) {
+            console.log("duck and push");
+            this.accel = new Vec2d(1.5, 0);
             this.speed = 1;
         }
     },
@@ -143,7 +145,7 @@ var Citizen = Entity.extend({
     stumble: function() {
         this.setAnimation("stumble");
         this.stumbleCounter = 500;
-        this.accel = 1.5;
+        this.accel = new Vec2d(1.5, 0);
         this.speed = 3;
         this.isStumbling = true;
         this.canDeke = false;
@@ -230,6 +232,17 @@ var Citizen = Entity.extend({
         } else {
             gamejs.draw.rect(surface, this.hex, this.rect);
         }
+
+        if (this.world.debug) {
+            // Draw some useful info above the head!
+            /*
+            var fAccel = font.render("a" + String(this.accel.x));
+            surface.blit(fAccel, [this.rect.x + 5, this.rect.y - 10]);
+
+            var fSpeed = font.render("o" + String(this.speed));
+            surface.blit(fSpeed, [this.rect.x + 25, this.rect.y - 10]);
+            */
+        }
     },
 
     setAnimation: function(animation) {
@@ -247,7 +260,7 @@ var Protestor = Citizen.extend({
         this.isProtestor = true; // Identifier.
 
         this.runSpeed = 1.0; // Our speed modifier.
-        this.accel = 1.0;
+        this.accel = new Vec2d(1, 0);
         this.speed = this.runSpeed;
         this.maxspeed = 1.0;
 
@@ -262,7 +275,7 @@ var Protestor = Citizen.extend({
 
         // Police padding. If we get too near the police and are aware of them,
         // we should
-        this.awarenessDistance = 90;
+        this.awarenessDistance = 20;
 
         // Eventually police can advance, and we won't be aware of this. This is
         // where we can get captured.
@@ -280,6 +293,9 @@ var Protestor = Citizen.extend({
     },
 
     makeDecision: function() {
+        if (this.isDeking) return false;
+        if (this.isCaptured) return false;
+        if (this.accel.getX() !== 0) return false;
         return _.random(0, 10) > 7;
     },
 
@@ -290,7 +306,7 @@ var Protestor = Citizen.extend({
     // Is captured by the cops, just get off the screen.
     isBeingCaptured: function() {
         this.speed = -10;
-        this.accel = 2;
+        this.accel = new Vec2d(2, 0);
         this.isCaptured = true;
         this.setAnimation('captured');
     },
@@ -301,7 +317,7 @@ var Protestor = Citizen.extend({
         dt = (dt / 1000);
 
         // Adjust accel and speed because we may be sprinting forward.
-        var accel = new Vec2d(this.accel, 0);
+        var accel = new Vec2d(this.accel.x, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
         this.velocity = this.velocity.truncate(this.maxSpeed);
 
@@ -310,34 +326,34 @@ var Protestor = Citizen.extend({
             return;
         }
 
-        var decel = this.speed / 1.5 * dt;
+        var decel = Math.abs(this.speed / 1.2 * dt);
         if (accel.isZero()) {
             dampenVector(this.velocity, decel);
+        } else {
+            // Otherwise, we still have acceleration, so slowly get rid of it.
+            dampenVector(this.accel, decel);
         }
 
         // If we're near police we should ensure that the movement is positive.
         if (this.nearPolice()) {
             //console.log(this.hex, " is near the police!");
             this.speed = this.runSpeed;
-            this.accel = 1;
+            this.accel = new Vec2d(0.5, 0);
             return;
         } else if (this.nearFront()) {
             //console.log(this.hex, " is near the front!");
             this.speed = -(this.runSpeed);
-            this.accel = 1;
+            this.accel = new Vec2d(0.5, 0);
             return;
-        } else {
-            this.accel = 0;
         }
 
         // Every now and then, let's decide what to do. Stay at our speed,
         // or adjust it slightly.
         this.decideCounter -= dt;
         if (this.decideCounter <= 0) {
-            //console.log(this.hex, " is deciding what to do");
             // Generally, we'll stay where we are.
             if (this.makeDecision()) {
-                this.accel = 1;
+                this.accel = new Vec2d(1, 0);
                 this.speed += _.first(_.sample(
                     [-(this.runSpeed), (this.runSpeed)]
                 , 1));
@@ -370,7 +386,15 @@ var Protestor = Citizen.extend({
     },
 
     draw: function(surface) {
-        //gamejs.draw.rect(surface, "#ffcc00", this.collisionRect);
+        if (this.world.debug) {
+            /*
+            gamejs.draw.rect(surface, "#ffcc00", this.collisionRect);
+            gamejs.draw.line(surface, "#ffcc00",
+                [this.rect.x - this.awarenessDistance, 0],
+                [this.rect.x - this.awarenessDistance, surface.getSize()[1]]);
+            */
+        }
+
         Citizen.prototype.draw.call(this, surface);
     }
 });
@@ -430,7 +454,7 @@ var Police = Citizen.extend({
     actionCapture: function(entity) {
         //console.log("actionCapture", entity);
 
-        this.accel = 5;
+        this.accel = new Vec2d(1.25, 0);
         this.isCapturing = true;
         entity.isBeingCaptured();
 
@@ -445,25 +469,26 @@ var Police = Citizen.extend({
         dt = (dt / 1000);
 
         // Adjust accel and speed because we may be sprinting forward.
-        var accel = new Vec2d(this.accel, 0);
+        var accel = new Vec2d(this.accel.x, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
         this.velocity = this.velocity.truncate(this.maxSpeed);
 
-        var decel = this.speed / 1.5 * dt;
+        var decel = Math.abs(this.speed / 1.2 * dt);
         if (accel.isZero()) {
             dampenVector(this.velocity, decel);
+        } else {
+            // Otherwise, we still have acceleration, so slowly get rid of it.
+            dampenVector(this.accel, decel);
         }
 
         if (this.isCapturing) return;
 
         if (this.nearPoliceLine()) {
-            this.accel = 1;
+            this.accel = new Vec2d(0.5, 0);
             this.speed = -0.5;
         } else if (this.nearBack()) {
-            this.accel = 0.5;
+            this.accel = new Vec2d(0.5, 0);
             this.speed = 0.5;
-        } else {
-            this.accel = 0;
         }
     },
 
@@ -551,7 +576,7 @@ var Player = Protestor.extend({
         dt = (dt / 1000); // Sanity.
 
         // Adjust accel and speed because we may be sprinting forward.
-        var accel = new Vec2d(this.accel, 0);
+        var accel = new Vec2d(this.accel.x, 0);
         this.velocity.add(accel.mul(dt).mul(this.speed));
         this.velocity = this.velocity.truncate(this.maxSpeed);
 
