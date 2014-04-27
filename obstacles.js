@@ -15,6 +15,7 @@ var Obstacle = Entity.extend({
         this.speed = -2;
         this.onGround = false;
         this.name = 'obstacle';
+        this.z = 0;
 
         this.hex = "#000000";
         this.image = gamejs.image.load(options.image);

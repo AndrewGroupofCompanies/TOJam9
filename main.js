@@ -8,6 +8,7 @@ var _ = require('underscore'),
     entities = require('./entities'),
     obstacles = require('./obstacles'),
     Vec2d = gramework.vectors.Vec2d,
+    gameui = require('./gameui'),
     GameController = gramework.input.GameController;
 
 var Images = {
@@ -66,6 +67,8 @@ var Game = Scene.extend({
             protester09: initSpriteSheet(imgfy(Images.protester12), 30, 30),
             gascloud: initSpriteSheet(imgfy(Images.gascloud), 60, 60)
         };
+
+        this.topbar = new gameui.TopBar(this);
 
         this.terrain = new scrollables.AllTerrain({
             width: 1024,
