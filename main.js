@@ -24,6 +24,7 @@ var Images = {
     sprite_test_2: './assets/images/spritesheet-player.png',
     terrain: './assets/images/terrain01.png',
     titlescreen: './assets/images/titlescreen.png',
+    ending01: './assets/images/ending01.png',
     ending02: './assets/images/ending02.png',
     ending03: './assets/images/ending03.png',
     ending04: './assets/images/ending04.png',
@@ -628,6 +629,7 @@ var main = function() {
     var gamewinScreen = new Cutscene({
         borderImage: Images.border,
         images: [
+            imgfy(Images.ending01),
             imgfy(Images.ending02),
             imgfy(Images.ending03),
             imgfy(Images.ending04),
