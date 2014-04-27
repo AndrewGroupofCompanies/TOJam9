@@ -426,6 +426,13 @@ var Police = Citizen.extend({
         this.canCapture = false;
 
         this.anim.setFrame(_.random(0,7));
+
+        this.decideCounterStart = 1.5;
+        this.decideCounter = this.resetDecision();
+    },
+
+    resetDecision: function() {
+        return this.decideCounterStart;
     },
 
     isDistracted: function() {
@@ -446,7 +453,7 @@ var Police = Citizen.extend({
     },
 
     nearBack: function() {
-        if (this.collisionRect.x <= this.world.backLine) {
+        if (this.collisionRect.x <= (this.world.backLine)) {
             return true;
         }
         return false;
@@ -456,13 +463,13 @@ var Police = Citizen.extend({
     actionCapture: function(entity) {
         //console.log("actionCapture", entity);
 
-        this.accel = new Vec2d(1.25, 0);
         this.isCapturing = true;
         entity.isBeingCaptured();
 
         this.setAnimation("diving");
 
         // Set speed to negative, so the two go off the screen.
+        this.accel = new Vec2d(1.25, 0);
         this.speed = -10;
     },
 
@@ -475,6 +482,8 @@ var Police = Citizen.extend({
         this.velocity.add(accel.mul(dt).mul(this.speed));
         this.velocity = this.velocity.truncate(this.maxSpeed);
 
+        if (this.isCapturing) return;
+
         var decel = Math.abs(this.speed / 1.2 * dt);
         if (accel.isZero()) {
             dampenVector(this.velocity, decel);
@@ -483,14 +492,22 @@ var Police = Citizen.extend({
             dampenVector(this.accel, decel);
         }
 
-        if (this.isCapturing) return;
 
         if (this.nearPoliceLine()) {
-            this.accel = new Vec2d(0.5, 0);
-            this.speed = -0.5;
+            this.accel = new Vec2d(0.25, 0);
+            this.speed = -1;
         } else if (this.nearBack()) {
-            this.accel = new Vec2d(0.5, 0);
-            this.speed = 0.5;
+            console.log("nearBack");
+            this.accel = new Vec2d(0.25, 0);
+            this.speed = 1;
+        } else {
+            this.decideCounter -= dt;
+            if (this.decideCounter <= 0) {
+                console.log("moving cop");
+                this.accel = new Vec2d(1, 0);
+                this.speed += _.first(_.sample([-1, 1], 1));
+                this.decideCounter = this.resetDecision();
+            }
         }
     },
 

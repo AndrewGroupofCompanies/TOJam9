@@ -115,6 +115,7 @@ var Game = Scene.extend({
         this.frontLine = this.surface.getSize()[0] - 10;
         this.backLine = -25;
         this.createProtestors(15);
+
         this.scrollGenerator = new scrollables.SceneryGenerator({
             world: this,
             images: [
@@ -148,7 +149,7 @@ var Game = Scene.extend({
             takeover: gamejs.event.K_t
         });
         this.player = null;
-        this.spawnPlayer();
+        //this.spawnPlayer();
     },
 
     createProtestors: function(limit) {
