@@ -256,7 +256,7 @@ var Protestor = Citizen.extend({
         this.accel = new Vec2d(2, 0);
         this.isCaptured = true;
         this.setAnimation('captured');
-        this.world.topbar.queueText('Fuck!');
+        this.world.topbar.displayText('Fuck!', true);
     },
 
 
