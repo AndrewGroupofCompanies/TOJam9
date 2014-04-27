@@ -56,19 +56,20 @@ var TopBar = uielements.Element.extend({
         this.subelements.draw(surface);
     },
 
-    displayText: function(text) {
-        // For displaying low-priority, "flavour" text
-        // For important text, use queueText
-        if (!this.showingQueuedText) {
+    displayText: function(text, priority) {
+        // If priority is given, text will be added to queue, and displayed necessarily
+        // (Won't be interrupted)
+        // If priority if false, text is interruptable
+        if(typeof(priority)==='undefined') {
+            priority = false;
+        }
+        if (priority) {
+            this.textQueue.push(text);
+        } else if (!this.showingQueuedText) {
             this.textBlock.show();
             this.textBlock.setText(text);
         }
-    },
-
-    queueText: function(text) {
-        this.textQueue.push(text);
-    },
-
+    }
 
 });
 
