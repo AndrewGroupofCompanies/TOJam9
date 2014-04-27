@@ -1,49 +1,30 @@
 # Screens
 
-some details
+##### some details
 
-    width by height
-    325px by 88px
+screens excluding the topbar area should be a size of:  
+325px by 88px (width by height)
 
 ## Start screen
 
 **see [README-startscreen.md](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/README-startscreen.md)**
 
-- screen_start.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start.png?raw=true)
+- opening01.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/opening01.png?raw=true)
 
-- screen_start02.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start02.png?raw=true)
+- opening02.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/opening02.png?raw=true)
 
-- screen_start03.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start03.png?raw=true)
+- opening03.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/opening03.png?raw=true)
 
-- screen_start04.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start04.png?raw=true)
+- opening04.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/opening04.png?raw=true)
 
-- screen_start05.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_start05.png?raw=true)
+- opening05.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/opening05.png?raw=true)
 
 ## Lose screen
 
 **see [README-lose.md](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/README-lose.md)**
 
-- screen_lose_cop_with_beagle.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_lose_cop_with_beagle.png?raw=true)
-
-- screen_lose_protestors_arrested.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_lose_protestors_arrested.png?raw=true)
+- lose.png ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/lose.png?raw=true)
 
 ## Game over screen
 
-**see [README-gameover.md](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/README-gameover.md)**
-
-- 01 gameover
-
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover.png?raw=true)
-
-- 02 gameover
-
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover02.png?raw=true)
-
-- 03 gameover
-
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover03.png?raw=true)
-
-- 04 gameover
-
-![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/screen_gameover04.png?raw=true)
-
+There is no gameover images, just some text

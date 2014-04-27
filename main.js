@@ -48,7 +48,13 @@ var Images = {
     indicator: './assets/images/active_player_icon.png',
     beagle: './assets/images/beagle_icon.png',
     portraitAndrew: './assets/images/portrait-andrewgardner.png',
-    screen_start: './assets/images/screen_start.png'
+    screen_start: './assets/images/screen_start.png',
+    opening01: './assets/images/opening01.png',
+    opening02: './assets/images/opening02.png',
+    opening03: './assets/images/opening03.png',
+    opening04: './assets/images/opening04.png',
+    opening05: './assets/images/opening05.png',
+    lose: './assets/images/lose.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -449,14 +455,46 @@ var Game = Scene.extend({
 });
 
 var main = function() {
+    var gameoverCutscene = new Cutscene({
+        next: openingCutscene,
+        borderImage: Images.border,
+        images: [
+
+        ],
+        text: [],
+        //portrait: 
+        pixelScale: 4      
+    });
+
     var game = new Game({
-        pixelScale: 4
+        pixelScale: 4,
+        loseScene: gameoverCutscene
     });
 
     var openingCutscene = new Cutscene({
         next: game,
         borderImage: Images.border,
-        text: ['okay'],
+        images: [
+            imgfy(Images.opening01),
+            imgfy(Images.opening02),
+            imgfy(Images.opening03),
+            imgfy(Images.opening04),
+            imgfy(Images.opening05)
+        ],
+        text: _.sample([[
+            'I showed up to protest the beagle breeding mill.',
+            'I didn\'t plan on breaking the law.',
+            'When I saw the dog being handed down, the right thing was obvious.'
+        ],[
+            'They have the nerve to open a breeding mill in our community.',
+            'The cops want to protect the right to kill these dogs?',
+            'I’m sick of waiting for change.'
+        ],[
+            'Beagles are the dog of choice for animal experiments.',
+            'Because they don\'t really fight back.',
+            'But I do.'
+        ]]),
+        //portrait: 
         pixelScale: 4
     });
 

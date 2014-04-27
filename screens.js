@@ -35,15 +35,15 @@ var TitleScreen = Scene.extend({
 
 var Cutscene = Scene.extend({
     initialize: function(options) {
-        this.imageDuration = options.imageDuration || 200;
+        this.imageDuration = options.imageDuration || 2000;
         this.elapsed = 0;
-        this.currentImage++;
+        this.currentImage = 0;
         this.next = options.next;
         this.text = options.text;
         this.images = options.images || [];
         this.borderImage = options.borderImage;
-        this.portraits = options.portraits;
-        this._isDone = true;
+        //this.portrait = options.portrait;
+        this._isDone = false;
         this.topbar = new gameui.TopBar({
             color: [0,0,0],
             width: this.surface.getSize()[0],
@@ -53,23 +53,25 @@ var Cutscene = Scene.extend({
             world: this,
             subBorderImage: gamejs.image.load(this.borderImage),
             subFont: "8px Ebit",
-            portraits: this.portraits
+            doneDuration: 1800
+            //portraits: this.portraits
         });
 
         this.elements.add(this.topbar);
 
         this.text.forEach(function(text){
-            this.topbar.displayText("Just a quick test", null, true);
+            this.topbar.displayText(text, null, true);
         }, this);
     },
 
     update: function(dt) {
         this.elapsed += dt;
+        this.topbar.update(dt);
         if (this.elapsed >= this.imageDuration) {
             this.elapsed = 0;
             this.currentImage++;
         }
-        if (this.currentImage > this.images.length) {
+        if (this.topbar.textQueue.length === 0 && !this.topbar.showingQueuedText) {
             this._isDone = true;
         }
         if (this.isDone()){
@@ -79,6 +81,7 @@ var Cutscene = Scene.extend({
     },
 
     draw: function(surface) {
+        this.topbar.draw(this.view);
         if (this.currentImage < this.images.length) {
             this.surface.blit(this.images[this.currentImage], [0,40]);
         }
