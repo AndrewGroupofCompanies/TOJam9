@@ -102,6 +102,58 @@ var Citizen = Entity.extend({
         }
     },
 
+    restoreMotion: function() {
+        this.isDeking = false;
+        this.isDucking = false;
+        this.isStumbling = false;
+        this.accel = 1.5;
+        this.canDeke = true;
+    },
+
+    deke: function() {
+        this.isDeking = true;
+        this.canDeke = false;
+        this.setAnimation("deke");
+        this.dekeCounter = 300;
+        this.accel = 3;
+    },
+
+    endDeke: function() {
+        this.restoreMotion();
+    },
+
+    duck: function() {
+        this.setAnimation("duck");
+        this.isDucking = true;
+        this.duckCounter = 500;
+        this.canDeke = false;
+    },
+
+    endDuck: function() {
+        this.restoreMotion();
+    },
+
+    stumble: function() {
+        this.setAnimation("stumble");
+        this.stumbleCounter = 500;
+        this.accel = -1.5;
+        this.isStumbling = true;
+        this.canDeke = false;
+    },
+
+    endStumble: function() {
+        this.restoreMotion();
+    },
+
+    clothesline: function() {
+
+    },
+
+    endClothesline: function() {
+
+    },
+
+
     update: function(dt) {
         if (this.world.paused) return;
 
@@ -122,11 +174,51 @@ var Citizen = Entity.extend({
             return;
         }
 
+        if (this.duckCounter > 0) {
+            this.duckCounter -= dt;
+        }
+
+        if (this.duckCounter <= 0 && this.isDucking) {
+            this.endDuck();
+        }
+
+        if (this.dekeCounter > 0) {
+            this.dekeCounter -= dt;
+        }
+
+        if (this.dekeCounter <= 0 && this.isDeking) {
+            console.log("alas, my deke has finished");
+            this.endDeke();
+        }
+
+        if (this.stumbleCounter > 0) {
+            this.stumbleCounter -= dt;
+        }
+
+        if (this.stumbleCounter <= 0 && this.isStumbling) {
+            this.endStumble();
+        }
+
+        // Identify obstacles and deke them out if necessary.
+        this.world.getObstacles().forEach(function(o) {
+            if (this.collisionRect.collideRect(o.collisionRect)) {
+                this.collidingWithObstacle(o);
+            }
+        }, this);
+
         if (this.anim && this.anim.isFinished()) {
             this.anim.start('running');
         }
-
     },
+
+    collidingWithObstacle: function(obstacle) {
+        if (obstacle.high) {
+            this.duck();
+        } else if (obstacle.low) {
+            this.deke();
+        }
+    },
+
 
     draw: function(surface) {
         if (this.image) {
@@ -265,109 +357,11 @@ var Protestor = Citizen.extend({
         return false;
     },
 
-    restoreMotion: function() {
-        this.isDeking = false;
-        this.isDucking = false;
-        this.isStumbling = false;
-        this.accel = 1.5;
-        this.canDeke = true;
-    },
-
-    deke: function() {
-        this.isDeking = true;
-        this.canDeke = false;
-        this.setAnimation("deke");
-        this.dekeCounter = 300;
-        this.accel = 3;
-    },
-
-    endDeke: function() {
-        this.restoreMotion();
-    },
-
-    duck: function() {
-        this.setAnimation("duck");
-        this.isDucking = true;
-        this.duckCounter = 500;
-        this.canDeke = false;
-    },
-
-    endDuck: function() {
-        this.restoreMotion();
-    },
-
-    stumble: function() {
-        this.setAnimation("stumble");
-        this.stumbleCounter = 500;
-        this.accel = -1.5;
-        this.isStumbling = true;
-        this.canDeke = false;
-    },
-
-    endStumble: function() {
-        this.restoreMotion();
-    },
-
-    clothesline: function() {
-
-    },
-
-    endClothesline: function() {
-
-    },
-
     update: function(dt) {
         Citizen.prototype.update.apply(this, arguments);
 
         // Protestors collision rect is a bit above rect x;
         this.collisionRect.x = this.rect.x + 10;
-
-        if (this.isCaptured) {
-            return;
-        }
-
-        if (this.duckCounter > 0) {
-            this.duckCounter -= dt;
-        }
-
-        if (this.duckCounter <= 0 && this.isDucking) {
-            this.endDuck();
-        }
-
-        if (this.dekeCounter > 0) {
-            this.dekeCounter -= dt;
-        }
-
-        if (this.dekeCounter <= 0 && this.isDeking) {
-            console.log("alas, my deke has finished");
-            this.endDeke();
-        }
-
-        if (this.stumbleCounter > 0) {
-            this.stumbleCounter -= dt;
-        }
-
-        if (this.stumbleCounter <= 0 && this.isStumbling) {
-            this.endStumble();
-        }
-
-        // NPC-specific behaviour
-        if (this.isProtestor) {
-            // Identify obstacles and deke them out if necessary.
-            this.world.getObstacles().forEach(function(o) {
-                if (this.collisionRect.collideRect(o.collisionRect)) {
-                    this.collidingWithObstacle(o);
-                }
-            }, this);
-        }
-    },
-
-    collidingWithObstacle: function(obstacle) {
-        if (obstacle.high) {
-            this.duck();
-        } else if (obstacle.low) {
-            this.deke();
-        }
     },
 
     draw: function(surface) {
@@ -489,6 +483,11 @@ var Police = Citizen.extend({
 
         this.collisionRect.x = this.rect.x;
         this.collisionRect.y = this.rect.y;
+    },
+
+    // TODO: Placeholder. Can't do anything until we have more police frames.
+    collidingWithObstacle: function(obstacle) {
+        return;
     },
 
     draw: function(surface) {
