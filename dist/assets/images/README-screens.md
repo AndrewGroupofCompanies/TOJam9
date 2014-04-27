@@ -16,9 +16,6 @@ some details
 ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/cop_with_beagle.png?raw=true
 
 
-
-
-
 - protestors arrested
 
 ![](https://github.com/AndrewGroupofCompanies/TOJam9/blob/master/dist/assets/images/protestors_arrested.png?raw=true
@@ -26,8 +23,6 @@ some details
 ## Game over screen
 
 2 images
-
-
 
 #### random images
 
