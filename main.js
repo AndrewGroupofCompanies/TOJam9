@@ -22,7 +22,7 @@ var Images = {
     sprite_test:   './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
     terrain: './assets/images/terrain01.png',
-    gameover: './assets/images/screen_gameover.png',
+    titlescreen: './assets/images/titlescreen.png',
     protester01:   './assets/images/protester01.png',
     protester02:   './assets/images/protester02.png',
     protester03:   './assets/images/protester03.png',
@@ -48,7 +48,6 @@ var Images = {
     indicator: './assets/images/active_player_icon.png',
     beagle: './assets/images/beagle_icon.png',
     portraitAndrew: './assets/images/portrait-andrewgardner.png',
-    screen_start: './assets/images/screen_start.png',
     opening01: './assets/images/opening01.png',
     opening02: './assets/images/opening02.png',
     opening03: './assets/images/opening03.png',
@@ -94,7 +93,7 @@ var Game = Scene.extend({
         this.indicator = null;
 
         this.startingProtestors = 1;
-        this.maxProtestors = 1;
+        this.maxProtestors = 25;
         this.obstaclesOff = 0;
 
         this.portraits = {
@@ -462,8 +461,8 @@ var main = function() {
 
         ],
         text: [],
-        //portrait: 
-        pixelScale: 4      
+        //portrait:
+        pixelScale: 4
     });
 
     var game = new Game({
@@ -488,7 +487,7 @@ var main = function() {
         ],[
             'They have the nerve to open a breeding mill in our community.',
             'The cops want to protect the right to kill these dogs?',
-            'I’m sick of waiting for change.'
+            "I'm sick of waiting for change."
         ],[
             'Beagles are the dog of choice for animal experiments.',
             'Because they don\'t really fight back.',
@@ -499,7 +498,7 @@ var main = function() {
     });
 
     var titleScreen = new TitleScreen({
-        image: Images.screen_start,
+        image: Images.titlescreen,
         next: openingCutscene,
         pixelScale: 4
     });
