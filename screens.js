@@ -43,6 +43,7 @@ var Cutscene = Scene.extend({
         this.images = options.images || [];
         this.borderImage = options.borderImage;
         this.duration = options.duration || null;
+        console.log(this.duration);
         //this.portrait = options.portrait;
         this._isDone = false;
         this.topbar = new gameui.TopBar({
@@ -67,6 +68,7 @@ var Cutscene = Scene.extend({
 
     update: function(dt) {
         this.elapsed += dt;
+        console.log(this.elapsed);
         this.topbar.update(dt);
         if (this.elapsed >= this.imageDuration) {
             this.elapsed = 0;
