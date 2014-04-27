@@ -112,6 +112,7 @@ var Citizen = Entity.extend({
     },
 
     deke: function() {
+        this.world.topbar.displayText("Check this deke");
         this.isDeking = true;
         this.canDeke = false;
         this.setAnimation("deke");
@@ -309,6 +310,7 @@ var Protestor = Citizen.extend({
         this.accel = new Vec2d(2, 0);
         this.isCaptured = true;
         this.setAnimation('captured');
+        this.world.topbar.displayText('Fuck!');
     },
 
 

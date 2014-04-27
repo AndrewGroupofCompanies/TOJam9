@@ -107,7 +107,7 @@ _.extend(AnimScrollableGenerator.prototype, {
 
 var SceneryGenerator = function(options) {
     this.world = options.world || null;
-    this.nextScrollable = _.random(100, 1000);
+    this.nextScrollable = _.random(100, 500);
     this.timer = 0;
     this.initialize(options);
 };
