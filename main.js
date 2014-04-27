@@ -22,6 +22,7 @@ var Images = {
     sprite_test:   './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
     terrain: './assets/images/terrain01.png',
+    gameover: './assets/images/screen_gameover.png',
     protester01:   './assets/images/protester01.png',
     protester02:   './assets/images/protester02.png',
     protester03:   './assets/images/protester03.png',
@@ -61,6 +62,24 @@ var imgfy = function(image) {
 
 var GROUND_HEIGHT = 20;
 
+var GameOver = Scene.extend({
+    initialize: function(options) {
+        this.image = imgfy(Images.gameover);
+    },
+
+    draw: function(surface) {
+        surface.blit(this.image, [0,0]);
+    },
+
+    event: function(ev) {
+        if (ev.type === gamejs.event.KEY_DOWN) {
+            if (ev.key === gamejs.event.K_r) {
+                main();
+            }
+        }
+    }
+});
+
 var Game = Scene.extend({
     initialize: function(options) {
         this.paused = false;
@@ -69,7 +88,7 @@ var Game = Scene.extend({
         this.indicator = null;
 
         this.startingProtestors = 1;
-        this.maxProtestors = 25;
+        this.maxProtestors = 1;
         this.obstaclesOff = 0;
 
         this.portraits = {
@@ -283,6 +302,12 @@ var Game = Scene.extend({
         if (!protestor) {
             // Player is taking over th beagle carrier. Last remaining hope!
             protestor = this.getBeagleCarrier()[0];
+        }
+
+        if (!protestor) {
+            // Game over man!
+            this.dispatcher.push(new GameOver({}));
+            return;
         }
 
         this.player = new entities.Player({

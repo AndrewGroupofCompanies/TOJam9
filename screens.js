@@ -20,7 +20,7 @@ var TitleScreen = Scene.extend({
     },
 
     update: function(dt) {
-        
+
     },
 
     draw: function(surface) {
