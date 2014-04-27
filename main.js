@@ -11,19 +11,29 @@ var _ = require('underscore'),
     GameController = gramework.input.GameController;
 
 var Images = {
-    cop01: './assets/images/cop01.png',
-    bg_test: './assets/images/bg_test.jpg',
-    sprite_test: './assets/images/spritesheet-enemy.png',
+    cop01:         './assets/images/cop01.png',
+    bg_test:       './assets/images/bg_test.jpg',
+    sprite_test:   './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
-    protester01: './assets/images/protester_01_pete.png',
-    protester02: './assets/images/protester_02_pete.png',
-    protester03: './assets/images/protester_03_pete.png',
-    protester04: './assets/images/protester_04_xyz.png',
-    protester05: './assets/images/protester_05_xyz.png',
-    protester06: './assets/images/protester_06_xyz.png',
-    tree_01: './assets/images/tree_01.png',
-    fence: './assets/images/fencebroken.png',
-    barricade: './assets/images/barricade.png',
+    terrain: './assets/images/terrain01.png',
+    protester01:   './assets/images/protester_01_pete.png',
+    protester02:   './assets/images/protester_02_pete.png',
+    protester03:   './assets/images/protester_03_pete.png',
+    protester04:   './assets/images/protester_04_xyz.png',
+    protester05:   './assets/images/protester_05_xyz.png',
+    protester06:   './assets/images/protester_06_xyz.png',
+    protester07:   './assets/images/protester_04_xyz.png',
+    protester08:   './assets/images/protester_05_xyz.png',
+    protester09:   './assets/images/protester_06_xyz.png',
+    protester10:   './assets/images/protester_10_plorry.png',
+    protester11:   './assets/images/protester_11_plorry.png',
+    protester12:   './assets/images/protester_12_plorry.png',
+    protester13:   './assets/images/protester_10_plorry.png',
+    protester14:   './assets/images/protester_11_plorry.png',
+    protester15:   './assets/images/protester_12_plorry.png',
+    tree_01:       './assets/images/tree_01.png',
+    fence:         './assets/images/fencebroken.png',
+    barricade:     './assets/images/barricade.png',
     gascloud: './assets/images/gascloud.png',
     staticcloud: './assets/images/staticcloud.png'
 };
@@ -39,10 +49,8 @@ var imgfy = function(image) {
 
 var GROUND_HEIGHT = 20;
 
-
 var Game = Scene.extend({
     initialize: function(options) {
-        this.gravity = new Vec2d(0, 50);
 
         //Gotta init them spriteSheets
         this.spriteSheets = {
@@ -53,8 +61,16 @@ var Game = Scene.extend({
             protester04: initSpriteSheet(imgfy(Images.protester04), 30, 30),
             protester05: initSpriteSheet(imgfy(Images.protester05), 30, 30),
             protester06: initSpriteSheet(imgfy(Images.protester06), 30, 30),
+            protester07: initSpriteSheet(imgfy(Images.protester10), 30, 30),
+            protester08: initSpriteSheet(imgfy(Images.protester11), 30, 30),
+            protester09: initSpriteSheet(imgfy(Images.protester12), 30, 30),
             gascloud: initSpriteSheet(imgfy(Images.gascloud), 60, 60)
         };
+
+        this.terrain = new scrollables.AllTerrain({
+            width: 1024,
+            image: Images.terrain
+        });
 
         var previousAdd = this.entities.add;
         this.entities.add = function(list) {
@@ -64,24 +80,15 @@ var Game = Scene.extend({
                 return b.z-a.z;
             });
         };
-        /*
-        this.bg = new scrollables.Scrollable({
-            image: Images.bg_test,
-            height: 128,
-            width: 256,
-            x: 0,
-            y: 0,
-            z: 0
-        });
-        */
+
         // Handles world speed.
         this.velocity = new Vec2d(0, 0);
         this.speed = -10;
         this.accel = 5;
-
+        this.runningPlane = this.surface.getSize()[1] - 50;
 
         // The front line of the protestors. Let's keep them grouped.
-        this.frontLine = this.surface.getSize()[0] - 50;
+        this.frontLine = this.surface.getSize()[0] - 10;
         this.backLine = 10;
         this.createProtestors(15);
         this.scrollGenerator = new scrollables.SceneryGenerator({
@@ -122,20 +129,29 @@ var Game = Scene.extend({
 
     createProtestors: function(limit) {
         _.each(_.range(limit), function(i) {
-            
-            var randomNum= _.random(1,6);
+            var randomNum= _.random(1,9);
             var spriteId  = 'protester0' + randomNum;
-            console.log(spriteId);
-            tmpSpriteSheet = this.spriteSheets[spriteId];
-            
+            var tmpSpriteSheet = this.spriteSheets[spriteId];
             var p = new entities.Protestor({
-                x: 80 + (i * 15), y: 0,
+                x: 80 + (i * 15), y: this.runningPlane,
                 width: 30, height: 30,
                 world: this,
                 spriteSheet: tmpSpriteSheet
             });
             this.entities.add(p);
         }, this);
+    },
+
+    getObstacles: function() {
+        return _.filter(this.entities._sprites, function(entity) {
+            return entity.isObstacle === true;
+        });
+    },
+
+    getPolice: function() {
+        return _.filter(this.entities._sprites, function(entity) {
+            return entity.isPolice === true;
+        });
     },
 
     getProtestors: function() {
@@ -147,7 +163,7 @@ var Game = Scene.extend({
     createPolice: function(limit) {
         _.each(_.range(limit), function(i) {
             var p = new entities.Police({
-                x: (i * 5), y: 0,
+                x: (i * 5), y: this.runningPlane,
                 width: 60, height: 30,
                 spriteSheet: this.spriteSheets.police,
                 world: this
@@ -188,9 +204,9 @@ var Game = Scene.extend({
     update: function(dt) {
         this.scrollGenerator.update(dt);
         //this.animscrollGenerator.update(dt);
+        this.terrain.update(dt);
 
         Scene.prototype.update.call(this, dt);
-
 
         dt = (dt / 1000); // Sane velocity mutations.
 
@@ -200,12 +216,10 @@ var Game = Scene.extend({
         if (this.Obstacles && this.Obstacles.alive) {
             this.Obstacles.update(dt);
         } else if (this.Obstacles === null) {
-            /*
             this.Obstacles = new obstacles.ObstacleEmitter({
                 world: this,
                 images: [Images.fence, Images.barricade]
             });
-            */
         } else if (!this.Obstacles.alive) {
             this.Obstacles = null;
         }
@@ -216,6 +230,8 @@ var Game = Scene.extend({
         this.view.clear();
 
         this.surface.fill('#fff');
+
+        this.terrain.draw(this.view);
 
             //this.scrollables.draw(this.view);
 
@@ -264,7 +280,7 @@ var main = function() {
     });
     var d = new Dispatcher(gamejs, {
         initial: game,
-        canvas: {flag: gamejs.display.DISABLE_SMOOTHING}
+        canvas: {flag: gamejs.display.DISABLE_SMOOTHING | gamejs.display.FULLSCREEN}
     });
 };
 
