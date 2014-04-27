@@ -591,9 +591,7 @@ var main = function() {
         images: [
             imgfy(Images.opening01),
             imgfy(Images.opening02),
-            imgfy(Images.opening03),
-            imgfy(Images.opening04),
-            imgfy(Images.opening05)
+            imgfy(Images.opening03)
         ],
         text: _.sample([[
             'I showed up to protest the beagle breeding mill.',

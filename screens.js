@@ -35,7 +35,7 @@ var TitleScreen = Scene.extend({
 
 var Cutscene = Scene.extend({
     initialize: function(options) {
-        this.imageDuration = options.imageDuration || 2000;
+        this.imageDuration = options.imageDuration || 3000;
         this.elapsed = 0;
         this.currentImage = 0;
         this.next = options.next;
