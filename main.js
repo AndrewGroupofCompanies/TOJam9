@@ -26,16 +26,16 @@ var Images = {
     protester02:   './assets/images/protester02.png',
     protester03:   './assets/images/protester03.png',
     protester04:   './assets/images/protester04.png',
-    protester05:   './assets/images/protester07.png',
-    protester06:   './assets/images/protester04.png',
-    protester07:   './assets/images/protester04.png',
-    protester08:   './assets/images/protester04.png',
-    protester09:   './assets/images/protester04.png',
+    protester05:   './assets/images/protester05.png',
+    protester06:   './assets/images/protester07.png',
+    protester07:   './assets/images/protester01.png',
+    protester08:   './assets/images/protester02.png',
+    protester09:   './assets/images/protester03.png',
     protester10:   './assets/images/protester04.png',
-    protester11:   './assets/images/protester04.png',
-    protester12:   './assets/images/protester04.png',
-    protester13:   './assets/images/protester04.png',
-    protester14:   './assets/images/protester04.png',
+    protester11:   './assets/images/protester05.png',
+    protester12:   './assets/images/protester01.png',
+    protester13:   './assets/images/protester02.png',
+    protester14:   './assets/images/protester03.png',
     protester15:   './assets/images/protester04.png',
     tree_01:       './assets/images/tree_01.png',
     fence:         './assets/images/fencebroken.png',
@@ -81,7 +81,7 @@ var Game = Scene.extend({
             protester04: [initSpriteSheet(imgfy(Images.protester04), 30, 30), 'andrew'],
             protester05: [initSpriteSheet(imgfy(Images.protester05), 30, 30), 'andrew'],
             protester06: [initSpriteSheet(imgfy(Images.protester06), 30, 30), 'andrew'],
-            protester07: [initSpriteSheet(imgfy(Images.protester10), 30, 30), 'andrew'],
+            protester07: [initSpriteSheet(imgfy(Images.protester07), 30, 30), 'andrew'],
             protester08: [initSpriteSheet(imgfy(Images.protester08), 30, 30), 'andrew'],
             protester09: [initSpriteSheet(imgfy(Images.protester09), 30, 30), 'andrew'],
             protester10: [initSpriteSheet(imgfy(Images.protester10), 30, 30), 'andrew'],
@@ -174,7 +174,7 @@ var Game = Scene.extend({
     },
 
     pickProtestorSprite: function() {
-        var randomNum = _.random(1,5);
+        var randomNum = _.random(1,6);
         var zeroPadded = _s.pad(randomNum.toString(), 2, '0', 'left');
         var spriteId = 'protester' + zeroPadded;
         var spriteSheet = this.spriteSheets[spriteId];
