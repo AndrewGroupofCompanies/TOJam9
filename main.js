@@ -12,16 +12,17 @@ var _ = require('underscore'),
     Vec2d = gramework.vectors.Vec2d,
     gameui = require('./gameui'),
     TitleScreen = require('./screens').TitleScreen,
+    Cutscene = require('./screens').Cutscene,
     FadeTransition = gramework.state.FadeTransition,
     GameController = gramework.input.GameController;
 
 var Images = {
-    //font:          './assets/fonts/emulogic.ttf', 
     cop01:         './assets/images/cop01.png',
     bg_test:       './assets/images/bg_test.jpg',
     sprite_test:   './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
     terrain: './assets/images/terrain01.png',
+    titlescreen: './assets/images/titlescreen.png',
     protester01:   './assets/images/protester01.png',
     protester02:   './assets/images/protester02.png',
     protester03:   './assets/images/protester03.png',
@@ -44,7 +45,15 @@ var Images = {
     staticcloud: './assets/images/staticcloud.png',
     border: './assets/images/border01.png',
     goat: './assets/images/goat.png',
-    portraitAndrew: './assets/images/portrait-andrewgardner.png'
+    indicator: './assets/images/active_player_icon.png',
+    beagle: './assets/images/beagle_icon.png',
+    portraitAndrew: './assets/images/portrait-andrewgardner.png',
+    opening01: './assets/images/opening01.png',
+    opening02: './assets/images/opening02.png',
+    opening03: './assets/images/opening03.png',
+    opening04: './assets/images/opening04.png',
+    opening05: './assets/images/opening05.png',
+    lose: './assets/images/lose.png'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -58,13 +67,34 @@ var imgfy = function(image) {
 
 var GROUND_HEIGHT = 20;
 
+var GameOver = Scene.extend({
+    initialize: function(options) {
+        this.image = imgfy(Images.gameover);
+    },
+
+    draw: function(surface) {
+        surface.blit(this.image, [0,0]);
+    },
+
+    event: function(ev) {
+        if (ev.type === gamejs.event.KEY_DOWN) {
+            if (ev.key === gamejs.event.K_r) {
+                main();
+            }
+        }
+    }
+});
+
 var Game = Scene.extend({
     initialize: function(options) {
         this.paused = false;
         this.debug = true;
+        this.timer = 0;
+        this.eventCounter = 0;
+        this.indicator = null;
 
         this.startingProtestors = 1;
-        this.maxProtestors = 25;
+        this.maxProtestors = 10;
         this.obstaclesOff = 0;
 
         this.portraits = {
@@ -120,8 +150,8 @@ var Game = Scene.extend({
         this.scrollGenerator = new scrollables.SceneryGenerator({
             world: this,
             images: [
-                Images.tree_01,
-                Images.staticcloud
+                Images.tree_01//,
+                //Images.staticcloud
             ]
         });
 
@@ -161,7 +191,7 @@ var Game = Scene.extend({
             takeover: gamejs.event.K_t
         });
         this.player = null;
-        //this.spawnPlayer();
+        this.spawnPlayer();
 
         this.eventable = new EventEmitter();
         this.eventBindings();
@@ -170,6 +200,12 @@ var Game = Scene.extend({
     eventBindings: function() {
         var self = this;
         this.eventable.once("protestorsReady", this.joinProtestorGroup.bind(this));
+
+        this.eventable.on("gameover", this.triggerGameOver.bind(this));
+    },
+
+    triggerGameOver: function() {
+        this.dispatcher.push(new GameOver({}));
     },
 
     pickProtestorSprite: function() {
@@ -205,7 +241,7 @@ var Game = Scene.extend({
 
     getPolice: function() {
         return _.filter(this.entities._sprites, function(entity) {
-            return entity.isPolice === true;
+            return entity.isPolice === true && entity.completedCapture === false;
         });
     },
 
@@ -238,7 +274,13 @@ var Game = Scene.extend({
             portrait: this.spriteSheets.protester01[1],
             z: 0.5
         });
-        this.entities.add(p);
+
+        var b = new entities.Beagle({
+            guardian: p,
+            image: Images.beagle
+        });
+
+        this.entities.add([p, b]);
 
         this.protestorGroupActive = true;
         // Don't show any obstacles while the group enters.
@@ -274,9 +316,26 @@ var Game = Scene.extend({
             protestor = this.getBeagleCarrier()[0];
         }
 
+        if (!protestor) {
+            // Game over man!
+            this.eventable.emit("gameover");
+            return;
+        }
+
         this.player = new entities.Player({
             existing: protestor
         });
+
+        if (!this.indicator) {
+            this.indicator = new entities.PlayerIndicator({
+                image: Images.indicator,
+                follow: this.player
+            });
+            this.entities.add(this.indicator);
+        } else {
+            this.indicator.follow = this.player;
+        }
+
         this.entities.add(this.player);
 
         protestor.kill();
@@ -295,7 +354,17 @@ var Game = Scene.extend({
     increasePolicePressure: function(step) {
         step = (step || 1);
         this.policePressure += step;
+
+        // As time goes up, we want to shrink the distraction box.
+        var s = Math.round(this.timer / 10) * 10;
+        if ((s / 20) % 1) {
+            step -= (step * 0.3);
+        }
         this.policeDistraction += step;
+
+        if (this.policeDistraction >= (this.frontLine - 10)) {
+            this.eventable.emit("gameover");
+        }
     },
 
     policeGenerator: function(dt) {
@@ -305,7 +374,10 @@ var Game = Scene.extend({
         dt = (dt / 1000);
         this.policeDelay -= dt;
         if (this.policeDelay <= 0) {
-            this.createPolice(1, {x: -5});
+            var s = Math.round(this.policePressure / 10) * 10;
+            var increase = Math.floor(s / 10);
+
+            this.createPolice(increase, {x: -5});
             this.policeDelay = this.resetPoliceDelay();
         }
     },
@@ -319,6 +391,8 @@ var Game = Scene.extend({
 
         dt = (dt / 1000); // Sane velocity mutations.
 
+        this.timer += dt;
+
         // Await our group of protestors.
         this.protestorGroupDelay -= dt;
         if (this.protestorGroupDelay <= 0) {
@@ -329,7 +403,8 @@ var Game = Scene.extend({
         this.velocity.add(accel.mul(dt).mul(this.speed));
 
         this.obstaclesOff -= dt;
-        if (this.obstaclesOff <= 0) {
+        // TODO: No obstacles while we test police distraction.
+        if (false && this.obstaclesOff <= 0) {
             if (this.Obstacles && this.Obstacles.alive) {
                 this.Obstacles.update(dt);
             } else if (this.Obstacles === null) {
@@ -341,17 +416,32 @@ var Game = Scene.extend({
                 this.Obstacles = null;
             }
         }
+
+        //Event firings
+
+        if (this.timer > 2 && this.eventCounter === 0) {
+            this.eventCounter++;
+            _.sample(this.getProtestors()).say(
+                "We got one. We saved a dog."
+            );
+        }
+
+        if (this.timer > 5 && this.eventCounter === 1) {
+            this.eventCounter++;
+            _.sample(this.getProtestors()).say(
+                "Hang back and distract the police."
+            );
+        }
+
     },
 
     draw: function(surface) {
         surface.clear();
         this.view.clear();
 
-        this.surface.fill('#fff');
-
+        this.surface.fill('rgb(0,20,80)');
         this.terrain.draw(this.view);
-
-            //this.scrollables.draw(this.view);
+        //this.scrollables.draw(this.view);
 
         // Draw the police pressure line as useful debugging.
         gamejs.draw.line(this.view, "#cccccc",
@@ -395,16 +485,57 @@ var Game = Scene.extend({
 });
 
 var main = function() {
+    var gameoverCutscene = new Cutscene({
+        next: openingCutscene,
+        borderImage: Images.border,
+        images: [
+
+        ],
+        text: [],
+        //portrait:
+        pixelScale: 4
+    });
+
     var game = new Game({
+        pixelScale: 4,
+        loseScene: gameoverCutscene
+    });
+
+    var openingCutscene = new Cutscene({
+        next: game,
+        borderImage: Images.border,
+        images: [
+            imgfy(Images.opening01),
+            imgfy(Images.opening02),
+            imgfy(Images.opening03),
+            imgfy(Images.opening04),
+            imgfy(Images.opening05)
+        ],
+        text: _.sample([[
+            'I showed up to protest the beagle breeding mill.',
+            'I didn\'t plan on breaking the law.',
+            'When I saw the dog being handed down, the right thing was obvious.'
+        ],[
+            'They have the nerve to open a breeding mill in our community.',
+            'The cops want to protect the right to kill these dogs?',
+            "I'm sick of waiting for change."
+        ],[
+            'Beagles are the dog of choice for animal experiments.',
+            'Because they don\'t really fight back.',
+            'But I do.'
+        ]]),
+        //portrait: 
         pixelScale: 4
     });
 
     var titleScreen = new TitleScreen({
-        game: game
+        image: Images.titlescreen,
+        next: openingCutscene,
+        pixelScale: 4
     });
 
     var d = new Dispatcher(gamejs, {
-        initial: titleScreen,
+        initial: game,
         defaultTransition: FadeTransition,
         canvas: {flag: gamejs.display.DISABLE_SMOOTHING | gamejs.display.FULLSCREEN}
     });

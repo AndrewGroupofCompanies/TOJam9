@@ -15,6 +15,8 @@ var TopBar = uielements.Element.extend({
         this.subFont = options.subFont;
         this.portraits = options.portraits;
 
+        this.doneDuration = options.doneDuration || 600;
+
         this.subelements = new gamejs.sprite.Group();
 
         this.textBlock = new uielements.TextBlock({
@@ -39,7 +41,7 @@ var TopBar = uielements.Element.extend({
             height: 28
         });
 
-        this.portraitBox.setImage(this.portraits.andrew);
+        //this.portraitBox.setImage(this.portraits.andrew);
 
         this.textQueue = [];
         this.showingQueuedText = false;
@@ -53,14 +55,17 @@ var TopBar = uielements.Element.extend({
     update: function(dt) {
         this.subelements.update(dt);
         if (this.textQueue.length > 0 && !this.showingQueuedText) {
-            this.portraitBox.show();
+            
             this.textBlock.show();
             var nextText = this.textQueue.shift();
             this.textBlock.setText(nextText[0]);
-            this.portraitBox.image = this.portraits[nextText[1]];
+            if (nextText[1]) {
+                this.portraitBox.image = this.portraits[nextText[1]];
+                this.portraitBox.show();
+            }
             this.showingQueuedText = true;
         }
-        if (this.textBlock.doneDuration >= 600) {
+        if (this.textBlock.doneDuration >= this.doneDuration) {
             this.portraitBox.hide();
             this.textBlock.hide();
             if (this.showingQueuedText) {
@@ -90,6 +95,7 @@ var TopBar = uielements.Element.extend({
             if (portrait) {
                 this.portraitBox.setImage(this.portraits[portrait]);
                 this.portraitBox.show();
+                console.log('okay');
             }
             this.textBlock.show();
             this.textBlock.setText(text);
