@@ -15,6 +15,7 @@ var Images = {
     bg_test:       './assets/images/bg_test.jpg',
     sprite_test:   './assets/images/spritesheet-enemy.png',
     sprite_test_2: './assets/images/spritesheet-player.png',
+    terrain: './assets/images/terrain01.png',
     protester01:   './assets/images/protester_01_pete.png',
     protester02:   './assets/images/protester_02_pete.png',
     protester03:   './assets/images/protester_03_pete.png',
@@ -63,6 +64,11 @@ var Game = Scene.extend({
             protester09: initSpriteSheet(imgfy(Images.protester12), 30, 30),
         };
 
+        this.terrain = new scrollables.AllTerrain({
+            width: 1024,
+            image: Images.terrain
+        });
+
         var previousAdd = this.entities.add;
         this.entities.add = function(list) {
             previousAdd.apply(this, arguments);
@@ -71,16 +77,7 @@ var Game = Scene.extend({
                 return b.z-a.z;
             });
         };
-        /*
-        this.bg = new scrollables.Scrollable({
-            image: Images.bg_test,
-            height: 128,
-            width: 256,
-            x: 0,
-            y: 0,
-            z: 0
-        });
-        */
+
         // Handles world speed.
         this.velocity = new Vec2d(0, 0);
         this.speed = -10;
@@ -195,6 +192,7 @@ var Game = Scene.extend({
 
     update: function(dt) {
         this.scrollGenerator.update(dt);
+        this.terrain.update(dt);
 
         Scene.prototype.update.call(this, dt);
 
@@ -220,6 +218,8 @@ var Game = Scene.extend({
         this.view.clear();
 
         this.surface.fill('#fff');
+
+        this.terrain.draw(this.view);
 
             //this.scrollables.draw(this.view);
 
