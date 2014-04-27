@@ -12,6 +12,7 @@ var _ = require('underscore'),
     GameController = gramework.input.GameController;
 
 var Images = {
+    //font:          './assets/fonts/emulogic.ttf', 
     cop01:         './assets/images/cop01.png',
     bg_test:       './assets/images/bg_test.jpg',
     sprite_test:   './assets/images/spritesheet-enemy.png',
@@ -70,8 +71,17 @@ var Game = Scene.extend({
             gascloud: initSpriteSheet(imgfy(Images.gascloud), 60, 60)
         };
 
-        this.topbar = new gameui.TopBar(this, Images.border);
-
+        this.topbar = new gameui.TopBar({
+            color: [0,0,0],
+            width: this.surface.getSize()[0],
+            height: 40,
+            x: 0,
+            y:0,
+            world: this,
+            subBorderImage: Images.border,
+            subFont: "8px Ebit"
+        });
+   
         this.terrain = new scrollables.AllTerrain({
             width: 1024,
             image: Images.terrain

@@ -2,27 +2,40 @@ var _ = require('underscore'),
     gamejs = require('gamejs'),
     uielements = require('gramework').uielements;
 
-var TopBar = function(world, borderImage) {
-    var options = {
-        color: [0,0,0],
-        x: 0,
-        y: 0,
-        width: world.surface.getSize()[0],
-        height: 35
-    }
-
-    var element = new uielements.Element(options);
-
-    world.elements.add(element);
-
-    return element;
-};
-
-_.extend(TopBar.prototype, uielements.Element.prototype, {
+var TopBar = uielements.Element.extend({
     initialize: function(options) {
-        Element.prototype.initialize.apply(this, arguments);
+        uielements.Element.prototype.initialize.apply(this, arguments);
+
+        this.world = options.world;
+        this.world.elements.add(this);
+
+        this.subBorderImage = options.subBorderImage;
+        this.subFont = options.subFont;
 
         this.subelements = new gamejs.sprite.Group();
+
+        this.subelements.add(
+            new uielements.Element({
+                borderImage: this.subBorderImage,
+                borderWidth: 3,
+                borderImageSlice: 3,
+                x: 50,
+                y: 4,
+                width: 200,
+                height: 30
+            })
+        );
+
+        this.subelements.add(
+            new uielements.TextBlock({
+                x: 50,
+                y: 5,
+                width: 200,
+                height: 28,
+                font: this.subFont,
+                lineHeight: 12
+            })
+        );
     },
 
     update: function(dt) {
@@ -30,7 +43,7 @@ _.extend(TopBar.prototype, uielements.Element.prototype, {
     },
 
     draw: function(surface) {
-        Element.prototype.draw.apply(this, arguments);
+        uielements.Element.prototype.draw.apply(this, arguments);
         this.subelements.draw(surface);
     }
 });
