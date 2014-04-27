@@ -64,6 +64,7 @@ var Game = Scene.extend({
     initialize: function(options) {
         this.paused = false;
         this.debug = true;
+        this.timer = 0;
 
         this.startingProtestors = 1;
         this.maxProtestors = 25;
@@ -163,7 +164,7 @@ var Game = Scene.extend({
             takeover: gamejs.event.K_t
         });
         this.player = null;
-        //this.spawnPlayer();
+        this.spawnPlayer();
 
         this.eventable = new EventEmitter();
         this.eventBindings();
@@ -244,7 +245,7 @@ var Game = Scene.extend({
         var b = new entities.Beagle({
             guardian: p,
             image: Images.beagle
-        })
+        });
 
         this.entities.add([p, b]);
 
@@ -303,6 +304,12 @@ var Game = Scene.extend({
     increasePolicePressure: function(step) {
         step = (step || 1);
         this.policePressure += step;
+
+        // As time goes up, we want to shrink the distraction box.
+        var s = Math.round(this.timer / 10) * 10;
+        if ((s / 20) % 1) {
+            step -= (step * 0.3);
+        }
         this.policeDistraction += step;
     },
 
@@ -326,6 +333,8 @@ var Game = Scene.extend({
         Scene.prototype.update.call(this, dt);
 
         dt = (dt / 1000); // Sane velocity mutations.
+
+        this.timer += dt;
 
         // Await our group of protestors.
         this.protestorGroupDelay -= dt;
