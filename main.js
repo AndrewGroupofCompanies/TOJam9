@@ -55,7 +55,7 @@ var Images = {
     opening05: './assets/images/opening05.png',
     lose: './assets/images/lose.png',
     cop_static: './assets/images/cop_static.png',
-    music: './assets/music/jam.mp3'
+    music: './assets/music/jam.ogg'
 };
 
 var initSpriteSheet = function(image, width, height) {
@@ -99,6 +99,8 @@ var Game = Scene.extend({
         this.startingProtestors = 1;
         this.maxProtestors = 10;
         this.obstaclesOff = 0;
+
+        gamejs.mixer.setNumChannels(1);
 
         this.music = new gamejs.mixer.Sound(Images.music);
         this._musicPlaying = false;
@@ -395,9 +397,9 @@ var Game = Scene.extend({
     },
 
     update: function(dt) {
-        //if (!this._musicPlaying) {
-        //    this.music.play(true);
-       // }
+        if (!this._musicPlaying) {
+            this.music.play(true);
+        }
         this.scrollGenerator.update(dt);
         this.terrain.update(dt);
         this.policeGenerator(dt);
@@ -617,7 +619,7 @@ var main = function() {
     });
 
     var d = new Dispatcher(gamejs, {
-        initial: game,
+        initial: titlescreen,
         defaultTransition: FadeTransition,
         canvas: {flag: gamejs.display.DISABLE_SMOOTHING | gamejs.display.FULLSCREEN}
     });
