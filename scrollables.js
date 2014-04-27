@@ -125,7 +125,7 @@ _.extend(SceneryGenerator.prototype, {
         var s = new Scrollable({
             height: 64,
             width: 64,
-            x:256,
+            x:315,
             y:50,
             z:z,
             image: image,
@@ -210,6 +210,7 @@ _.extend(AllTerrain.prototype, {
 });
 
 module.exports = {
+    Scrollable: Scrollable,
     SceneryGenerator: SceneryGenerator,
     AnimScrollableGenerator: AnimScrollableGenerator,
     TerrainLayer: TerrainLayer,

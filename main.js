@@ -544,7 +544,19 @@ var Game = Scene.extend({
             );
         }
 
-        if (this.timer > 30 )
+        if (this.timer > 30 && this.goat === false) {
+            this.entities.add(
+                new scrollables.Scrollable({
+                    image: Images.goat,
+                    x: 315,
+                    y: 70,
+                    height: 16,
+                    width: 16,
+                    z: 3,
+                    world: this 
+                })
+            );  
+        }
 
         if (this.policePressure > 75 && this.warningLevel === 0) {
             this.warningLevel++;
