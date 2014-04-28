@@ -1330,8 +1330,8 @@ var Game = Scene.extend({
             var ypos_multiplier = 0;
             var x, y;
 
-            x =  30 + (30 * (xpos_multiplier));
-            y =  30 + (30 * (ypos_multiplier));
+            x =  7 + (30 * (xpos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p1 = new FunCitizen({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1342,7 +1342,7 @@ var Game = Scene.extend({
             this.entities.add(p1);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p2 = new FunCitizen({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1353,7 +1353,7 @@ var Game = Scene.extend({
             this.entities.add(p2);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p3 = new FunCitizen({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1364,7 +1364,7 @@ var Game = Scene.extend({
             this.entities.add(p3);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p4 = new FunCitizen({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1375,7 +1375,7 @@ var Game = Scene.extend({
             this.entities.add(p4);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p5 = new FunCitizen({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1386,7 +1386,7 @@ var Game = Scene.extend({
             this.entities.add(p5);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p6 = new FunCitizen({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1397,7 +1397,7 @@ var Game = Scene.extend({
             this.entities.add(p6);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p7 = new FunCitizen({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1416,8 +1416,8 @@ var Game = Scene.extend({
             var ypos_multiplier = 0;
             var x, y, y_simple;
 
-            x =  210 + 30 + (30 * (xpos_multiplier));
-            y =  30 + (30 * (ypos_multiplier));
+            x =  210 + 7 + (30 * (xpos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             // console.log(x);
             // console.log(y);
 
@@ -1431,7 +1431,7 @@ var Game = Scene.extend({
             this.entities.add(p1);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p2 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1442,7 +1442,7 @@ var Game = Scene.extend({
             this.entities.add(p2);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p3 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1455,7 +1455,7 @@ var Game = Scene.extend({
             ypos_multiplier++;
             ypos_multiplier++;
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p4 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1466,7 +1466,7 @@ var Game = Scene.extend({
             this.entities.add(p4);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p5 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1477,7 +1477,7 @@ var Game = Scene.extend({
             this.entities.add(p5);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p6 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1488,7 +1488,7 @@ var Game = Scene.extend({
             this.entities.add(p6);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p7 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1499,7 +1499,7 @@ var Game = Scene.extend({
             this.entities.add(p7);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p8 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1510,7 +1510,7 @@ var Game = Scene.extend({
             this.entities.add(p8);
 
             ypos_multiplier++;
-            y =  30 + (30 * (ypos_multiplier));
+            y =  7 + (30 * (ypos_multiplier));
             var p9 = new FunPolice({
                 x: x, y: y,
                 width: 30, height: 30,
@@ -1546,9 +1546,12 @@ var Game = Scene.extend({
 });
 
 var main = function() {
-    var game = new Game({});
+    var game = new Game({
+        pixelScale: 4,
+    });
     var d = new Dispatcher(gamejs, {
-        initial: game
+        initial: game,
+        canvas: {flag: gamejs.display.DISABLE_SMOOTHING }
     });
 };
 
