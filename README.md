@@ -37,6 +37,7 @@ Secret Andxyz Develop
     git checkout master
     git pull
     watchify ./main.js -o ./dist/bundled.js -v
+    watchify ./fun.js -o ./dist/fun.js -v
 
 ##### build & watch andxyz's playground
 

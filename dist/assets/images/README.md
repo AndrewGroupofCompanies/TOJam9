@@ -1,5 +1,28 @@
 # Animations
 
+
+## some animations names
+
+Protestor
+running:
+duck:
+deke:
+stumble:
+stumblebig:
+clothesline:
+captured:
+
+Cop:
+1 running
+2 duck
+3 deke
+4 clothesline
+5 falling
+6 reaching
+7 reaching2
+8 capturing
+9 capturing2
+
 ## Protestor frame notes
 
 totalframes for animation (example: 40) 30x30 pixels
@@ -8,7 +31,7 @@ totalframes for animation (example: 40) 30x30 pixels
 10 player duck
 10 player hop
 
-25 player stumble light/dog 
+25 player stumble light/dog
 20 player stumble heavy
 
 15 player fall clothesline

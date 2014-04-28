@@ -1163,7 +1163,7 @@ var ImagesC = {
     protester04:   './assets/images/protester04.png',
     protester05:   './assets/images/protester05.png',
     protester06:   './assets/images/protester07.png',
-    protester07:   './assets/images/protester01.png',
+    protester07:   './assets/images/protester02.png',
 };
 var ImagesP = {
     cop01:         './assets/images/cop01.png',
